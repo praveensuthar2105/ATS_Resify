@@ -1,0 +1,122 @@
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+% Define colors
+\definecolor{accent}{RGB}{220,38,38}
+\definecolor{textgray}{RGB}{55,65,81}
+
+% Custom section formatting
+\titleformat{\section}
+  {\color{accent}\Large\bfseries}
+  {}{0em}
+  {}
+  [\color{accent}\titlerule]
+
+\titlespacing*{\section}{0pt}{12pt}{8pt}
+
+\begin{document}
+
+% Creative Header
+\begin{center}
+{\Huge\bfseries\color{accent}{{FULL_NAME}}}
+
+\vspace{8pt}
+
+{\large {{EMAIL}} \textbar{} {{PHONE_NUMBER}} \textbar{} {{LOCATION}}}
+
+\vspace{5pt}
+
+{{#LINKEDIN}}\href{{{LINKEDIN}}}{LinkedIn}{{/LINKEDIN}}{{#GITHUB}} \textbar{} \href{{{GITHUB}}}{GitHub}{{/GITHUB}}{{#PORTFOLIO}} \textbar{} \href{{{PORTFOLIO}}}{Portfolio}{{/PORTFOLIO}}
+\end{center}
+
+\vspace{10pt}
+
+% Summary
+{{#SUMMARY}}
+\section*{About Me}
+\textit{{{SUMMARY}}}
+{{/SUMMARY}}
+
+% Skills - creative layout
+{{#HAS_SKILLS}}
+\section*{Expertise}
+\begin{itemize}[leftmargin=0.2in,label=\textcolor{accent}{$\bullet$}]
+{{#SKILLS}}
+\item \textbf{{{SKILL_TITLE}}} -- {{SKILL_LEVEL}}
+{{/SKILLS}}
+\end{itemize}
+{{/HAS_SKILLS}}
+
+% Experience
+{{#HAS_EXPERIENCE}}
+\section*{Experience}
+{{#EXPERIENCE}}
+\textbf{\large {{JOB_TITLE}}} \hfill \textit{{{DURATION}}}
+
+\textit{{{COMPANY}}} -- {{LOCATION}}
+
+\vspace{4pt}
+{{RESPONSIBILITY}}
+
+\vspace{8pt}
+{{/EXPERIENCE}}
+{{/HAS_EXPERIENCE}}
+
+% Projects
+{{#HAS_PROJECTS}}
+\section*{Featured Projects}
+{{#PROJECTS}}
+\textbf{\large {{PROJECT_TITLE}}}{{#GITHUB_LINK}} -- \href{{{GITHUB_LINK}}}{\textcolor{accent}{View on GitHub}}{{/GITHUB_LINK}}
+
+{{PROJECT_DESCRIPTION}}
+
+\textit{Tech Stack:} {{TECHNOLOGIES}}
+
+\vspace{8pt}
+{{/PROJECTS}}
+{{/HAS_PROJECTS}}
+
+% Education
+{{#HAS_EDUCATION}}
+\section*{Education}
+{{#EDUCATION}}
+\textbf{{{DEGREE}}} \hfill {{GRADUATION_YEAR}}
+
+{{UNIVERSITY}} -- {{LOCATION}}
+
+{{/EDUCATION}}
+{{/HAS_EDUCATION}}
+
+% Certifications
+{{#HAS_CERTIFICATIONS}}
+\section*{Certifications \& Awards}
+\begin{itemize}[leftmargin=0.2in,label=\textcolor{accent}{$\star$}]
+{{#CERTIFICATIONS}}
+\item {{CERT_TITLE}} by {{ISSUING_ORG}} ({{CERT_YEAR}})
+{{/CERTIFICATIONS}}
+\end{itemize}
+{{/HAS_CERTIFICATIONS}}
+
+% Achievements
+{{#HAS_ACHIEVEMENTS}}
+\section*{Notable Achievements}
+\begin{itemize}[leftmargin=0.2in,label=\textcolor{accent}{$\checkmark$}]
+{{#ACHIEVEMENTS}}
+\item {{ACH_TITLE}} ({{ACH_YEAR}})
+{{/ACHIEVEMENTS}}
+\end{itemize}
+{{/HAS_ACHIEVEMENTS}}
+
+% Languages
+{{#HAS_LANGUAGES}}
+\section*{Languages}
+{{LANGUAGES_LIST}}
+{{/HAS_LANGUAGES}}
+
+\end{document}

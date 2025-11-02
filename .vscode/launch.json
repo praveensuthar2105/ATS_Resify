@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-AiResumeBuilderBackendApplication<AI_Resume_Builder_Backend>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.Backend.AI_Resume_Builder_Backend.AiResumeBuilderBackendApplication",
+            "projectName": "AI_Resume_Builder_Backend",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

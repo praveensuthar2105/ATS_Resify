@@ -1,0 +1,184 @@
+/* Custom styles for the app */
+
+/* Global background stays light on inner pages; Home overrides with dark hero */
+.ant-layout {
+  background: #ffffff;
+}
+
+.ant-layout-header {
+  padding: 0;
+  line-height: 70px;
+  height: 70px;
+  background: #ffffff;
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.05);
+}
+
+.ant-layout-content {
+  overflow-x: hidden;
+  background: #ffffff;
+}
+
+.ant-layout-footer {
+  background: #1a1a2e;
+  padding: 60px 50px 30px;
+}
+
+/* Custom button styles */
+.ant-btn-primary {
+  background: #4F46E5;
+  border-color: #4F46E5;
+  font-weight: 500;
+  height: 48px;
+  padding: 0 32px;
+  font-size: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 0 rgba(79, 70, 229, 0.045);
+}
+
+.ant-btn-primary:hover {
+  background: #4338CA;
+  border-color: #4338CA;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.ant-btn-default {
+  height: 48px;
+  padding: 0 32px;
+  font-size: 16px;
+  border-radius: 8px;
+  border-color: #e5e7eb;
+  font-weight: 500;
+}
+
+.ant-btn-default:hover {
+  border-color: #4F46E5;
+  color: #4F46E5;
+}
+
+/* Card styles */
+.ant-card {
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.ant-card:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  border-color: #e5e7eb;
+}
+
+/* Menu styles */
+.ant-menu-horizontal {
+  border-bottom: none;
+  background: transparent;
+}
+
+.ant-menu-horizontal > .ant-menu-item {
+  font-weight: 500;
+  color: #4b5563;
+  border-bottom: 2px solid transparent;
+  margin: 0 4px;
+  padding: 0 16px;
+}
+
+/* Remove dark header overrides to keep light theme app-wide */
+
+.ant-menu-horizontal > .ant-menu-item:hover,
+.ant-menu-horizontal > .ant-menu-item-selected {
+  color: #4F46E5;
+  border-bottom-color: #4F46E5;
+}
+
+.ant-menu-horizontal > .ant-menu-item::after {
+  border-bottom: none !important;
+}
+
+/* Typography */
+.ant-typography h1 {
+  font-weight: 700;
+  color: #111827;
+}
+
+.ant-typography h2 {
+  font-weight: 700;
+  color: #111827;
+}
+
+.ant-typography h3 {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.ant-typography h4 {
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Form styles */
+.ant-form-item-label > label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.ant-input,
+.ant-input-textarea {
+  border-radius: 8px;
+  border-color: #e5e7eb;
+}
+
+.ant-input:hover,
+.ant-input-textarea:hover {
+  border-color: #4F46E5;
+}
+
+.ant-input:focus,
+.ant-input-textarea:focus {
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+
+/* Upload styles */
+.ant-upload-drag {
+  border-radius: 12px;
+  border: 2px dashed #d1d5db;
+  background: #f9fafb;
+}
+
+.ant-upload-drag:hover {
+  border-color: #4F46E5;
+}
+
+/* Progress styles */
+.ant-progress-circle .ant-progress-text {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Tag styles */
+.ant-tag {
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ant-layout-header {
+    padding: 0 16px;
+    height: 60px;
+    line-height: 60px;
+  }
+
+  .ant-btn-primary,
+  .ant-btn-default {
+    height: 42px;
+    padding: 0 24px;
+    font-size: 15px;
+  }
+
+  .ant-layout-footer {
+    padding: 40px 20px 20px;
+  }
+}
+

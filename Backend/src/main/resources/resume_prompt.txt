@@ -1,0 +1,94 @@
+Generate a professional IT job resume in JSON format based on the following description.
+
+TEMPLATE STYLE: {{templateType}}
+
+TEMPLATE-SPECIFIC INSTRUCTIONS:
+- If template is "modern": Use dynamic, contemporary language. Emphasize innovation, technology leadership, and modern methodologies. Use action verbs like "spearheaded", "engineered", "innovated", "optimized". Focus on metrics and impact.
+
+- If template is "ats": Use clear, keyword-rich language. Include standard industry terms and certifications. Use simple action verbs like "managed", "developed", "implemented", "created". Ensure all technical skills are explicitly mentioned. Format should be ATS-scanner friendly.
+
+- If template is "creative": Use expressive, unique language that showcases creativity and personality. Emphasize design thinking, innovation, and creative problem-solving. Use vivid action verbs like "crafted", "designed", "conceptualized", "transformed". Highlight creative achievements and unique projects.
+
+- If template is "executive": Use formal, authoritative language. Focus on strategic leadership, business impact, and high-level achievements. Use executive-level action verbs like "directed", "orchestrated", "established", "transformed". Emphasize revenue growth, team leadership, and organizational impact.
+
+IMPORTANT: Please respond ONLY in English language. Do not use Chinese or any other language.
+
+Ensure the JSON is consistent, well-structured, and contains all specified keys, even if some values are empty strings, empty arrays, or null. Use the exact keys and hierarchy provided below.
+
+Return only the JSON in English, without any markdown code block or <think> section.
+
+Input Description:
+"{{userResumeDescription}}"
+
+JSON Structure Requirements (all content must be in English):
+
+{
+  "personalInformation": {
+    "fullName": "string (in English)",
+    "email": "string",
+    "phoneNumber": "string",
+    "location": "string (in English)",
+    "linkedIn": "string or null",
+    "gitHub": "string or null",
+    "portfolio": "string or null"
+  },
+  "summary": "string (professional summary in English)",
+  "skills": [
+    {
+      "title": "string (skill name in English)",
+      "level": "string (proficiency level in English)"
+    }
+  ],
+  "experience": [
+    {
+      "jobTitle": "string (in English)",
+      "company": "string (in English)",
+      "location": "string (in English)",
+      "duration": "string (in English)",
+      "responsibility": "string (in English)"
+    }
+  ],
+  "education": [
+    {
+      "degree": "string (in English)",
+      "university": "string (in English)",
+      "location": "string (in English)",
+      "graduationYear": "string"
+    }
+  ],
+  "certifications": [
+    {
+      "title": "string (in English)",
+      "issuingOrganization": "string (in English)",
+      "year": "string"
+    }
+  ],
+  "projects": [
+    {
+      "title": "string (in English)",
+      "description": "string (in English)",
+      "technologiesUsed": ["string (in English)"],
+      "githubLink": "string or null"
+    }
+  ],
+  "achievements": [
+    {
+      "title": "string (in English)",
+      "year": "string"
+    }
+  ],
+  "extraInformation": "string (in English)",
+  "languages": [
+    {
+      "id": 1,
+      "name": "string (language name in English)"
+    }
+  ],
+  "interests": [
+    {
+      "id": 1,
+    }
+  ]
+}
+
+Please generate realistic and professional content based on the user's description. If information is not provided, make reasonable assumptions or leave fields empty/null as appropriate.

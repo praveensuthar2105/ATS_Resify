@@ -1,0 +1,89 @@
+\documentclass[11pt,a4paper,sans]{moderncv}
+\moderncvstyle{banking}
+\moderncvcolor{blue}
+\usepackage[utf8]{inputenc}
+\usepackage[scale=0.85]{geometry}
+\usepackage{fontawesome}
+
+% Personal information
+\name{{{FULL_NAME}}}{}
+\phone[mobile]{{{PHONE_NUMBER}}}
+\email{{{EMAIL}}}
+\address{{{LOCATION}}}{}{}
+\social[linkedin]{{{LINKEDIN}}}
+\social[github]{{{GITHUB}}}
+{{#PORTFOLIO}}
+\homepage{{{PORTFOLIO}}}
+{{/PORTFOLIO}}
+
+\begin{document}
+
+\makecvtitle
+
+% Professional Summary
+{{#SUMMARY}}
+\section{Professional Summary}
+{{SUMMARY}}
+{{/SUMMARY}}
+
+% Skills
+{{#HAS_SKILLS}}
+\section{Technical Skills}
+{{#SKILLS}}
+\cvitem{{{SKILL_TITLE}}}{{{SKILL_LEVEL}}}
+{{/SKILLS}}
+{{/HAS_SKILLS}}
+
+% Professional Experience
+{{#HAS_EXPERIENCE}}
+\section{Professional Experience}
+{{#EXPERIENCE}}
+\cventry{{{DURATION}}}{{{JOB_TITLE}}}{{{COMPANY}}}{{{LOCATION}}}{}{%
+{{RESPONSIBILITY}}
+}
+{{/EXPERIENCE}}
+{{/HAS_EXPERIENCE}}
+
+% Projects
+{{#HAS_PROJECTS}}
+\section{Projects}
+{{#PROJECTS}}
+\cventry{}{{{PROJECT_TITLE}}}{}{}{}{%
+{{PROJECT_DESCRIPTION}}\\
+\textit{Technologies:} {{TECHNOLOGIES}}{{#GITHUB_LINK}}\\
+\textit{GitHub:} \url{{{GITHUB_LINK}}}{{/GITHUB_LINK}}
+}
+{{/PROJECTS}}
+{{/HAS_PROJECTS}}
+
+% Education
+{{#HAS_EDUCATION}}
+\section{Education}
+{{#EDUCATION}}
+\cventry{{{GRADUATION_YEAR}}}{{{DEGREE}}}{{{UNIVERSITY}}}{{{LOCATION}}}{}{}
+{{/EDUCATION}}
+{{/HAS_EDUCATION}}
+
+% Certifications
+{{#HAS_CERTIFICATIONS}}
+\section{Certifications}
+{{#CERTIFICATIONS}}
+\cvitem{{{CERT_YEAR}}}{{{CERT_TITLE}} -- {{ISSUING_ORG}}}
+{{/CERTIFICATIONS}}
+{{/HAS_CERTIFICATIONS}}
+
+% Achievements
+{{#HAS_ACHIEVEMENTS}}
+\section{Achievements}
+{{#ACHIEVEMENTS}}
+\cvitem{{{ACH_YEAR}}}{{{ACH_TITLE}}}
+{{/ACHIEVEMENTS}}
+{{/HAS_ACHIEVEMENTS}}
+
+% Languages
+{{#HAS_LANGUAGES}}
+\section{Languages}
+\cvitem{}{{{LANGUAGES_LIST}}}
+{{/HAS_LANGUAGES}}
+
+\end{document}

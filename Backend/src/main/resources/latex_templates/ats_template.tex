@@ -1,0 +1,110 @@
+\documentclass[10pt,letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+% Minimal styling - ATS friendly
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% Section formatting - simple
+\titleformat{\section}{\normalsize\bfseries\uppercase}{}{0em}{}[\titlerule]
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+
+\begin{document}
+
+% Header - Simple and clear
+\begin{center}
+\textbf{\Large {{FULL_NAME}}}
+
+{{EMAIL}} | {{PHONE_NUMBER}} | {{LOCATION}}
+
+{{#LINKEDIN}}{{LINKEDIN}}{{/LINKEDIN}}{{#GITHUB}} | {{GITHUB}}{{/GITHUB}}{{#PORTFOLIO}} | {{PORTFOLIO}}{{/PORTFOLIO}}
+\end{center}
+
+\vspace{10pt}
+
+% Professional Summary
+{{#SUMMARY}}
+\section*{Professional Summary}
+{{SUMMARY}}
+{{/SUMMARY}}
+
+% Skills - keyword focused
+{{#HAS_SKILLS}}
+\section*{Skills}
+{{#SKILLS}}
+{{SKILL_TITLE}}: {{SKILL_LEVEL}}
+
+{{/SKILLS}}
+{{/HAS_SKILLS}}
+
+% Experience
+{{#HAS_EXPERIENCE}}
+\section*{Professional Experience}
+{{#EXPERIENCE}}
+\textbf{{{JOB_TITLE}}} \hfill {{DURATION}}
+
+{{COMPANY}}, {{LOCATION}}
+
+{{RESPONSIBILITY}}
+
+{{/EXPERIENCE}}
+{{/HAS_EXPERIENCE}}
+
+% Projects
+{{#HAS_PROJECTS}}
+\section*{Projects}
+{{#PROJECTS}}
+\textbf{{{PROJECT_TITLE}}}
+
+{{PROJECT_DESCRIPTION}}
+
+Technologies: {{TECHNOLOGIES}}
+{{#GITHUB_LINK}}
+
+GitHub: {{GITHUB_LINK}}
+{{/GITHUB_LINK}}
+
+{{/PROJECTS}}
+{{/HAS_PROJECTS}}
+
+% Education
+{{#HAS_EDUCATION}}
+\section*{Education}
+{{#EDUCATION}}
+\textbf{{{DEGREE}}} \hfill {{GRADUATION_YEAR}}
+
+{{UNIVERSITY}}, {{LOCATION}}
+
+{{/EDUCATION}}
+{{/HAS_EDUCATION}}
+
+% Certifications
+{{#HAS_CERTIFICATIONS}}
+\section*{Certifications}
+{{#CERTIFICATIONS}}
+{{CERT_TITLE}} - {{ISSUING_ORG}} ({{CERT_YEAR}})
+
+{{/CERTIFICATIONS}}
+{{/HAS_CERTIFICATIONS}}
+
+% Achievements
+{{#HAS_ACHIEVEMENTS}}
+\section*{Achievements}
+{{#ACHIEVEMENTS}}
+{{ACH_TITLE}} ({{ACH_YEAR}})
+
+{{/ACHIEVEMENTS}}
+{{/HAS_ACHIEVEMENTS}}
+
+% Languages
+{{#HAS_LANGUAGES}}
+\section*{Languages}
+{{LANGUAGES_LIST}}
+{{/HAS_LANGUAGES}}
+
+\end{document}
