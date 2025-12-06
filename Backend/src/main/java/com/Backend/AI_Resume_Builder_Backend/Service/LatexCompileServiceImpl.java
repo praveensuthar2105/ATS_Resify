@@ -29,7 +29,8 @@ public class LatexCompileServiceImpl implements LatexCompileService {
         Path pdfFile = tempDir.resolve("resume.pdf");
 
         // Write LaTeX file
-        Files.write(texFile, latexCode.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        Files.write(texFile, latexCode.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING);
 
         // Determine candidate compilers
         String mode = (compilerMode == null || compilerMode.isBlank()) ? "auto" : compilerMode.trim().toLowerCase();
@@ -57,7 +58,8 @@ public class LatexCompileServiceImpl implements LatexCompileService {
         }
 
         cleanup(tempDir);
-        if (lastError != null) throw lastError;
+        if (lastError != null)
+            throw lastError;
         throw new IOException("LaTeX compilation failed with all available compilers");
     }
 
@@ -77,7 +79,10 @@ public class LatexCompileServiceImpl implements LatexCompileService {
             dummyDir = Path.of(System.getProperty("java.io.tmpdir", "."));
         }
         Path dummyTex = dummyDir.resolve("check.tex");
-        try { Files.writeString(dummyTex, "\\documentclass{article}\\begin{document}OK\\end{document}"); } catch (Exception ignored) {}
+        try {
+            Files.writeString(dummyTex, "\\documentclass{article}\\begin{document}OK\\end{document}");
+        } catch (Exception ignored) {
+        }
 
         if ("pdflatex".equals(mode)) {
             candidates.add(buildPdflatexCommand(dummyDir, dummyTex));
@@ -100,12 +105,18 @@ public class LatexCompileServiceImpl implements LatexCompileService {
             try {
                 Process p = new ProcessBuilder(probe).redirectErrorStream(true).start();
                 java.io.ByteArrayOutputStream outBuf = new java.io.ByteArrayOutputStream();
-                try (InputStream is = p.getInputStream()) { is.transferTo(outBuf); }
+                try (InputStream is = p.getInputStream()) {
+                    is.transferTo(outBuf);
+                }
                 boolean finished = p.waitFor(5, java.util.concurrent.TimeUnit.SECONDS);
-                if (!finished) { p.destroyForcibly(); throw new IOException("timeout"); }
+                if (!finished) {
+                    p.destroyForcibly();
+                    throw new IOException("timeout");
+                }
                 int code = p.exitValue();
                 String ver = outBuf.toString(java.nio.charset.StandardCharsets.UTF_8);
-                boolean ok = code == 0 && (ver.toLowerCase().contains("tectonic") || ver.toLowerCase().contains("pdftex") || ver.toLowerCase().contains("miktex"));
+                boolean ok = code == 0 && (ver.toLowerCase().contains("tectonic")
+                        || ver.toLowerCase().contains("pdftex") || ver.toLowerCase().contains("miktex"));
                 d.put("available", ok);
                 d.put("version", ver.trim());
                 any = any || ok;
@@ -120,7 +131,11 @@ public class LatexCompileServiceImpl implements LatexCompileService {
         out.put("candidates", details);
 
         // cleanup
-        try { Files.deleteIfExists(dummyTex); Files.deleteIfExists(dummyDir); } catch (Exception ignored) {}
+        try {
+            Files.deleteIfExists(dummyTex);
+            Files.deleteIfExists(dummyDir);
+        } catch (Exception ignored) {
+        }
         return out;
     }
 
@@ -206,11 +221,15 @@ public class LatexCompileServiceImpl implements LatexCompileService {
         try {
             if (tempDir != null && Files.exists(tempDir)) {
                 Files.walk(tempDir)
-                        .sorted((a,b) -> b.compareTo(a))
+                        .sorted((a, b) -> b.compareTo(a))
                         .forEach(p -> {
-                            try { Files.deleteIfExists(p); } catch (IOException ignored) {}
+                            try {
+                                Files.deleteIfExists(p);
+                            } catch (IOException ignored) {
+                            }
                         });
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
     }
 }

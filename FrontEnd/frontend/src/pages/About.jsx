@@ -76,9 +76,14 @@ const About = () => {
           >
             About AI Resume Builder
           </Typography>
-          <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 400, maxWidth: '700px', mx: 'auto' }}>
-            A student project exploring the integration of AI technology in resume creation.
-            Built with Spring Boot, React, and Google's Gemini AI.
+          <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 400, maxWidth: '800px', mx: 'auto', lineHeight: 1.8 }}>
+            <strong>Developed an AI-powered resume builder</strong> using Spring Boot 3.3.5 and React 18, integrating Google Gemini 2.0 Flash API 
+            via Spring RestClient to transform user descriptions into professional LaTeX code, automatically compiling to PDF with MiKTeX across 
+            4 ATS-optimized templates (Modern, Professional, Creative, ATS-Focused).<br/><br/>
+            <strong>Engineered robust backend services</strong> including custom prompt template engine for AI content generation, JSON response parsing, 
+            PDF text extraction using Apache PDFBox for ATS score analysis, and automated LaTeX compilation pipeline with error handling for reliable production deployment.<br/><br/>
+            <strong>Implemented secure authentication</strong> with Spring Security and Google OAuth2 login, JWT token-based sessions, user role management, 
+            and MySQL 8.0 persistence using Spring Data JPA and Hibernate ORM with HikariCP connection pooling.
           </Typography>
         </Box>
 

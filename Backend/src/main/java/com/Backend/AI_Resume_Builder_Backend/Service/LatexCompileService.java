@@ -4,15 +4,20 @@ import java.io.IOException;
 
 public interface LatexCompileService {
     /**
-     * Compile LaTeX source code to PDF bytes using a local TeX engine (e.g., tectonic or pdflatex).
+     * Compile LaTeX source code to PDF bytes using a local TeX engine (e.g.,
+     * tectonic or pdflatex).
+     * 
      * @param latexCode Full LaTeX source code
      * @return PDF bytes
      */
     byte[] compileToPdf(String latexCode) throws IOException, InterruptedException;
 
     /**
-     * Check availability of configured LaTeX compiler(s) and return diagnostic info.
-     * @return map containing mode, configured path, candidate commands with availability and version output
+     * Check availability of configured LaTeX compiler(s) and return diagnostic
+     * info.
+     * 
+     * @return map containing mode, configured path, candidate commands with
+     *         availability and version output
      */
     java.util.Map<String, Object> getCompilerStatus();
 }

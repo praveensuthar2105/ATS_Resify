@@ -180,11 +180,13 @@ const Navbar = () => {
                   textTransform: 'none',
                   fontWeight: 600,
                   px: 3,
-                  borderColor: '#667eea',
-                  color: '#667eea',
+                  background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+                  color: 'white',
+                  border: 'none',
                   '&:hover': {
-                    borderColor: '#764ba2',
-                    bgcolor: '#F9FAFB',
+                    background: 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)',
+                    boxShadow: '0 6px 16px rgba(37, 99, 235, 0.4)',
+                    transform: 'translateY(-2px)',
                   },
                   transition: 'all 0.2s',
                 }}

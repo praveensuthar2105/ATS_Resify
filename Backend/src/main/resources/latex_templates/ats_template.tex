@@ -1,6 +1,6 @@
 \documentclass[10pt,letterpaper]{article}
 \usepackage[utf8]{inputenc}
-\usepackage[margin=1in]{geometry}
+\usepackage[top=0.5in,bottom=0.5in,left=0.6in,right=0.6in]{geometry}
 \usepackage{titlesec}
 \usepackage{enumitem}
 \usepackage{hyperref}
@@ -8,11 +8,17 @@
 % Minimal styling - ATS friendly
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{6pt}
+\setlength{\parskip}{3pt}
+\setlength{\parsep}{0pt}
+\setlength{\headsep}{0pt}
+\setlength{\topskip}{0pt}
+\setlength{\topmargin}{0pt}
+\setlength{\topsep}{0pt}
+\setlength{\partopsep}{0pt}
 
-% Section formatting - simple
+% Section formatting - compact
 \titleformat{\section}{\normalsize\bfseries\uppercase}{}{0em}{}[\titlerule]
-\titlespacing*{\section}{0pt}{10pt}{4pt}
+\titlespacing*{\section}{0pt}{6pt}{2pt}
 
 \begin{document}
 
@@ -33,13 +39,33 @@
 {{SUMMARY}}
 {{/SUMMARY}}
 
-% Skills - keyword focused
+% Skills - keyword focused, categorized
 {{#HAS_SKILLS}}
-\section*{Skills}
-{{#SKILLS}}
-{{SKILL_TITLE}}: {{SKILL_LEVEL}}
+\section*{Technical Skills}
+{{#SKILL_LANGUAGES}}
+\textbf{Languages:} {{SKILL_LANGUAGES}}
 
-{{/SKILLS}}
+{{/SKILL_LANGUAGES}}
+{{#SKILL_FRAMEWORKS}}
+\textbf{Frameworks \& Libraries:} {{SKILL_FRAMEWORKS}}
+
+{{/SKILL_FRAMEWORKS}}
+{{#SKILL_DATABASES}}
+\textbf{Databases:} {{SKILL_DATABASES}}
+
+{{/SKILL_DATABASES}}
+{{#SKILL_TOOLS}}
+\textbf{Tools \& Technologies:} {{SKILL_TOOLS}}
+
+{{/SKILL_TOOLS}}
+{{#SKILL_CLOUD}}
+\textbf{Cloud Platforms:} {{SKILL_CLOUD}}
+
+{{/SKILL_CLOUD}}
+{{#SKILL_OTHER}}
+\textbf{Other Skills:} {{SKILL_OTHER}}
+
+{{/SKILL_OTHER}}
 {{/HAS_SKILLS}}
 
 % Experience

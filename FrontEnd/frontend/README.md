@@ -1,6 +1,12 @@
-# AI-Powered Resume Builder - Frontend
+# AI Resume Builder - Frontend
 
-A modern, feature-rich frontend application for the AI Resume Builder project, built with React, Ant Design, and Tailwind CSS.
+**Java 21 • Spring Boot 3.3.5 • Spring RestClient • React 18 • Google Gemini 2.0 Flash • MySQL 8.0**
+
+## 📋 Project Description
+
+- **Developed an AI-powered resume builder** using Spring Boot 3.3.5 and React 18, integrating Google Gemini 2.0 Flash API via Spring RestClient to transform user descriptions into professional LaTeX code, automatically compiling to PDF with MiKTeX/pdfLaTeX across 4 ATS-optimized templates (Modern, Professional, Creative, ATS-Focused).
+- **Engineered robust backend services** including custom prompt template engine for AI content generation, JSON response parsing with Jackson, PDF text extraction using Apache PDFBox for ATS score analysis, and automated LaTeX compilation pipeline with configurable timeout and error handling for production reliability.
+- **Implemented secure authentication and authorization** with Spring Security, Google OAuth2 login integration, JWT token-based stateless sessions, user role management (USER/ADMIN), and MySQL 8.0 persistence layer using Spring Data JPA and Hibernate ORM with HikariCP connection pooling.
 
 ## 🚀 Features
 

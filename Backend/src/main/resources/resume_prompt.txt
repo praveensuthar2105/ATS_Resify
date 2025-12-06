@@ -1,5 +1,7 @@
 Generate a professional IT job resume in JSON format based on the following description.
 
+CRITICAL: THE RESUME MUST FIT ON ONE PAGE. Keep all content concise and focused.
+
 TEMPLATE STYLE: {{templateType}}
 
 TEMPLATE-SPECIFIC INSTRUCTIONS:
@@ -11,7 +13,28 @@ TEMPLATE-SPECIFIC INSTRUCTIONS:
 
 - If template is "executive": Use formal, authoritative language. Focus on strategic leadership, business impact, and high-level achievements. Use executive-level action verbs like "directed", "orchestrated", "established", "transformed". Emphasize revenue growth, team leadership, and organizational impact.
 
+CONTENT LENGTH GUIDELINES (CRITICAL FOR ONE-PAGE FIT):
+- Summary: Maximum 2-3 sentences (40-60 words)
+- Experience: Maximum 2-3 most relevant positions, each with 2-3 concise bullet points (max 20 words per point)
+- Projects: Maximum 2-3 most impressive projects with brief descriptions (max 30 words each)
+- Education: Keep concise - degree, institution, year only
+- Certifications: List only the most relevant (max 3-4)
+- Achievements: Only exceptional ones (max 2-3)
+- Focus on quality over quantity - include only the most impactful and relevant information
+
 IMPORTANT: Please respond ONLY in English language. Do not use Chinese or any other language.
+
+SKILLS GENERATION GUIDELINES:
+- Analyze the user's description to identify their role (e.g., Full Stack Developer, Backend Developer, Frontend Developer, DevOps Engineer, Data Engineer, Mobile Developer, etc.)
+- Generate skills relevant to their specific role and experience level
+- For Backend Developers: Focus on server-side languages (Java, Python, Node.js), backend frameworks (Spring Boot, Django, Express.js), databases, API development, and microservices
+- For Frontend Developers: Focus on JavaScript/TypeScript, frontend frameworks (React, Angular, Vue.js), CSS frameworks, responsive design, and state management
+- For Full Stack Developers: Include a balanced mix of both frontend and backend skills
+- For DevOps Engineers: Focus on containerization (Docker, Kubernetes), CI/CD tools, cloud platforms, infrastructure as code, and monitoring tools
+- For Data Engineers: Focus on data processing frameworks, ETL tools, big data technologies, SQL/NoSQL databases, and cloud data services
+- Only include skills that are mentioned or strongly implied by the user's description
+- Organize skills logically: put most relevant/strongest skills first in each category
+- Ensure skills are current and industry-relevant based on the described experience
 
 Ensure the JSON is consistent, well-structured, and contains all specified keys, even if some values are empty strings, empty arrays, or null. Use the exact keys and hierarchy provided below.
 
@@ -33,12 +56,14 @@ JSON Structure Requirements (all content must be in English):
     "portfolio": "string or null"
   },
   "summary": "string (professional summary in English)",
-  "skills": [
-    {
-      "title": "string (skill name in English)",
-      "level": "string (proficiency level in English)"
-    }
-  ],
+  "skills": {
+    "languages": ["string (programming languages like Java, Python, JavaScript, C++, TypeScript, Go, etc.)"],
+    "frameworks": ["string (frameworks and libraries like Spring Boot, Spring Security, React, Angular, Vue.js, Node.js, Express.js, Django, Flask, .NET, Hibernate, JPA, etc.)"],
+    "databases": ["string (databases like MySQL, PostgreSQL, MongoDB, Oracle, SQL Server, Redis, Cassandra, DynamoDB, etc.)"],
+    "tools": ["string (development and DevOps tools like Git, Maven, Gradle, Docker, Kubernetes, Jenkins, GitHub Actions, GitLab CI/CD, Postman, JIRA, VS Code, IntelliJ IDEA, etc.)"],
+    "cloud": ["string (cloud platforms and services like AWS (EC2, S3, Lambda, RDS), Azure (App Service, Azure Functions, Cosmos DB), Google Cloud Platform (GCP), Heroku, etc.)"],
+    "other": ["string (other relevant skills based on role like RESTful APIs, Microservices, Agile/Scrum, CI/CD, Test-Driven Development (TDD), System Design, Data Structures & Algorithms, GraphQL, WebSockets, OAuth, JWT, Unit Testing, Integration Testing, etc.)]"
+  },
   "experience": [
     {
       "jobTitle": "string (in English)",

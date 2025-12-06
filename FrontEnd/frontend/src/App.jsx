@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline, Box, Container } from '@mui/material';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Home from './pages/Home';
+import LandingPage from './pages/LandingPage';
 import GenerateResume from './pages/GenerateResume';
 import EditResume from './pages/EditResume';
 import AtsChecker from './pages/AtsChecker';
@@ -33,21 +33,19 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
           <Navbar />
-          <Box component="main" sx={{ mt: '70px', width: '100%' }}>
-            <Container maxWidth={false} disableGutters>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/generate" element={<GenerateResume />} />
-                <Route path="/edit-resume" element={<EditResume />} />
-                <Route path="/ats-checker" element={<AtsChecker />} />
-                <Route path="/features" element={<Features />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/admin" element={<AdminPanel />} />
-              </Routes>
-            </Container>
+          <Box component="main" sx={{ width: '100%', flex: 1, mt: '70px' }}>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/generate" element={<GenerateResume />} />
+              <Route path="/edit-resume" element={<EditResume />} />
+              <Route path="/ats-checker" element={<AtsChecker />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/admin" element={<AdminPanel />} />
+            </Routes>
           </Box>
           <Footer />
         </Box>

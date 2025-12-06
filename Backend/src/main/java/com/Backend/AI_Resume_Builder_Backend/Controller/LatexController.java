@@ -12,8 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/latex")
-@CrossOrigin(
-    origins = {
+@CrossOrigin(origins = {
         "http://localhost:5173",
         "http://localhost:5174",
         "http://localhost:5175",
@@ -24,9 +23,7 @@ import java.util.Map;
         "http://127.0.0.1:5175",
         "http://127.0.0.1:5178",
         "http://127.0.0.1:3000"
-    },
-    allowCredentials = "true"
-)
+}, allowCredentials = "true")
 public class LatexController {
 
     @Autowired

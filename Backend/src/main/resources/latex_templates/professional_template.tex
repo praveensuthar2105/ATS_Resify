@@ -25,7 +25,7 @@
 %----------------------------------------------------------------------------------------
 % DOCUMENT DEFINITION
 %----------------------------------------------------------------------------------------
-\documentclass[a4paper,12pt]{article}
+\documentclass[a4paper,10pt]{article}
 
 %----------------------------------------------------------------------------------------
 % PACKAGES
@@ -35,7 +35,7 @@
 \RequirePackage{color}
 \RequirePackage{graphicx}
 \usepackage[usenames,dvipsnames]{xcolor}
-\usepackage[scale=0.9]{geometry}
+\usepackage[scale=0.95]{geometry}
 \usepackage{tabularx}
 \usepackage{enumitem}
 \newcolumntype{C}{>{\centering\arraybackslash}X}
@@ -48,14 +48,23 @@
 \hypersetup{colorlinks,breaklinks,urlcolor=linkcolour,linkcolor=linkcolour}
 \usepackage{fontawesome5}
 
-\titleformat{\section}{\Large\scshape\raggedright}{}{0em}{}[\titlerule]
-\titlespacing{\section}{0pt}{10pt}{10pt}
+% Compact spacing
+\setlength{\parskip}{2pt}
+\setlength{\parsep}{0pt}
+\setlength{\headsep}{0pt}
+\setlength{\topskip}{0pt}
+\setlength{\topmargin}{0pt}
+\setlength{\topsep}{0pt}
+\setlength{\partopsep}{0pt}
 
-% job listing environments
+\titleformat{\section}{\large\scshape\raggedright}{}{0em}{}[\titlerule]
+\titlespacing{\section}{0pt}{6pt}{4pt}
+
+% job listing environments - compact
 \newenvironment{jobshort}[2]
     {
     \begin{tabularx}{\linewidth}{@{}l X r@{}}
-    \textbf{#1} & \hfill &  #2 \\[3.75pt]
+    \textbf{#1} & \hfill &  #2 \\[2pt]
     \end{tabularx}
     }
     {
@@ -64,10 +73,10 @@
 \newenvironment{joblong}[2]
     {
     \begin{tabularx}{\linewidth}{@{}l X r@{}}
-    \textbf{#1} & \hfill &  #2 \\[3.75pt]
+    \textbf{#1} & \hfill &  #2 \\[2pt]
     \end{tabularx}
     \begin{minipage}[t]{\linewidth}
-    \begin{itemize}[nosep,after=\strut, leftmargin=1em, itemsep=3pt,label=--]
+    \begin{itemize}[nosep,after=\strut, leftmargin=1em, itemsep=2pt,label=--]
     }
     {
     \end{itemize}
@@ -116,7 +125,7 @@
 \section{Projects}
 {{#PROJECTS}}
 \begin{tabularx}{\linewidth}{ @{}l r@{} }
-	extbf{{{PROJECT_TITLE}}} & \hfill {{#GITHUB_LINK}}\href{{GITHUB_LINK}}{GitHub}\ {{/GITHUB_LINK}} \\
+\textbf{{{PROJECT_TITLE}}} & \hfill {{#GITHUB_LINK}}\href{{{GITHUB_LINK}}}{GitHub}\ {{/GITHUB_LINK}} \\
 \multicolumn{2}{@{}X@{}}{{PROJECT_DESCRIPTION}} \\
 \multicolumn{2}{@{}X@{}}{\textit{Technologies:} {{TECHNOLOGIES}}} \\
 \end{tabularx}
@@ -160,9 +169,14 @@
 % SKILLS
 %----------------------------------------------------------------------------------------
 {{#HAS_SKILLS}}
-\section{Skills}
+\section{Technical Skills}
 \begin{tabularx}{\linewidth}{@{}l X@{}}
-{{#SKILLS}}{{SKILL_TITLE}} & {{SKILL_LEVEL}} \\{{/SKILLS}}
+{{#SKILL_LANGUAGES}}\textbf{Languages:} & {{SKILL_LANGUAGES}} \\[3pt]{{/SKILL_LANGUAGES}}
+{{#SKILL_FRAMEWORKS}}\textbf{Frameworks \& Libraries:} & {{SKILL_FRAMEWORKS}} \\[3pt]{{/SKILL_FRAMEWORKS}}
+{{#SKILL_DATABASES}}\textbf{Databases:} & {{SKILL_DATABASES}} \\[3pt]{{/SKILL_DATABASES}}
+{{#SKILL_TOOLS}}\textbf{Tools \& Technologies:} & {{SKILL_TOOLS}} \\[3pt]{{/SKILL_TOOLS}}
+{{#SKILL_CLOUD}}\textbf{Cloud Platforms:} & {{SKILL_CLOUD}} \\[3pt]{{/SKILL_CLOUD}}
+{{#SKILL_OTHER}}\textbf{Other Skills:} & {{SKILL_OTHER}} \\[3pt]{{/SKILL_OTHER}}
 \end{tabularx}
 {{/HAS_SKILLS}}
 

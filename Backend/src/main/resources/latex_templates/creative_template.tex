@@ -1,6 +1,6 @@
-\documentclass[10pt]{article}
+\documentclass[9pt]{article}
 \usepackage[utf8]{inputenc}
-\usepackage[margin=0.5in]{geometry}
+\usepackage[top=0.4in,bottom=0.4in,left=0.5in,right=0.5in]{geometry}
 \usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{titlesec}
@@ -11,14 +11,23 @@
 \definecolor{accent}{RGB}{220,38,38}
 \definecolor{textgray}{RGB}{55,65,81}
 
-% Custom section formatting
+% Compact spacing
+\setlength{\parskip}{2pt}
+\setlength{\parsep}{0pt}
+\setlength{\headsep}{0pt}
+\setlength{\topskip}{0pt}
+\setlength{\topmargin}{0pt}
+\setlength{\topsep}{0pt}
+\setlength{\partopsep}{0pt}
+
+% Custom section formatting - compact
 \titleformat{\section}
-  {\color{accent}\Large\bfseries}
+  {\color{accent}\large\bfseries}
   {}{0em}
   {}
   [\color{accent}\titlerule]
 
-\titlespacing*{\section}{0pt}{12pt}{8pt}
+\titlespacing*{\section}{0pt}{6pt}{3pt}
 
 \begin{document}
 
@@ -26,16 +35,16 @@
 \begin{center}
 {\Huge\bfseries\color{accent}{{FULL_NAME}}}
 
-\vspace{8pt}
+\vspace{4pt}
 
 {\large {{EMAIL}} \textbar{} {{PHONE_NUMBER}} \textbar{} {{LOCATION}}}
 
-\vspace{5pt}
+\vspace{3pt}
 
 {{#LINKEDIN}}\href{{{LINKEDIN}}}{LinkedIn}{{/LINKEDIN}}{{#GITHUB}} \textbar{} \href{{{GITHUB}}}{GitHub}{{/GITHUB}}{{#PORTFOLIO}} \textbar{} \href{{{PORTFOLIO}}}{Portfolio}{{/PORTFOLIO}}
 \end{center}
 
-\vspace{10pt}
+\vspace{4pt}
 
 % Summary
 {{#SUMMARY}}
@@ -43,14 +52,39 @@
 \textit{{{SUMMARY}}}
 {{/SUMMARY}}
 
-% Skills - creative layout
+% Skills - creative layout, categorized
 {{#HAS_SKILLS}}
-\section*{Expertise}
-\begin{itemize}[leftmargin=0.2in,label=\textcolor{accent}{$\bullet$}]
-{{#SKILLS}}
-\item \textbf{{{SKILL_TITLE}}} -- {{SKILL_LEVEL}}
-{{/SKILLS}}
-\end{itemize}
+\section*{Technical Expertise}
+{{#SKILL_LANGUAGES}}
+\textbf{\textcolor{accent}{Languages:}} {{SKILL_LANGUAGES}}
+
+\vspace{2pt}
+{{/SKILL_LANGUAGES}}
+{{#SKILL_FRAMEWORKS}}
+\textbf{\textcolor{accent}{Frameworks \& Libraries:}} {{SKILL_FRAMEWORKS}}
+
+\vspace{2pt}
+{{/SKILL_FRAMEWORKS}}
+{{#SKILL_DATABASES}}
+\textbf{\textcolor{accent}{Databases:}} {{SKILL_DATABASES}}
+
+\vspace{2pt}
+{{/SKILL_DATABASES}}
+{{#SKILL_TOOLS}}
+\textbf{\textcolor{accent}{Tools \& Technologies:}} {{SKILL_TOOLS}}
+
+\vspace{2pt}
+{{/SKILL_TOOLS}}
+{{#SKILL_CLOUD}}
+\textbf{\textcolor{accent}{Cloud Platforms:}} {{SKILL_CLOUD}}
+
+\vspace{2pt}
+{{/SKILL_CLOUD}}
+{{#SKILL_OTHER}}
+\textbf{\textcolor{accent}{Other Skills:}} {{SKILL_OTHER}}
+
+\vspace{2pt}
+{{/SKILL_OTHER}}
 {{/HAS_SKILLS}}
 
 % Experience
@@ -61,7 +95,7 @@
 
 \textit{{{COMPANY}}} -- {{LOCATION}}
 
-\vspace{4pt}
+\vspace{2pt}
 {{RESPONSIBILITY}}
 
 \vspace{8pt}
@@ -78,7 +112,7 @@
 
 \textit{Tech Stack:} {{TECHNOLOGIES}}
 
-\vspace{8pt}
+\vspace{3pt}
 {{/PROJECTS}}
 {{/HAS_PROJECTS}}
 

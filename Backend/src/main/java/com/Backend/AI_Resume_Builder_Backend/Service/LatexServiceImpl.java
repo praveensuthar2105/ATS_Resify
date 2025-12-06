@@ -81,25 +81,25 @@ public class LatexServiceImpl implements LatexService {
         // Replace simple placeholders
         template = replacePlaceholder(template, "FULL_NAME",
                 getStringValue(personalInfo, "fullName"));
-    template = replacePlaceholder(template, "EMAIL",
-        getStringValue(personalInfo, "email"));
-    template = replacePlaceholder(template, "PHONE_NUMBER",
-        getStringValue(personalInfo, "phoneNumber"));
+        template = replacePlaceholder(template, "EMAIL",
+                getStringValue(personalInfo, "email"));
+        template = replacePlaceholder(template, "PHONE_NUMBER",
+                getStringValue(personalInfo, "phoneNumber"));
         template = replacePlaceholder(template, "LOCATION",
                 getStringValue(personalInfo, "location"));
 
         // Handle optional links
-    // Optional sections in header/footer links
-    template = handleOptionalSection(template, "LINKEDIN",
+        // Optional sections in header/footer links
+        template = handleOptionalSection(template, "LINKEDIN",
                 getStringValue(personalInfo, "linkedIn"));
         template = handleOptionalSection(template, "GITHUB",
                 getStringValue(personalInfo, "gitHub"));
         template = handleOptionalSection(template, "PORTFOLIO",
                 getStringValue(personalInfo, "portfolio"));
-    template = handleOptionalSection(template, "EMAIL",
-        getStringValue(personalInfo, "email"));
-    template = handleOptionalSection(template, "PHONE_NUMBER",
-        getStringValue(personalInfo, "phoneNumber"));
+        template = handleOptionalSection(template, "EMAIL",
+                getStringValue(personalInfo, "email"));
+        template = handleOptionalSection(template, "PHONE_NUMBER",
+                getStringValue(personalInfo, "phoneNumber"));
 
         // LinkedIn and GitHub display (without https://)
         String linkedin = getStringValue(personalInfo, "linkedIn");
@@ -134,26 +134,32 @@ public class LatexServiceImpl implements LatexService {
         // Languages
         template = handleLanguagesSection(template, resumeData);
 
-        // As a final safety step, strip any leftover Mustache-like tags so LaTeX never sees
+        // As a final safety step, strip any leftover Mustache-like tags so LaTeX never
+        // sees
         // raw markers like {{#EMAIL}} or {{UNRESOLVED}} which can introduce # into TeX.
         return sanitizeTemplateArtifacts(template);
     }
 
     /**
-     * Remove any leftover Mustache-like artifacts to avoid LaTeX errors if a placeholder/section
-     * slips through. This is a defensive cleanup that runs after all normal replacements.
+     * Remove any leftover Mustache-like artifacts to avoid LaTeX errors if a
+     * placeholder/section
+     * slips through. This is a defensive cleanup that runs after all normal
+     * replacements.
      *
      * Examples removed:
-     *  - {{#SECTION}} ... {{/SECTION}}
-     *  - {{PLACEHOLDER}}
-     *  - {{{PLACEHOLDER}}}
+     * - {{#SECTION}} ... {{/SECTION}}
+     * - {{PLACEHOLDER}}
+     * - {{{PLACEHOLDER}}}
      */
     private String sanitizeTemplateArtifacts(String template) {
-        if (template == null || template.isEmpty()) return template;
+        if (template == null || template.isEmpty())
+            return template;
 
         // 1) Remove any remaining section blocks of the form {{#NAME}} ... {{/NAME}}
-        // Use DOTALL-like behavior by matching across newlines with (?s) and reluctant quantifier
-        // Java does not support inline DOTALL in String#replaceAll, so we use (?s) at pattern start
+        // Use DOTALL-like behavior by matching across newlines with (?s) and reluctant
+        // quantifier
+        // Java does not support inline DOTALL in String#replaceAll, so we use (?s) at
+        // pattern start
         template = template.replaceAll("(?s)\\{\\{#\\s*([A-Za-z0-9_]+)\\s*\\}\\}.*?\\{\\{/\\s*\\1\\s*\\}\\}", "");
 
         // 2) Remove any remaining triple-braced placeholders {{{NAME}}}
@@ -166,9 +172,25 @@ public class LatexServiceImpl implements LatexService {
     }
 
     private String handleSkillsSection(String template, Map<String, Object> resumeData) {
-        List<Map<String, Object>> skills = getListValue(resumeData, "skills");
+        Map<String, Object> skills = getMapValue(resumeData, "skills");
 
         if (skills == null || skills.isEmpty()) {
+            template = removeSection(template, "HAS_SKILLS");
+            return template;
+        }
+
+        // Check if any skill category has content
+        boolean hasAnySkills = false;
+        List<String> categories = Arrays.asList("languages", "frameworks", "databases", "tools", "cloud", "other");
+        for (String category : categories) {
+            List<String> categorySkills = getStringListValue(skills, category);
+            if (categorySkills != null && !categorySkills.isEmpty()) {
+                hasAnySkills = true;
+                break;
+            }
+        }
+
+        if (!hasAnySkills) {
             template = removeSection(template, "HAS_SKILLS");
             return template;
         }
@@ -176,19 +198,33 @@ public class LatexServiceImpl implements LatexService {
         template = template.replace("{{#HAS_SKILLS}}", "");
         template = template.replace("{{/HAS_SKILLS}}", "");
 
-        StringBuilder skillsContent = new StringBuilder();
-        String skillTemplate = extractLoopTemplate(template, "SKILLS");
+        // Handle each skill category
+        template = handleSkillCategory(template, skills, "languages", "SKILL_LANGUAGES");
+        template = handleSkillCategory(template, skills, "frameworks", "SKILL_FRAMEWORKS");
+        template = handleSkillCategory(template, skills, "databases", "SKILL_DATABASES");
+        template = handleSkillCategory(template, skills, "tools", "SKILL_TOOLS");
+        template = handleSkillCategory(template, skills, "cloud", "SKILL_CLOUD");
+        template = handleSkillCategory(template, skills, "other", "SKILL_OTHER");
 
-        for (Map<String, Object> skill : skills) {
-            String skillEntry = skillTemplate;
-            skillEntry = skillEntry.replace("{{SKILL_TITLE}}",
-                    escapeLatexSpecialChars(getStringValue(skill, "title")));
-            skillEntry = skillEntry.replace("{{SKILL_LEVEL}}",
-                    escapeLatexSpecialChars(getStringValue(skill, "level")));
-            skillsContent.append(skillEntry);
+        return template;
+    }
+
+    private String handleSkillCategory(String template, Map<String, Object> skills, String category,
+            String placeholder) {
+        List<String> categorySkills = getStringListValue(skills, category);
+
+        if (categorySkills == null || categorySkills.isEmpty()) {
+            template = removeSection(template, placeholder);
+            return template;
         }
 
-        template = replaceLoop(template, "SKILLS", skillsContent.toString());
+        // Join skills with comma and space, then escape for LaTeX
+        String skillsString = escapeLatexSpecialChars(String.join(", ", categorySkills));
+
+        template = template.replace("{{#" + placeholder + "}}", "");
+        template = template.replace("{{/" + placeholder + "}}", "");
+        template = template.replace("{{" + placeholder + "}}", skillsString);
+
         return template;
     }
 
@@ -462,6 +498,23 @@ public class LatexServiceImpl implements LatexService {
         Object value = map.get(key);
         if (value instanceof List) {
             return (List<Map<String, Object>>) value;
+        }
+        return new ArrayList<>();
+    }
+
+    private List<String> getStringListValue(Map<String, Object> map, String key) {
+        if (map == null)
+            return new ArrayList<>();
+        Object value = map.get(key);
+        if (value instanceof List) {
+            List<?> list = (List<?>) value;
+            List<String> stringList = new ArrayList<>();
+            for (Object item : list) {
+                if (item != null) {
+                    stringList.add(item.toString());
+                }
+            }
+            return stringList;
         }
         return new ArrayList<>();
     }

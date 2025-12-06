@@ -1,9 +1,13 @@
-\documentclass[11pt,a4paper,sans]{moderncv}
+\documentclass[10pt,a4paper,sans]{moderncv}
 \moderncvstyle{banking}
 \moderncvcolor{blue}
 \usepackage[utf8]{inputenc}
-\usepackage[scale=0.85]{geometry}
+\usepackage[scale=0.92]{geometry}
 \usepackage{fontawesome}
+
+% Compact spacing
+\setlength{\hintscolumnwidth}{2.5cm}
+\setlength{\separatorcolumnwidth}{0.5em}
 
 % Personal information
 \name{{{FULL_NAME}}}{}
@@ -26,12 +30,27 @@
 {{SUMMARY}}
 {{/SUMMARY}}
 
-% Skills
+% Skills - categorized
 {{#HAS_SKILLS}}
 \section{Technical Skills}
-{{#SKILLS}}
-\cvitem{{{SKILL_TITLE}}}{{{SKILL_LEVEL}}}
-{{/SKILLS}}
+{{#SKILL_LANGUAGES}}
+\cvitem{Languages}{{{SKILL_LANGUAGES}}}
+{{/SKILL_LANGUAGES}}
+{{#SKILL_FRAMEWORKS}}
+\cvitem{Frameworks \& Libraries}{{{SKILL_FRAMEWORKS}}}
+{{/SKILL_FRAMEWORKS}}
+{{#SKILL_DATABASES}}
+\cvitem{Databases}{{{SKILL_DATABASES}}}
+{{/SKILL_DATABASES}}
+{{#SKILL_TOOLS}}
+\cvitem{Tools \& Technologies}{{{SKILL_TOOLS}}}
+{{/SKILL_TOOLS}}
+{{#SKILL_CLOUD}}
+\cvitem{Cloud Platforms}{{{SKILL_CLOUD}}}
+{{/SKILL_CLOUD}}
+{{#SKILL_OTHER}}
+\cvitem{Other Skills}{{{SKILL_OTHER}}}
+{{/SKILL_OTHER}}
 {{/HAS_SKILLS}}
 
 % Professional Experience

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Box, Card, CardContent, Typography, Button, Grid, Divider, Chip, CircularProgress, LinearProgress, Snackbar, Alert } from '@mui/material';
+import { Box, Card, CardContent, Typography, Button, Grid, Divider, Chip, CircularProgress, LinearProgress, Snackbar, Alert, Stack } from '@mui/material';
 import { UploadOutlined, CheckCircleOutlined, CloseCircleOutlined, FileTextOutlined } from '@ant-design/icons';
 import { resumeAPI } from '../services/api';
 
@@ -152,38 +152,83 @@ const AtsChecker = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#F9FAFB', p: '32px 16px', width: '100%' }}>
-      <Box sx={{ maxWidth: '896px', mx: 'auto', width: '100%' }}>
-        <Card sx={{ boxShadow: 3, mb: 3 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 40%, #ffffff 100%)', p: '32px 16px', width: '100%' }}>
+      <Box sx={{ maxWidth: '1100px', mx: 'auto', width: '100%' }}>
+        <Card sx={{ boxShadow: 6, mb: 4, background: 'linear-gradient(135deg, #2563eb 0%, #4f46e5 60%, #1e293b 100%)', color: 'white' }}>
           <CardContent>
-            <Title level={2} sx={{ textAlign: 'center', mb: 2 }}>
-              <CheckCircleOutlined style={{ marginRight: 8 }} />
-              ATS Score Checker
-            </Title>
-            <Paragraph sx={{ textAlign: 'center', color: 'text.secondary', mb: 3 }}>
-              Upload your resume to check how well it performs with Applicant Tracking Systems (ATS).
-              Get instant feedback and suggestions to improve your resume's compatibility.
-            </Paragraph>
-          <Box sx={{ textAlign: 'center', border: '1px dashed #d0d7de', borderRadius: 2, p: 4, mb: 3, bgcolor: '#fff' }}>
-            <Box sx={{ fontSize: 48, color: '#1976d2', mb: 1 }}>
-              <FileTextOutlined />
-            </Box>
-            <Typography variant="body1" sx={{ mb: 1 }}>Click the button below to upload</Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>Support PDF and Word documents. Max size: 5MB</Typography>
-            <Button variant="contained" startIcon={<UploadOutlined />} component="label" disabled={uploading}>
-              Select File
-              <input hidden type="file" accept=".pdf,.doc,.docx" onChange={onPickFile} />
-            </Button>
-          </Box>
-
-          {uploading && (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <CircularProgress />
-              <Paragraph sx={{ mt: 2, color: 'text.secondary' }}>Analyzing your resume...</Paragraph>
-            </Box>
-          )}
+            <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" justifyContent="space-between">
+              <Box>
+                <Typography variant="overline" sx={{ letterSpacing: 1, opacity: 0.85 }}>ATS READINESS</Typography>
+                <Title level={2} sx={{ color: 'white', mb: 1, mt: 0.5 }}>Score your resume for ATS in minutes</Title>
+                <Paragraph sx={{ color: 'rgba(255,255,255,0.9)', maxWidth: 680, mb: 2 }}>
+                  Upload your PDF or Word resume to get instant scoring, keyword coverage, and section-level guidance tailored for Applicant Tracking Systems.
+                </Paragraph>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  <Chip label="PDF / DOC / DOCX" sx={{ bgcolor: 'rgba(255,255,255,0.14)', color: 'white', borderColor: 'rgba(255,255,255,0.4)' }} variant="outlined" />
+                  <Chip label="< 5 MB" sx={{ bgcolor: 'rgba(255,255,255,0.14)', color: 'white', borderColor: 'rgba(255,255,255,0.4)' }} variant="outlined" />
+                  <Chip label="Keyword insights" sx={{ bgcolor: 'rgba(255,255,255,0.14)', color: 'white', borderColor: 'rgba(255,255,255,0.4)' }} variant="outlined" />
+                </Stack>
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
+                <Chip label="Fast analysis" color="success" sx={{ fontWeight: 700, bgcolor: 'rgba(16,185,129,0.18)', color: 'white', borderColor: 'rgba(255,255,255,0.35)' }} variant="outlined" />
+                <Chip label="ATS friendly templates" sx={{ bgcolor: 'rgba(255,255,255,0.14)', color: 'white', borderColor: 'rgba(255,255,255,0.4)' }} variant="outlined" />
+              </Box>
+            </Stack>
           </CardContent>
         </Card>
+
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={7}>
+            <Card sx={{ boxShadow: 3, mb: 3 }}>
+              <CardContent>
+                <Title level={3} sx={{ mb: 1 }}>Upload & analyze</Title>
+                <Paragraph sx={{ color: 'text.secondary', mb: 2 }}>Drop in your resume to get ATS scoring, keyword coverage, and prioritized fixes.</Paragraph>
+
+                <Box sx={{ textAlign: 'center', border: '1px dashed #d0d7de', borderRadius: 2, p: 4, mb: 3, bgcolor: '#fff' }}>
+                  <Box sx={{ fontSize: 48, color: '#2563eb', mb: 1 }}>
+                    <FileTextOutlined />
+                  </Box>
+                  <Typography variant="body1" sx={{ mb: 1 }}>Click to select a file or drag and drop</Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>Accepted: PDF, DOC, DOCX • Max 5MB</Typography>
+                  <Button variant="contained" startIcon={<UploadOutlined />} component="label" disabled={uploading}>
+                    {uploading ? 'Uploading...' : 'Select File'}
+                    <input hidden type="file" accept=".pdf,.doc,.docx" onChange={onPickFile} />
+                  </Button>
+                </Box>
+
+                {uploading && (
+                  <Box sx={{ textAlign: 'center', py: 3 }}>
+                    <CircularProgress />
+                    <Paragraph sx={{ mt: 2, color: 'text.secondary' }}>Analyzing your resume...</Paragraph>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={5}>
+            <Card sx={{ boxShadow: 3, mb: 3 }}>
+              <CardContent>
+                <Title level={4} sx={{ mb: 1 }}>ATS-friendly checklist</Title>
+                <Paragraph sx={{ color: 'text.secondary', mb: 2 }}>Quick wins to boost your score before you upload.</Paragraph>
+                <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, display: 'grid', gap: 1.25 }}>
+                  {[
+                    'Use standard headings: Summary, Experience, Education, Skills',
+                    'Keep fonts simple (Inter, Arial, Calibri) and avoid images',
+                    'Mirror keywords from the job description naturally',
+                    'Prefer bullet points, avoid dense paragraphs',
+                    'Export to PDF for consistency unless a DOCX is required',
+                  ].map((item, idx) => (
+                    <Box key={idx} component="li" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                      <CheckCircleOutlined style={{ color: '#10b981', fontSize: 18, marginTop: 2 }} />
+                      <Text>{item}</Text>
+                    </Box>
+                  ))}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
 
         {atsResult && (
           <Card sx={{ boxShadow: 3 }}>
