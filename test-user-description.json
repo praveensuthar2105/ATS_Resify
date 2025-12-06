@@ -1,0 +1,66 @@
+{
+  "userDescription": "I am a Full Stack Software Engineer with 5 years of experience in developing scalable web applications. I hold a Bachelor's degree in Computer Science from Stanford University, graduated in 2019 with a GPA of 3.8. I have worked at Google as a Senior Software Engineer from 2021 to present, where I led the development of a microservices architecture that improved system performance by 40%. Previously, I worked at Amazon as a Software Developer from 2019 to 2021, building cloud-based solutions using AWS and Java Spring Boot. My technical skills include Java, Python, JavaScript, React, Node.js, Spring Boot, Docker, Kubernetes, AWS, and MySQL. I have completed several notable projects including an E-commerce Platform using React and Node.js that handles 10,000+ daily transactions, and a Real-time Chat Application built with WebSocket and Redis for instant messaging. I am passionate about clean code, system design, and continuous learning.",
+  "testResumeData": {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "+1-555-0123",
+    "address": "San Francisco, CA",
+    "summary": "Full Stack Software Engineer with 5 years of experience in developing scalable web applications. Passionate about clean code, system design, and continuous learning.",
+    "educationList": [
+      {
+        "degree": "Bachelor of Science in Computer Science",
+        "institution": "Stanford University",
+        "year": "2019",
+        "details": "GPA: 3.8/4.0. Dean's List. Member of ACM Computer Science Society."
+      }
+    ],
+    "experienceList": [
+      {
+        "title": "Senior Software Engineer",
+        "company": "Google",
+        "duration": "2021 - Present",
+        "description": "Led development of microservices architecture improving system performance by 40%. Mentored 5 junior developers. Implemented CI/CD pipelines reducing deployment time by 60%."
+      },
+      {
+        "title": "Software Developer",
+        "company": "Amazon",
+        "duration": "2019 - 2021",
+        "description": "Built cloud-based solutions using AWS and Java Spring Boot. Developed RESTful APIs serving 1M+ requests daily. Optimized database queries reducing response time by 50%."
+      }
+    ],
+    "skills": [
+      "Java",
+      "Python",
+      "JavaScript",
+      "React",
+      "Node.js",
+      "Spring Boot",
+      "Docker",
+      "Kubernetes",
+      "AWS",
+      "MySQL",
+      "MongoDB",
+      "Redis",
+      "Git",
+      "Jenkins",
+      "Microservices"
+    ],
+    "projects": [
+      {
+        "name": "E-commerce Platform",
+        "description": "Full-stack e-commerce application using React and Node.js handling 10,000+ daily transactions with payment integration",
+        "link": "https://github.com/johndoe/ecommerce"
+      },
+      {
+        "name": "Real-time Chat Application",
+        "description": "WebSocket-based chat app with Redis for caching and instant messaging supporting 1000+ concurrent users",
+        "link": "https://github.com/johndoe/chatapp"
+      },
+      {
+        "name": "Task Management System",
+        "description": "Collaborative task tracker with drag-and-drop interface built with React DnD and Spring Boot backend",
+        "link": "https://github.com/johndoe/taskmanager"
+      }
+    ]
+  }
+}
