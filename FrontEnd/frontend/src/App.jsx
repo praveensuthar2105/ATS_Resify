@@ -1,6 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline, Box, Container } from '@mui/material';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
@@ -13,13 +13,45 @@ import AuthCallback from './pages/AuthCallback';
 import AdminPanel from './pages/AdminPanel';
 import './App.css';
 
+// 404 Not Found Component
+const NotFound = () => (
+  <Box sx={{ 
+    display: 'flex', 
+    flexDirection: 'column', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    minHeight: '60vh',
+    textAlign: 'center',
+    p: 4 
+  }}>
+    <Box sx={{ fontSize: '72px', mb: 2 }}>🔍</Box>
+    <Box component="h1" sx={{ fontSize: '2rem', fontWeight: 700, mb: 1, color: '#1f2937' }}>
+      Page Not Found
+    </Box>
+    <Box sx={{ color: '#6b7280', mb: 3 }}>
+      The page you're looking for doesn't exist or has been moved.
+    </Box>
+    <Link to="/" style={{ 
+      color: '#6366f1', 
+      textDecoration: 'none', 
+      fontWeight: 600,
+      padding: '12px 24px',
+      border: '2px solid #6366f1',
+      borderRadius: '8px',
+      transition: 'all 0.2s'
+    }}>
+      ← Back to Home
+    </Link>
+  </Box>
+);
+
 const theme = createTheme({
   palette: {
-    primary: { main: '#4F46E5' },
-    success: { main: '#10B981' },
-    warning: { main: '#F59E0B' },
-    error: { main: '#EF4444' },
-    info: { main: '#3B82F6' },
+    primary: { main: '#6366f1' },
+    success: { main: '#22c55e' },
+    warning: { main: '#f59e0b' },
+    error: { main: '#ef4444' },
+    info: { main: '#3b82f6' },
     background: { default: '#ffffff' },
   },
   shape: { borderRadius: 8 },
@@ -28,27 +60,34 @@ const theme = createTheme({
   },
 });
 
+function AppContent() {
+  return (
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
+      <Navbar />
+      <Box component="main" sx={{ width: '100%', flex: 1, mt: '70px' }}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/generate" element={<GenerateResume />} />
+          <Route path="/edit-resume" element={<EditResume />} />
+          <Route path="/ats-checker" element={<AtsChecker />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Box>
+      <Footer />
+    </Box>
+  );
+}
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
-          <Navbar />
-          <Box component="main" sx={{ width: '100%', flex: 1, mt: '70px' }}>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/generate" element={<GenerateResume />} />
-              <Route path="/edit-resume" element={<EditResume />} />
-              <Route path="/ats-checker" element={<AtsChecker />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/admin" element={<AdminPanel />} />
-            </Routes>
-          </Box>
-          <Footer />
-        </Box>
+        <AppContent />
       </Router>
     </ThemeProvider>
   );

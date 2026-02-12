@@ -4,10 +4,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class GeminiService {
-    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+    private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent";
     private final String apiKey;
     private final RestClient restClient;
 
@@ -20,9 +29,21 @@ public class GeminiService {
         this.restClient = restClientBuilder.baseUrl(GEMINI_API_URL).build();
     }
 
-    public String generateContent(String prompt) {
-        String requestBody = String.format("{\"contents\":[{\"parts\":[{\"text\":\"%s\"}]}]}",
-                prompt.replace("\"", "\\\""));
+    public Optional<String> generateContent(String prompt) {
+        String requestBody;
+        try {
+            Map<String, Object> request = Map.of(
+                    "contents", List.of(Map.of(
+                            "parts", List.of(Map.of("text", prompt)))),
+                    "generationConfig", Map.of(
+                            "temperature", 0,
+                            "topP", 1,
+                            "topK", 1,
+                            "responseMimeType", "application/json"));
+            requestBody = OBJECT_MAPPER.writeValueAsString(request);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize Gemini request", e);
+        }
 
         JsonNode response = restClient.post()
                 .uri(uriBuilder -> uriBuilder.queryParam("key", apiKey).build())
@@ -37,10 +58,21 @@ public class GeminiService {
                 JsonNode content = candidates.get(0).path("content");
                 JsonNode parts = content.path("parts");
                 if (parts.isArray() && !parts.isEmpty()) {
-                    return parts.get(0).path("text").asText("");
+                    String text = parts.get(0).path("text").asText("");
+                    if (!text.isEmpty()) {
+                        log.info("Gemini response received ({} chars)", text.length());
+                        log.debug("===== GEMINI AI RAW RESPONSE (first 1000 chars) =====");
+                        log.debug("{}", text.substring(0, Math.min(text.length(), 1000)));
+                        if (text.length() > 1000) {
+                            log.debug("... ({} total chars)", text.length());
+                        }
+                        log.debug("===== END GEMINI AI RESPONSE =====");
+                        return Optional.of(text);
+                    }
                 }
             }
         }
-        return "";
+        log.warn("Gemini returned empty or unparseable response");
+        return Optional.empty();
     }
 }

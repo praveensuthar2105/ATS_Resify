@@ -6,6 +6,7 @@
 \usepackage{titlesec}
 \usepackage{hyperref}
 \usepackage{xcolor}
+\usepackage{fontawesome5}
 
 % Define colors
 \definecolor{accent}{RGB}{220,38,38}
@@ -106,13 +107,13 @@
 {{#HAS_PROJECTS}}
 \section*{Featured Projects}
 {{#PROJECTS}}
-\textbf{\large {{PROJECT_TITLE}}}{{#GITHUB_LINK}} -- \href{{{GITHUB_LINK}}}{\textcolor{accent}{View on GitHub}}{{/GITHUB_LINK}}
+\textbf{\large \textcolor{accent}{{{PROJECT_TITLE}}}}{{#GITHUB_LINK}} -- \href{{{GITHUB_LINK}}}{\textcolor{accent}{\faGithub\ GitHub}}{{/GITHUB_LINK}}
 
 {{PROJECT_DESCRIPTION}}
 
-\textit{Tech Stack:} {{TECHNOLOGIES}}
+\textit{\textcolor{accent}{Tech Stack:}} {{TECHNOLOGIES}}
 
-\vspace{3pt}
+\vspace{5pt}
 {{/PROJECTS}}
 {{/HAS_PROJECTS}}
 
@@ -146,11 +147,5 @@
 {{/ACHIEVEMENTS}}
 \end{itemize}
 {{/HAS_ACHIEVEMENTS}}
-
-% Languages
-{{#HAS_LANGUAGES}}
-\section*{Languages}
-{{LANGUAGES_LIST}}
-{{/HAS_LANGUAGES}}
 
 \end{document}

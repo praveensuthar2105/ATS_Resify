@@ -81,10 +81,6 @@ const AdminPanel = () => {
     };
 
     verifyAdmin();
-
-    // Verify admin status every 30 seconds
-    const interval = setInterval(verifyAdmin, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   const fetchUsers = async () => {
@@ -246,7 +242,7 @@ const AdminPanel = () => {
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -264,7 +260,7 @@ const AdminPanel = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -282,7 +278,7 @@ const AdminPanel = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">

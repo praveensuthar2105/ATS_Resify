@@ -1,0 +1,56 @@
+@startuml AI_Resume_Builder_Data_Flow_Simplified
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+title AI Resume Builder - Simplified Data Flow
+
+actor User
+participant "React\nFrontend" as Frontend
+participant "Spring Boot\nBackend" as Backend
+participant "Gemini AI" as AI
+participant "LaTeX\nEngine" as LaTeX
+database "Templates" as Templates
+
+== 1. Generate Resume ==
+
+User -> Frontend: Enter description\n+ Select template
+Frontend -> Backend: POST /api/resume/generate
+Backend -> AI: Send prompt
+AI --> Backend: Return JSON data
+Backend --> Frontend: Resume data
+Frontend --> User: Display resume
+
+== 2. Generate LaTeX ==
+
+User -> Frontend: Click "View LaTeX"
+Frontend -> Backend: POST /api/latex/generate
+Backend -> Templates: Load template
+Templates --> Backend: Template file
+Backend -> Backend: Fill template\n+ Format sections\n+ Ensure 3 points/project
+Backend --> Frontend: LaTeX code
+Frontend --> User: Show in editor
+
+== 3. Compile PDF ==
+
+User -> Frontend: Click "Compile"
+Frontend -> Backend: POST /api/latex/compile
+Backend -> LaTeX: Run pdflatex
+LaTeX --> Backend: PDF bytes
+Backend --> Frontend: PDF file
+Frontend --> User: Display PDF
+
+== 4. Download ==
+
+User -> Frontend: Click "Download"
+Frontend --> User: Save PDF
+
+note over Backend
+**Key Features:**
+• Multi-layer validation
+• Template-specific formatting
+• Auto-generate fallback content
+• Error handling at each step
+end note
+
+@enduml

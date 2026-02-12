@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Container, Box, Button, Stack, Typography, Avatar, Menu, MenuItem, Divider } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
-import { HomeOutlined, FileTextOutlined, CheckCircleOutlined, InfoCircleOutlined, StarOutlined, GoogleOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons';
+import './Navbar.css';
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = useState(null);
   const [user, setUser] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const menuRef = useRef(null);
 
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem('authToken');
     const name = localStorage.getItem('userName');
     const email = localStorage.getItem('userEmail');
@@ -20,17 +20,26 @@ const Navbar = () => {
     }
   }, []);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close mobile nav on route change
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
+
   const handleLogin = () => {
-    // Redirect to backend OAuth2 endpoint
-    window.location.href = 'http://localhost:8081/oauth2/authorization/google';
-  };
-
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
+    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+    window.location.href = `${backendUrl}/oauth2/authorization/google`;
   };
 
   const handleLogout = () => {
@@ -39,187 +48,153 @@ const Navbar = () => {
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userRole');
     setUser(null);
-    handleMenuClose();
-    navigate('/');
-    window.location.reload();
+    setMenuOpen(false);
+    // Full page refresh to clear all state and force re-authentication
+    window.location.href = '/';
   };
 
-  const links = [
-    { to: '/', label: 'Home', icon: <HomeOutlined /> },
-    { to: '/generate', label: 'Create Resume', icon: <FileTextOutlined /> },
-    { to: '/ats-checker', label: 'ATS Checker', icon: <CheckCircleOutlined /> },
-    { to: '/features', label: 'Features', icon: <StarOutlined /> },
-    { to: '/about', label: 'About', icon: <InfoCircleOutlined /> },
+  const baseLinks = [
+    { to: '/', label: 'Home' },
+    { to: '/generate', label: 'Create Resume' },
+    { to: '/ats-checker', label: 'ATS Checker' },
+    { to: '/features', label: 'Features' },
   ];
 
-  // Add Admin Panel link if user is admin (check dynamically)
   const currentRole = localStorage.getItem('userRole');
-  if (currentRole === 'ADMIN') {
-    links.push({ to: '/admin', label: 'Admin Panel', icon: <UserOutlined /> });
-  }
+  const links = currentRole === 'ADMIN'
+    ? [...baseLinks, { to: '/admin', label: 'Admin Panel' }]
+    : baseLinks;
+
+  const getInitials = (name) => {
+    if (!name) return '?';
+    return name.split(' ').filter(Boolean).map((n) => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+  };
 
   return (
-    <AppBar 
-      position="fixed" 
-      elevation={0} 
-      sx={{ 
-        bgcolor: 'white', 
-        color: '#1F2937',
-        borderBottom: '1px solid #E5E7EB',
-        backdropFilter: 'blur(10px)',
-      }}
-    >
-      <Container maxWidth="lg">
-        <Toolbar disableGutters sx={{ height: 70, display: 'flex', justifyContent: 'space-between' }}>
-          {/* Logo */}
-          <Button 
-            component={RouterLink} 
-            to="/" 
-            sx={{ 
-              textTransform: 'none',
-              '&:hover': { bgcolor: 'transparent' }
-            }}
-          >
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                fontWeight: 800,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              Resume.AI
-            </Typography>
-          </Button>
+    <header className="navbar">
+      <div className="navbar-container">
+        {/* Logo - clicks to home */}
+        <RouterLink to="/" className="navbar-logo" onClick={() => setMobileNavOpen(false)}>
+          <div className="logo-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="2" width="18" height="20" rx="3" stroke="currentColor" strokeWidth="2"/>
+              <path d="M8 7h8M8 11h8M8 15h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="17" cy="17" r="4" fill="#818cf8" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M16 17l1 1 2-2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <span className="logo-text">Resume<span className="logo-dot">.</span>AI</span>
+        </RouterLink>
 
-          {/* Navigation Links */}
-          <Stack direction="row" spacing={0.5} alignItems="center">
-            {links.map((link) => (
-              <Button
-                key={link.to}
-                component={RouterLink}
-                to={link.to}
-                sx={{ 
-                  textTransform: 'none',
-                  px: 2,
-                  py: 1,
-                  color: location.pathname === link.to ? '#667eea' : '#6B7280',
-                  fontWeight: location.pathname === link.to ? 600 : 500,
-                  borderBottom: location.pathname === link.to ? '2px solid #667eea' : '2px solid transparent',
-                  borderRadius: 0,
-                  '&:hover': {
-                    bgcolor: '#F9FAFB',
-                    color: '#667eea',
-                  },
-                  transition: 'all 0.2s',
-                }}
-              >
-                {link.label}
-              </Button>
-            ))}
-            
-            {/* Login/User Menu */}
-            {user ? (
-              <>
-                <Button
-                  onClick={handleMenuOpen}
-                  sx={{
-                    ml: 2,
-                    textTransform: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                  }}
-                >
-                  <Avatar 
-                    sx={{ 
-                      width: 32, 
-                      height: 32, 
-                      bgcolor: '#667eea',
-                      fontSize: '0.875rem'
-                    }}
-                  >
-                    {user.name.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Typography sx={{ fontWeight: 500, color: '#1F2937' }}>
-                    {user.name.split(' ')[0]}
-                  </Typography>
-                </Button>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={handleMenuClose}
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  sx={{ mt: 1 }}
-                >
-                  <Box sx={{ px: 2, py: 1 }}>
-                    <Typography variant="body2" fontWeight={600}>
-                      {user.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {user.email}
-                    </Typography>
-                  </Box>
-                  <Divider />
-                  <MenuItem onClick={handleLogout}>
-                    <LogoutOutlined style={{ marginRight: 8 }} />
-                    Logout
-                  </MenuItem>
-                </Menu>
-              </>
-            ) : (
-              <Button
-                onClick={handleLogin}
-                variant="outlined"
-                startIcon={<GoogleOutlined />}
-                sx={{
-                  ml: 2,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
-                  background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
-                  color: 'white',
-                  border: 'none',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)',
-                    boxShadow: '0 6px 16px rgba(37, 99, 235, 0.4)',
-                    transform: 'translateY(-2px)',
-                  },
-                  transition: 'all 0.2s',
-                }}
-              >
-                Login with Google
-              </Button>
-            )}
-            
-            {/* CTA Button */}
-            <Button
-              component={RouterLink}
-              to="/generate"
-              variant="contained"
-              sx={{
-                ml: 2,
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 3,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-                '&:hover': {
-                  boxShadow: '0 6px 16px rgba(102, 126, 234, 0.4)',
-                  transform: 'translateY(-1px)',
-                },
-                transition: 'all 0.2s',
-              }}
+        {/* Desktop Navigation Links */}
+        <nav className="navbar-nav">
+          {links.map((link) => (
+            <RouterLink
+              key={link.to}
+              to={link.to}
+              className={`nav-link ${location.pathname === link.to ? 'active' : ''}`}
             >
+              {link.label}
+            </RouterLink>
+          ))}
+        </nav>
+
+        {/* Right Side Actions */}
+        <div className="navbar-actions">
+          {user ? (
+            <>
+              <div className="user-menu" ref={menuRef}>
+                <button className="user-button" onClick={() => setMenuOpen(!menuOpen)}>
+                  <div className="user-avatar">{getInitials(user.name)}</div>
+                  <span className="user-name">{user.name.split(' ')[0]}</span>
+                  <svg className="user-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                
+                {menuOpen && (
+                  <div className="dropdown-menu">
+                    <div className="dropdown-header">
+                      <div className="dropdown-avatar">{getInitials(user.name)}</div>
+                      <div className="dropdown-info">
+                        <span className="dropdown-name">{user.name}</span>
+                        <span className="dropdown-email">{user.email}</span>
+                      </div>
+                    </div>
+                    <div className="dropdown-divider"></div>
+                    <RouterLink to="/generate" className="dropdown-item" onClick={() => setMenuOpen(false)}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                      Create Resume
+                    </RouterLink>
+                    <RouterLink to="/ats-checker" className="dropdown-item" onClick={() => setMenuOpen(false)}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9 11l3 3L22 4" />
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                      </svg>
+                      ATS Checker
+                    </RouterLink>
+                    <div className="dropdown-divider"></div>
+                    <button className="dropdown-item logout" onClick={handleLogout}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                      </svg>
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <button className="btn-signup" onClick={handleLogin}>
               Get Started
-            </Button>
-          </Stack>
-        </Toolbar>
-      </Container>
-    </AppBar>
+            </button>
+          )}
+
+          {/* Mobile Hamburger */}
+          <button
+            className={`mobile-menu-btn ${mobileNavOpen ? 'open' : ''}`}
+            onClick={() => setMobileNavOpen(!mobileNavOpen)}
+            aria-label="Toggle menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Navigation */}
+      {mobileNavOpen && (
+        <div className="mobile-nav">
+          {links.map((link) => (
+            <RouterLink
+              key={link.to}
+              to={link.to}
+              className={`mobile-nav-link ${location.pathname === link.to ? 'active' : ''}`}
+            >
+              {link.label}
+            </RouterLink>
+          ))}
+          {user ? (
+            <div className="mobile-auth-section">
+              <div className="mobile-user-info">
+                <div className="avatar">{getInitials(user.name)}</div>
+                <span className="user-name">{user.name}</span>
+              </div>
+              <button className="btn-logout-mobile" onClick={handleLogout}>Logout</button>
+            </div>
+          ) : (
+            <div className="mobile-auth-btns">
+              <button className="btn-signup" onClick={handleLogin}>Get Started</button>
+            </div>
+          )}
+        </div>
+      )}
+    </header>
   );
 };
 

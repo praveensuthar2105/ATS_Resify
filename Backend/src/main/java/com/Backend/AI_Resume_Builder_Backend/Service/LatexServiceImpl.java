@@ -22,7 +22,7 @@ public class LatexServiceImpl implements LatexService {
         String template = loadLatexTemplate(templateType);
 
         // Populate template with data
-        String latexCode = populateTemplate(template, resumeData);
+        String latexCode = populateTemplate(template, resumeData, templateType);
 
         return latexCode;
     }
@@ -74,7 +74,7 @@ public class LatexServiceImpl implements LatexService {
         }
     }
 
-    private String populateTemplate(String template, Map<String, Object> resumeData) {
+    private String populateTemplate(String template, Map<String, Object> resumeData, String templateType) {
         // Extract personal information
         Map<String, Object> personalInfo = getMapValue(resumeData, "personalInformation");
 
@@ -120,7 +120,7 @@ public class LatexServiceImpl implements LatexService {
         template = handleExperienceSection(template, resumeData);
 
         // Projects
-        template = handleProjectsSection(template, resumeData);
+        template = handleProjectsSection(template, resumeData, templateType);
 
         // Education
         template = handleEducationSection(template, resumeData);
@@ -252,8 +252,40 @@ public class LatexServiceImpl implements LatexService {
                     escapeLatexSpecialChars(getStringValue(exp, "location")));
             expEntry = expEntry.replace("{{DURATION}}",
                     escapeLatexSpecialChars(getStringValue(exp, "duration")));
-            expEntry = expEntry.replace("{{RESPONSIBILITY}}",
-                    escapeLatexSpecialChars(getStringValue(exp, "responsibility")));
+
+            // Handle responsibility - split by bullets or newlines and create multiple
+            // \resumeItem entries
+            String responsibility = getStringValue(exp, "responsibility");
+            StringBuilder responsibilityItems = new StringBuilder();
+
+            if (responsibility != null && !responsibility.trim().isEmpty()) {
+                // Split by common bullet separators: bullets (•, -, *), newlines, or numbered
+                // points
+                String[] points = responsibility.split("(?m)^\\s*[-•*]\\s*|(?m)^\\s*\\d+\\.\\s*|\\n+");
+
+                for (String point : points) {
+                    String trimmedPoint = point.trim();
+                    if (!trimmedPoint.isEmpty()) {
+                        responsibilityItems.append("      \\resumeItem{")
+                                .append(escapeLatexSpecialChars(trimmedPoint))
+                                .append("}\n");
+                    }
+                }
+            }
+
+            // If no items were created, add a placeholder item to avoid empty list
+            if (responsibilityItems.length() == 0) {
+                responsibilityItems.append("      \\resumeItem{Responsibility details pending}\n");
+            }
+
+            // Replace placeholder with items (don't trim the content as it contains
+            // necessary whitespace)
+            String responsibilityContent = responsibilityItems.toString();
+            // Remove only the trailing newline if present
+            if (responsibilityContent.endsWith("\n")) {
+                responsibilityContent = responsibilityContent.substring(0, responsibilityContent.length() - 1);
+            }
+            expEntry = expEntry.replace("{{RESPONSIBILITY}}", responsibilityContent);
             expContent.append(expEntry);
         }
 
@@ -261,7 +293,7 @@ public class LatexServiceImpl implements LatexService {
         return template;
     }
 
-    private String handleProjectsSection(String template, Map<String, Object> resumeData) {
+    private String handleProjectsSection(String template, Map<String, Object> resumeData, String templateType) {
         List<Map<String, Object>> projects = getListValue(resumeData, "projects");
 
         if (projects == null || projects.isEmpty()) {
@@ -277,10 +309,23 @@ public class LatexServiceImpl implements LatexService {
 
         for (Map<String, Object> project : projects) {
             String projEntry = projTemplate;
+            String projectTitle = getStringValue(project, "title");
             projEntry = projEntry.replace("{{PROJECT_TITLE}}",
-                    escapeLatexSpecialChars(getStringValue(project, "title")));
-            projEntry = projEntry.replace("{{PROJECT_DESCRIPTION}}",
-                    escapeLatexSpecialChars(getStringValue(project, "description")));
+                    escapeLatexSpecialChars(projectTitle));
+
+            // Handle project description - enforce exactly 3 point descriptions (6 lines
+            // total)
+            String description = getStringValue(project, "description");
+            String descriptionContent = formatProjectDescription(description, projectTitle, templateType);
+
+            // CRITICAL: Ensure description content is never empty
+            if (descriptionContent == null || descriptionContent.trim().isEmpty()) {
+                System.err.println("CRITICAL ERROR: Description content is empty for project: " + projectTitle);
+                descriptionContent = generateFallbackProjectDescription(projectTitle, templateType);
+                System.err.println("  Using fallback: " + descriptionContent);
+            }
+
+            projEntry = projEntry.replace("{{PROJECT_DESCRIPTION}}", descriptionContent);
 
             // Handle technologies (could be array or string)
             Object techObj = project.get("technologiesUsed");
@@ -399,28 +444,8 @@ public class LatexServiceImpl implements LatexService {
     }
 
     private String handleLanguagesSection(String template, Map<String, Object> resumeData) {
-        List<?> languages = getListValue(resumeData, "languages");
-
-        if (languages == null || languages.isEmpty()) {
-            template = removeSection(template, "HAS_LANGUAGES");
-            return template;
-        }
-
-        template = template.replace("{{#HAS_LANGUAGES}}", "");
-        template = template.replace("{{/HAS_LANGUAGES}}", "");
-
-        // Convert languages to comma-separated string
-        List<String> langNames = new ArrayList<>();
-        for (Object lang : languages) {
-            if (lang instanceof Map) {
-                langNames.add(getStringValue((Map<String, Object>) lang, "name"));
-            } else if (lang instanceof String) {
-                langNames.add((String) lang);
-            }
-        }
-
-        template = template.replace("{{LANGUAGES_LIST}}",
-                escapeLatexSpecialChars(String.join(", ", langNames)));
+        // Always remove the Languages section - languages are not included in resume
+        template = removeSection(template, "HAS_LANGUAGES");
         return template;
     }
 
@@ -524,5 +549,174 @@ public class LatexServiceImpl implements LatexService {
             return "";
         Object value = map.get(key);
         return value != null ? value.toString() : "";
+    }
+
+    /**
+     * Format project description based on template type.
+     * - professional/ats: Returns \\resumeItem{...} entries
+     * - modern: Returns bullet points with \\ separators for cventry context
+     * - creative: Returns bullet points or plain text
+     */
+    private String formatProjectDescription(String description, String projectTitle, String templateType) {
+        // Parse and ensure exactly 3 points with fallback generation
+        List<String> points = parseDescriptionPoints(description, projectTitle);
+
+        // DEBUG: Log the points being formatted
+        System.err.println("DEBUG: Formatting " + points.size() + " points for project: " + projectTitle);
+        for (int i = 0; i < points.size(); i++) {
+            System.err.println("  Point " + (i + 1) + ": " + points.get(i));
+        }
+
+        if ("modern".equals(templateType)) {
+            // For modern template (cventry context), use bullet points with \\ separators
+            StringBuilder result = new StringBuilder();
+            for (int i = 0; i < points.size(); i++) {
+                result.append("\\textbullet~").append(escapeLatexSpecialChars(points.get(i)));
+                if (i < points.size() - 1) {
+                    result.append(" \\\\");
+                }
+            }
+            return result.toString();
+        } else if ("creative".equals(templateType)) {
+            // For creative template, use bullet points
+            StringBuilder result = new StringBuilder();
+            for (String point : points) {
+                result.append("\\textbullet~").append(escapeLatexSpecialChars(point)).append("\n\n");
+            }
+            String content = result.toString().trim();
+            return content;
+        } else if ("ats".equals(templateType)) {
+            // For ATS template, use simple bullet points as text
+            StringBuilder result = new StringBuilder();
+            for (String point : points) {
+                result.append("• ").append(escapeLatexSpecialChars(point)).append("\n");
+            }
+            String content = result.toString().trim();
+            return content;
+        } else {
+            // For professional template, use \\resumeItem{...}
+            StringBuilder result = new StringBuilder();
+            for (String point : points) {
+                result.append("      \\resumeItem{").append(escapeLatexSpecialChars(point)).append("}\n");
+            }
+            String content = result.toString();
+            if (content.endsWith("\n")) {
+                content = content.substring(0, content.length() - 1);
+            }
+            System.err.println("DEBUG: Generated content length: " + content.length());
+            return content;
+        }
+    }
+
+    /**
+     * Parse description string into exactly 3 points.
+     * Handles various formats (bullets, newlines, etc.)
+     * Always returns exactly 3 points (generates placeholders if needed).
+     */
+    private List<String> parseDescriptionPoints(String description, String projectTitle) {
+        List<String> points = new ArrayList<>();
+
+        if (description != null && !description.trim().isEmpty()) {
+            String normalized = description.trim();
+            String[] lines = normalized.split("\\n");
+
+            for (String line : lines) {
+                String trimmedLine = line.trim();
+                if (trimmedLine.isEmpty()) {
+                    continue;
+                }
+
+                // Remove bullet markers if present (-, •, *, 1., 2., etc.)
+                String point = trimmedLine.replaceAll("^[-•*]\\s*|^\\d+\\.\\s*", "").trim();
+                if (!point.isEmpty() && points.size() < 3) {
+                    points.add(point);
+                }
+            }
+        }
+
+        // Always pad to exactly 3 points with generated content
+        if (points.size() == 0) {
+            System.err.println(
+                    "WARNING: Project '" + projectTitle + "' has empty description. Generating placeholder content.");
+        } else if (points.size() < 3) {
+            System.err.println("WARNING: Project '" + projectTitle + "' has only " + points.size()
+                    + " description points. Expected 3.");
+        }
+
+        while (points.size() < 3) {
+            String placeholder = generateProjectPlaceholder(projectTitle, points.size() + 1);
+            points.add(placeholder);
+            System.err.println("  Added placeholder point " + points.size() + ": " + placeholder);
+        }
+
+        return points;
+    }
+
+    /**
+     * Generate a placeholder description point for a project when no description is
+     * provided.
+     * Creates generic but relevant bullet points based on the project name.
+     */
+    private String generateProjectPlaceholder(String projectTitle, int pointNumber) {
+        if (projectTitle == null || projectTitle.isEmpty()) {
+            projectTitle = "Project";
+        }
+
+        switch (pointNumber) {
+            case 1:
+                return "Designed and developed " + projectTitle + " to deliver a high-quality solution";
+            case 2:
+                return "Implemented best practices for code quality, performance, and maintainability";
+            case 3:
+                return "Integrated modern technologies and frameworks for optimal user experience";
+            default:
+                return "Contributed to project success through technical excellence";
+        }
+    }
+
+    /**
+     * Generate complete fallback description content when formatProjectDescription
+     * returns empty.
+     * This is a last resort to ensure we never have empty descriptions in LaTeX.
+     */
+    private String generateFallbackProjectDescription(String projectTitle, String templateType) {
+        List<String> points = new ArrayList<>();
+        points.add(generateProjectPlaceholder(projectTitle, 1));
+        points.add(generateProjectPlaceholder(projectTitle, 2));
+        points.add(generateProjectPlaceholder(projectTitle, 3));
+
+        if ("modern".equals(templateType)) {
+            StringBuilder result = new StringBuilder();
+            for (int i = 0; i < points.size(); i++) {
+                result.append("\\textbullet~").append(escapeLatexSpecialChars(points.get(i)));
+                if (i < points.size() - 1) {
+                    result.append(" \\\\");
+                }
+            }
+            return result.toString();
+        } else if ("creative".equals(templateType)) {
+            StringBuilder result = new StringBuilder();
+            for (String point : points) {
+                result.append("\\textbullet~").append(escapeLatexSpecialChars(point)).append("\n\n");
+            }
+            return result.toString().trim();
+        } else if ("ats".equals(templateType)) {
+            StringBuilder result = new StringBuilder();
+            for (String point : points) {
+                result.append("• ").append(escapeLatexSpecialChars(point)).append("\n");
+            }
+            return result.toString().trim();
+        } else {
+            // Professional template
+            StringBuilder result = new StringBuilder();
+            for (String point : points) {
+                result.append("      \\resumeItem{").append(escapeLatexSpecialChars(point)).append("}\n");
+            }
+            String content = result.toString();
+            if (content.endsWith("\n")) {
+                content = content.substring(0, content.length() - 1);
+            }
+            return content;
+        }
     }
 }

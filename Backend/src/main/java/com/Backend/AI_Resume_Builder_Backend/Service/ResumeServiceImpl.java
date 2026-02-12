@@ -1,6 +1,8 @@
 package com.Backend.AI_Resume_Builder_Backend.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,8 @@ import java.util.Map;
 
 @Service
 public class ResumeServiceImpl implements ResumeService {
+    private static final Logger log = LoggerFactory.getLogger(ResumeServiceImpl.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final GeminiService geminiService;
 
     public ResumeServiceImpl(GeminiService geminiService) {
@@ -41,18 +45,18 @@ public class ResumeServiceImpl implements ResumeService {
             String promptContent = this.putValueToTemplate(promptString, Map.of(
                     "userResumeDescription", userResumeDescription,
                     "templateType", templateType));
-            String response = geminiService.generateContent(promptContent);
-            if (response == null || response.trim().isEmpty()) {
+            var responseOpt = geminiService.generateContent(promptContent);
+            if (responseOpt.isEmpty()) {
                 result.put("error", "Gemini AI service returned empty response");
                 result.put("details",
                         "Check Gemini API key, quota, or prompt format. See backend logs for raw response.");
                 return result;
             }
+            String response = responseOpt.get();
             Map<String, Object> stringMap = parseMultipleResponses(response);
             return stringMap;
         } catch (Exception e) {
-            System.err.println("Error in generateResumeResponse: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error in generateResumeResponse: {}", e.getMessage(), e);
             result.put("error", "Exception in resume generation");
             result.put("message", e.getMessage());
             return result;
@@ -107,21 +111,62 @@ public class ResumeServiceImpl implements ResumeService {
         }
 
         // Parse JSON section
-        int jsonStart = response.indexOf("```json");
-        int jsonEnd = response.indexOf("```", jsonStart + 7);
-        if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
-            String jsonContent = response.substring(jsonStart + 7, jsonEnd).trim();
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                Map data = mapper.readValue(jsonContent, Map.class);
-                result.put("data", data);
-            } catch (Exception e) {
-                System.err.println("Invalid JSON format: " + e.getMessage());
-                result.put("data", null);
-                result.put("error", "Failed to parse JSON response");
+        String jsonContent = response;
+
+        // Remove think section if present to get to the JSON part
+        if (thinkEnd != -1) {
+            jsonContent = response.substring(thinkEnd + 8).trim();
+        }
+
+        int jsonStart = jsonContent.indexOf("```json");
+        if (jsonStart != -1) {
+            int jsonEnd = jsonContent.indexOf("```", jsonStart + 7);
+            if (jsonEnd != -1) {
+                jsonContent = jsonContent.substring(jsonStart + 7, jsonEnd).trim();
+            } else {
+                // Unclosed code fence — take everything after the fence marker
+                jsonContent = jsonContent.substring(jsonStart + 7).trim();
             }
         } else {
+            // Check for plain ``` without json tag
+            jsonStart = jsonContent.indexOf("```");
+            if (jsonStart != -1) {
+                int jsonEnd = jsonContent.indexOf("```", jsonStart + 3);
+                if (jsonEnd != -1) {
+                    jsonContent = jsonContent.substring(jsonStart + 3, jsonEnd).trim();
+                } else {
+                    // Unclosed code fence — take everything after the fence marker
+                    jsonContent = jsonContent.substring(jsonStart + 3).trim();
+                }
+            } else {
+                // No code fences at all — try to extract raw JSON object
+                int braceStart = jsonContent.indexOf("{");
+                int braceEnd = jsonContent.lastIndexOf("}");
+                if (braceStart != -1 && braceEnd != -1 && braceEnd > braceStart) {
+                    jsonContent = jsonContent.substring(braceStart, braceEnd + 1).trim();
+                }
+            }
+        }
+
+        // If we still have no closing brace, try brace extraction as final fallback
+        if (!jsonContent.trim().endsWith("}")) {
+            int braceStart = jsonContent.indexOf("{");
+            int braceEnd = jsonContent.lastIndexOf("}");
+            if (braceStart != -1 && braceEnd != -1 && braceEnd > braceStart) {
+                jsonContent = jsonContent.substring(braceStart, braceEnd + 1).trim();
+            }
+        }
+
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> data = OBJECT_MAPPER.readValue(jsonContent, Map.class);
+            result.put("data", data);
+        } catch (Exception e) {
+            log.error("Invalid JSON format: {}", e.getMessage());
+            log.debug("Response content (first 500 chars): {}",
+                    response.substring(0, Math.min(response.length(), 500)));
             result.put("data", null);
+            result.put("error", "Failed to parse JSON response");
         }
 
         return result;

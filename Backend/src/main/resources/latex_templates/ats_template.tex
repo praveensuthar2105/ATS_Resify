@@ -1,136 +1,99 @@
 \documentclass[10pt,letterpaper]{article}
 \usepackage[utf8]{inputenc}
-\usepackage[top=0.5in,bottom=0.5in,left=0.6in,right=0.6in]{geometry}
+\usepackage[top=0.4in,bottom=0.4in,left=0.5in,right=0.5in]{geometry}
 \usepackage{titlesec}
 \usepackage{enumitem}
 \usepackage{hyperref}
+\usepackage[T1]{fontenc}
 
-% Minimal styling - ATS friendly
+% ATS-Optimized Minimal styling
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{3pt}
-\setlength{\parsep}{0pt}
-\setlength{\headsep}{0pt}
-\setlength{\topskip}{0pt}
-\setlength{\topmargin}{0pt}
-\setlength{\topsep}{0pt}
-\setlength{\partopsep}{0pt}
+\setlength{\parskip}{0pt}
 
-% Section formatting - compact
+% Section formatting - simple underline
 \titleformat{\section}{\normalsize\bfseries\uppercase}{}{0em}{}[\titlerule]
-\titlespacing*{\section}{0pt}{6pt}{2pt}
+\titlespacing*{\section}{0pt}{8pt}{4pt}
+
+% Tight list spacing
+\setlist[itemize]{leftmargin=0.15in, topsep=2pt, itemsep=1pt, parsep=0pt}
 
 \begin{document}
 
-% Header - Simple and clear
+%----------HEADER----------
 \begin{center}
-\textbf{\Large {{FULL_NAME}}}
+{\Large \textbf{\uppercase{{{FULL_NAME}}}}}
 
-{{EMAIL}} | {{PHONE_NUMBER}} | {{LOCATION}}
-
-{{#LINKEDIN}}{{LINKEDIN}}{{/LINKEDIN}}{{#GITHUB}} | {{GITHUB}}{{/GITHUB}}{{#PORTFOLIO}} | {{PORTFOLIO}}{{/PORTFOLIO}}
+\vspace{2pt}
+{{PHONE_NUMBER}} $|$ {{EMAIL}}{{#LINKEDIN}} $|$ \href{{{LINKEDIN}}}{LinkedIn}{{/LINKEDIN}}{{#GITHUB}} $|$ \href{{{GITHUB}}}{GitHub}{{/GITHUB}}{{#PORTFOLIO}} $|$ \href{{{PORTFOLIO}}}{Portfolio}{{/PORTFOLIO}}{{#LOCATION}} $|$ {{LOCATION}}{{/LOCATION}}
 \end{center}
 
-\vspace{10pt}
-
-% Professional Summary
-{{#SUMMARY}}
-\section*{Professional Summary}
-{{SUMMARY}}
-{{/SUMMARY}}
-
-% Skills - keyword focused, categorized
-{{#HAS_SKILLS}}
-\section*{Technical Skills}
-{{#SKILL_LANGUAGES}}
-\textbf{Languages:} {{SKILL_LANGUAGES}}
-
-{{/SKILL_LANGUAGES}}
-{{#SKILL_FRAMEWORKS}}
-\textbf{Frameworks \& Libraries:} {{SKILL_FRAMEWORKS}}
-
-{{/SKILL_FRAMEWORKS}}
-{{#SKILL_DATABASES}}
-\textbf{Databases:} {{SKILL_DATABASES}}
-
-{{/SKILL_DATABASES}}
-{{#SKILL_TOOLS}}
-\textbf{Tools \& Technologies:} {{SKILL_TOOLS}}
-
-{{/SKILL_TOOLS}}
-{{#SKILL_CLOUD}}
-\textbf{Cloud Platforms:} {{SKILL_CLOUD}}
-
-{{/SKILL_CLOUD}}
-{{#SKILL_OTHER}}
-\textbf{Other Skills:} {{SKILL_OTHER}}
-
-{{/SKILL_OTHER}}
-{{/HAS_SKILLS}}
-
-% Experience
-{{#HAS_EXPERIENCE}}
-\section*{Professional Experience}
-{{#EXPERIENCE}}
-\textbf{{{JOB_TITLE}}} \hfill {{DURATION}}
-
-{{COMPANY}}, {{LOCATION}}
-
-{{RESPONSIBILITY}}
-
-{{/EXPERIENCE}}
-{{/HAS_EXPERIENCE}}
-
-% Projects
-{{#HAS_PROJECTS}}
-\section*{Projects}
-{{#PROJECTS}}
-\textbf{{{PROJECT_TITLE}}}
-
-{{PROJECT_DESCRIPTION}}
-
-Technologies: {{TECHNOLOGIES}}
-{{#GITHUB_LINK}}
-
-GitHub: {{GITHUB_LINK}}
-{{/GITHUB_LINK}}
-
-{{/PROJECTS}}
-{{/HAS_PROJECTS}}
-
-% Education
+%----------EDUCATION----------
 {{#HAS_EDUCATION}}
 \section*{Education}
 {{#EDUCATION}}
-\textbf{{{DEGREE}}} \hfill {{GRADUATION_YEAR}}
+\textbf{{{UNIVERSITY}}}{{#LOCATION}}, {{LOCATION}}{{/LOCATION}} \hfill {{GRADUATION_YEAR}}
 
-{{UNIVERSITY}}, {{LOCATION}}
+\textit{{{DEGREE}}}{{#GPA}} $|$ GPA: {{GPA}}{{/GPA}}
 
 {{/EDUCATION}}
 {{/HAS_EDUCATION}}
 
-% Certifications
+%----------EXPERIENCE----------
+{{#HAS_EXPERIENCE}}
+\section*{Experience}
+{{#EXPERIENCE}}
+\textbf{{{COMPANY}}}{{#LOCATION}}, {{LOCATION}}{{/LOCATION}} \hfill {{DURATION}}
+
+\textit{{{JOB_TITLE}}}
+\begin{itemize}
+{{RESPONSIBILITY_BULLETS}}
+\end{itemize}
+
+{{/EXPERIENCE}}
+{{/HAS_EXPERIENCE}}
+
+%----------PROJECTS----------
+{{#HAS_PROJECTS}}
+\section*{Projects}
+{{#PROJECTS}}
+\textbf{{{PROJECT_TITLE}}} $|$ \textit{{{TECHNOLOGIES}}}{{#HAS_PROJECT_LINKS}} \hfill{{#GITHUB_LINK}}\href{{{GITHUB_LINK}}}{GitHub}{{/GITHUB_LINK}}{{#LIVE_LINK}}{{#GITHUB_LINK}} $|$ {{/GITHUB_LINK}}\href{{{LIVE_LINK}}}{Live}{{/LIVE_LINK}}{{/HAS_PROJECT_LINKS}}
+\begin{itemize}
+{{PROJECT_BULLETS}}
+\end{itemize}
+
+{{/PROJECTS}}
+{{/HAS_PROJECTS}}
+
+%----------TECHNICAL SKILLS----------
+{{#HAS_SKILLS}}
+\section*{Technical Skills}
+{{#SKILL_LANGUAGES}}\textbf{Languages:} {{SKILL_LANGUAGES}}{{/SKILL_LANGUAGES}}{{#SKILL_FRAMEWORKS}}
+\\\textbf{Frameworks:} {{SKILL_FRAMEWORKS}}{{/SKILL_FRAMEWORKS}}{{#SKILL_DATABASES}}
+\\\textbf{Databases:} {{SKILL_DATABASES}}{{/SKILL_DATABASES}}{{#SKILL_TOOLS}}
+\\\textbf{Developer Tools:} {{SKILL_TOOLS}}{{/SKILL_TOOLS}}{{#SKILL_CLOUD}}
+\\\textbf{Cloud/DevOps:} {{SKILL_CLOUD}}{{/SKILL_CLOUD}}{{#SKILL_OTHER}}
+\\\textbf{Other:} {{SKILL_OTHER}}{{/SKILL_OTHER}}
+{{/HAS_SKILLS}}
+
+%----------CERTIFICATIONS----------
 {{#HAS_CERTIFICATIONS}}
 \section*{Certifications}
+\begin{itemize}
 {{#CERTIFICATIONS}}
-{{CERT_TITLE}} - {{ISSUING_ORG}} ({{CERT_YEAR}})
-
+\item {{CERT_TITLE}} -- {{ISSUING_ORG}}{{#CERT_YEAR}} ({{CERT_YEAR}}){{/CERT_YEAR}}
 {{/CERTIFICATIONS}}
+\end{itemize}
 {{/HAS_CERTIFICATIONS}}
 
-% Achievements
+%----------ACHIEVEMENTS----------
 {{#HAS_ACHIEVEMENTS}}
 \section*{Achievements}
+\begin{itemize}
 {{#ACHIEVEMENTS}}
-{{ACH_TITLE}} ({{ACH_YEAR}})
-
+\item {{ACH_TITLE}}{{#ACH_DESCRIPTION}}: {{ACH_DESCRIPTION}}{{/ACH_DESCRIPTION}}{{#ACH_YEAR}} ({{ACH_YEAR}}){{/ACH_YEAR}}
 {{/ACHIEVEMENTS}}
+\end{itemize}
 {{/HAS_ACHIEVEMENTS}}
-
-% Languages
-{{#HAS_LANGUAGES}}
-\section*{Languages}
-{{LANGUAGES_LIST}}
-{{/HAS_LANGUAGES}}
 
 \end{document}

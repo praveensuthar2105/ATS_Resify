@@ -30,7 +30,7 @@ const Footer = () => {
       <Container maxWidth="lg">
         <Grid container spacing={6} sx={{ mb: 6 }}>
           {/* Brand Section */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Typography 
               variant="h4" 
               sx={{ 
@@ -84,7 +84,7 @@ const Footer = () => {
           </Grid>
 
           {/* Product Links */}
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, color: 'white', fontSize: '1rem' }}>
               Product
             </Typography>
@@ -118,7 +118,7 @@ const Footer = () => {
           </Grid>
 
           {/* Resources Links */}
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, color: 'white', fontSize: '1rem' }}>
               Resources
             </Typography>
@@ -151,7 +151,7 @@ const Footer = () => {
           </Grid>
 
           {/* Legal Links */}
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, color: 'white', fontSize: '1rem' }}>
               Legal
             </Typography>
@@ -184,7 +184,7 @@ const Footer = () => {
           </Grid>
 
           {/* Newsletter */}
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, color: 'white', fontSize: '1rem' }}>
               Support
             </Typography>

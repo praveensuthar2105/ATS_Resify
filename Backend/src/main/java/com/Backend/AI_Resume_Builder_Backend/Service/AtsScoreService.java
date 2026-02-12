@@ -7,4 +7,6 @@ import java.util.Map;
 
 public interface AtsScoreService {
     Map<String, Object> getAtsScore(MultipartFile resumeFile) throws IOException;
+
+    Map<String, Object> getAtsScore(MultipartFile resumeFile, String jobDescription) throws IOException;
 }

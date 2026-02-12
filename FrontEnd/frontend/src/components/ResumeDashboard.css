@@ -85,6 +85,12 @@
     box-shadow: var(--shadow-md);
 }
 
+.ghost-btn:focus-visible,
+.primary-btn:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+}
+
 .primary-btn {
     background: var(--primary);
     color: white;
@@ -142,6 +148,11 @@
     color: var(--primary);
     background: rgba(37, 99, 235, 0.05);
     border-radius: 8px;
+}
+
+.tab:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
 }
 
 .tab.active {
@@ -355,6 +366,11 @@
     background: var(--primary-dark);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.action-btn:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
 }
 
 .action-btn:active {

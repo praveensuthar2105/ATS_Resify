@@ -30,8 +30,8 @@ const Home = () => {
     },
     {
       icon: <SafetyOutlined style={{ fontSize: '32px' }} />,
-      title: 'ATS templates',
-      description: 'Your resume will be 100% compliant. Recruiters will see you.',
+      title: 'ATS Optimized',
+      description: 'Your resume will be 100% ATS compliant. Recruiters will see you.',
       color: '#8B5CF6',
     },
     {
@@ -57,7 +57,7 @@ const Home = () => {
       >
         <Container maxWidth="lg">
           <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ color: 'white' }}>
                 <Typography 
                   variant="h1" 
@@ -153,7 +153,7 @@ const Home = () => {
                 </Box>
               </Box>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Box 
                 sx={{ 
                   position: 'relative',
@@ -219,7 +219,7 @@ const Home = () => {
       <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
         <Grid container spacing={3}>
           {features.map((feature, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
               <Card 
                 sx={{ 
                   height: '100%',
@@ -293,7 +293,7 @@ const Home = () => {
           </Typography>
           
           <Grid container spacing={6}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <Chip 
                   label="AI-powered" 
@@ -324,7 +324,7 @@ const Home = () => {
               </Box>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <Chip 
                   label="AI-powered" 
@@ -355,7 +355,7 @@ const Home = () => {
               </Box>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <Chip 
                   label="ATS-optimized" 
@@ -386,7 +386,7 @@ const Home = () => {
               </Box>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <Chip 
                   label="Professional" 
@@ -400,19 +400,19 @@ const Home = () => {
                   }} 
                 />
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
-                  Industry-ready templates
+                  ATS-Optimized Template
                 </Typography>
                 <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.8, mb: 3, flexGrow: 1 }}>
-                  Choose from professionally designed templates that pass ATS screening. 
+                  Our professionally designed template passes ATS screening with 95%+ success rate. 
                   Your resume will look polished and get noticed by recruiters.
                 </Typography>
                 <Button
                   variant="contained"
                   endIcon={<ArrowRightOutlined />}
-                  onClick={() => navigate('/features')}
+                  onClick={() => navigate('/generate')}
                   sx={{ textTransform: 'none', fontWeight: 600, width: 'fit-content' }}
                 >
-                  View templates
+                  Create Resume
                 </Button>
               </Box>
             </Grid>

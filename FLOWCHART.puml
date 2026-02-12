@@ -1,0 +1,390 @@
+@startuml AI_Resume_Builder_Flowchart
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityBackgroundColor #E3F2FD
+skinparam activityBorderColor #1976D2
+skinparam activityStartColor #4CAF50
+skinparam activityEndColor #F44336
+skinparam activityDiamondBackgroundColor #FFF9C4
+skinparam activityDiamondBorderColor #F57C00
+skinparam noteBackgroundColor #FFECB3
+skinparam noteBorderColor #FF6F00
+
+title AI Resume Builder - Application Flowchart
+
+start
+
+:User Opens Application;
+
+partition "Template Selection & Input" {
+    :Display Landing Page;
+    :Show Template Options:
+    * Professional
+    * Modern  
+    * ATS-Optimized
+    * Creative;
+    
+    :User Selects Template;
+    
+    :User Enters Resume Description;
+    note right
+        Minimum 50 characters required
+        Include: skills, experience,
+        education, projects
+    end note
+    
+    if (Description length >= 50?) then (no)
+        :Show Validation Error;
+        stop
+    else (yes)
+        :Enable Generate Button;
+    endif
+}
+
+partition "Resume Generation with AI" {
+    :Send POST /api/resume/generate;
+    
+    :ResumeController validates input;
+    
+    if (Valid input?) then (no)
+        :Return HTTP 400 Bad Request;
+        :Display error message;
+        stop
+    else (yes)
+        :ResumeService processes request;
+    endif
+    
+    :Load resume_prompt.txt template;
+    
+    :Replace {{USER_DESCRIPTION}} 
+    with user input;
+    
+    :Add template-specific requirements;
+    
+    :Add INVALID/VALID examples
+    to guide AI;
+    
+    note right
+        **CRITICAL REQUIREMENTS:**
+        ✓ EXACTLY 3 bullet points per project
+        ✓ No empty descriptions
+        ✓ Mandatory sections format
+    end note
+    
+    :Call GeminiService;
+    
+    :Send request to Gemini API
+    (gemini-2.5-flash-lite);
+    
+    if (API call successful?) then (no)
+        :Return HTTP 500;
+        :Display "AI service unavailable";
+        stop
+    else (yes)
+        :Receive JSON response;
+    endif
+    
+    :Extract text from 
+    candidates[0].content.parts[0];
+    
+    :Clean JSON markers
+    (remove ```json, ```);
+    
+    :Parse to Map<String, Object>;
+    
+    if (Valid JSON structure?) then (no)
+        :Return parsing error;
+        stop
+    else (yes)
+        :Validate required fields;
+    endif
+    
+    if (Has name, email, phone,\neducation, skills, projects?) then (no)
+        :Return HTTP 400;
+        :Show "Incomplete resume data";
+        stop
+    else (yes)
+        :Return HTTP 200 with resume data;
+    endif
+}
+
+partition "Resume Preview & Edit" {
+    :Display Generated Resume;
+    
+    :Show sections:
+    * Personal Info
+    * Education
+    * Experience  
+    * Projects (with 3 points each)
+    * Skills (categorized);
+    
+    if (User wants to edit?) then (yes)
+        :Open Edit Mode;
+        :Modify resume data;
+        :Save changes;
+    else (no)
+        :Proceed to LaTeX generation;
+    endif
+}
+
+partition "LaTeX Code Generation" {
+    :User clicks "View LaTeX";
+    
+    :Open LatexEditor (full window);
+    
+    :Send POST /api/latex/generate
+    with resumeData & templateType;
+    
+    :LatexController validates request;
+    
+    if (Valid resumeData?) then (no)
+        :Return HTTP 400;
+        :Show error message;
+        stop
+    else (yes)
+        :LatexService processes;
+    endif
+    
+    :Load template file from resources:
+    * professional_template.tex
+    * ats_template.tex
+    * modern_template.tex
+    * creative_template.tex;
+    
+    :Extract template sections;
+    
+    :Process Personal Info;
+    :Escape LaTeX special characters
+    (%, $, &, #, _, {, }, ~, ^, \\);
+    :Replace {{NAME}}, {{EMAIL}}, {{PHONE}};
+    
+    :Process Education Section;
+    :Format with \\resumeSubheading;
+    :Add degree, university, dates, GPA;
+    
+    :Process Experience Section;
+    :Format company, role, dates;
+    :Add \\resumeItemListStart blocks;
+    
+    :Process Projects Section;
+    note right
+        **CRITICAL: Multi-layer Protection**
+    end note
+    
+    repeat
+        :Get next project;
+        
+        :Call formatProjectDescription();
+        
+        if (Description exists?) then (yes)
+            :Parse description points;
+            
+            :Split by bullets/newlines;
+            :Strip markers (-, •, *, 1.);
+            :Trim whitespace;
+            
+            if (Points < 3?) then (yes)
+                :Pad with placeholders:
+                "Developed key features"
+                "Implemented solutions"
+                "Achieved results";
+            else (no)
+                :Use existing points;
+            endif
+            
+            if (Template == professional?) then (yes)
+                :Format: \\resumeItem{point};
+            elseif (Template == ats?) then (yes)
+                :Format: - point;
+            elseif (Template == modern?) then (yes)
+                :Format: \\textbullet~point\\\\;
+            else (creative)
+                :Format: \\textbullet~point\\n\\n;
+            endif
+            
+            :Log DEBUG: "Formatting 3 points
+            for project: {name}";
+            :Log each point with char count;
+            
+        else (no - empty description)
+            :Call generateFallbackProjectDescription();
+            
+            :Create project-specific content:
+            "Developed {projectName} using
+            modern best practices"
+            "Implemented core functionality
+            with focus on scalability"
+            "Achieved successful deployment
+            with positive user feedback";
+            
+            :Apply template formatting;
+            
+            note right
+                **LAST-RESORT SAFETY NET**
+                Ensures no empty
+                \\resumeItemListStart blocks
+            end note
+        endif
+        
+        :Check if formatted string is empty;
+        
+        if (Still empty after formatting?) then (yes)
+            :Call generateFallbackProjectDescription()
+            as ultimate fallback;
+        else (no)
+            :Replace {{PROJECT_DESCRIPTION}}
+            with formatted content;
+        endif
+        
+    repeat while (More projects?)
+    
+    :Process Skills Section;
+    :Group by category
+    (Languages, Frameworks, Tools, etc.);
+    :Format: \\textbf{Category}: skill1, skill2;
+    
+    :Replace all placeholders in template;
+    
+    :Return complete LaTeX code;
+    
+    :Display in Monaco Editor
+    with syntax highlighting;
+}
+
+partition "PDF Compilation" {
+    :User clicks "Compile to PDF";
+    
+    :Show compilation progress;
+    
+    :Send POST /api/latex/compile
+    with latexCode;
+    
+    :LatexCompileService processes;
+    
+    :Create temporary directory;
+    
+    :Write .tex file to disk;
+    
+    :Execute pdflatex command:
+    -interaction=nonstopmode
+    -output-directory=temp;
+    
+    if (Compilation successful?) then (no)
+        :Parse error log;
+        :Extract error line numbers;
+        :Extract error messages;
+        
+        :Return HTTP 500
+        with error details;
+        
+        :Display error in editor:
+        "LaTeX Error at line X:
+        {error message}";
+        
+        :Highlight error line
+        in Monaco Editor;
+        
+        note right
+            Common errors prevented:
+            ✗ Empty \\resumeItemListStart
+            ✗ Missing \\item
+            ✗ Unescaped special chars
+        end note
+        
+        stop
+    else (yes)
+        :Read PDF bytes from temp dir;
+    endif
+    
+    :Clean up temporary files;
+    
+    :Return PDF bytes
+    (application/pdf);
+    
+    :Create Blob URL in frontend;
+    
+    :Display PDF in iframe preview;
+    
+    :Enable download buttons;
+}
+
+partition "Download Options" {
+    if (User wants to download?) then (yes)
+        if (Download LaTeX source?) then (yes)
+            :Create .tex file download;
+            :Download as resume.tex;
+        else (Download PDF?)
+            :Create PDF download link;
+            :Download as resume.pdf;
+        endif
+    else (no - continue editing)
+        :Return to LaTeX Editor;
+        :Allow modifications;
+        :User can recompile;
+    endif
+}
+
+partition "Optional: ATS Score Check" {
+    if (User uploads PDF for ATS check?) then (yes)
+        :Navigate to ATS Checker page;
+        
+        :Upload PDF file;
+        
+        :Send POST /api/resume/ats-score
+        with MultipartFile;
+        
+        if (File valid?) then (no)
+            :Return HTTP 400;
+            :Show "Invalid file";
+            stop
+        else (yes)
+            :AtsScoreService analyzes;
+        endif
+        
+        :Extract text from PDF;
+        
+        :Analyze keywords;
+        :Check formatting;
+        :Calculate ATS compatibility score;
+        
+        :Return score + suggestions;
+        
+        :Display ATS score (0-100);
+        :Show improvement recommendations;
+        :Highlight missing keywords;
+        
+    else (no)
+        :Skip ATS check;
+    endif
+}
+
+:User completes resume workflow;
+
+stop
+
+legend right
+    **Color Legend:**
+    |<#E3F2FD>| Normal Process Step |
+    |<#FFF9C4>| Decision Point |
+    |<#4CAF50>| Start |
+    |<#F44336>| End/Stop |
+    
+    **Key Features:**
+    • Multi-layer validation
+    • AI-powered generation
+    • Template-specific formatting
+    • Real-time LaTeX editing
+    • PDF compilation with error handling
+    • ATS optimization support
+endlegend
+
+note bottom
+    **Technology Stack:**
+    Frontend: React 19.1.1, Vite, Material-UI, Monaco Editor
+    Backend: Java 22, Spring Boot 3.5.0, Maven
+    AI: Google Gemini 2.5 Flash Lite
+    LaTeX: pdfTeX via MiKTeX 24.1
+    Database: MySQL 8.0.37
+end note
+
+@enduml

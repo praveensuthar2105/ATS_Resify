@@ -68,7 +68,9 @@ public class resumeController {
 	}
 
 	@PostMapping("/ats-score")
-	public ResponseEntity<Map<String, Object>> getAtsScore(@RequestParam MultipartFile file) {
+	public ResponseEntity<Map<String, Object>> getAtsScore(
+			@RequestParam MultipartFile file,
+			@RequestParam(required = false) String jobDescription) {
 		try {
 			if (file.isEmpty()) {
 				Map<String, Object> errorResponse = new HashMap<>();
@@ -77,7 +79,7 @@ public class resumeController {
 				return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
 			}
 
-			Map<String, Object> atsScore = atsScoreService.getAtsScore(file);
+			Map<String, Object> atsScore = atsScoreService.getAtsScore(file, jobDescription);
 			return new ResponseEntity<>(atsScore, HttpStatus.OK);
 		} catch (Exception e) {
 			Map<String, Object> errorResponse = new HashMap<>();

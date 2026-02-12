@@ -30,9 +30,12 @@ export const resumeAPI = {
     return data;
   },
 
-  calculateAtsScore: async (file) => {
+  calculateAtsScore: async (file, jobDescription = '') => {
     const formData = new FormData();
     formData.append('file', file);
+    if (jobDescription && jobDescription.trim()) {
+      formData.append('jobDescription', jobDescription.trim());
+    }
     
     const response = await axios.post(`${API_BASE_URL}/resume/ats-score`, formData, {
       headers: {

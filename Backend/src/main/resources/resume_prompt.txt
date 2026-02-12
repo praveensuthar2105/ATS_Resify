@@ -1,6 +1,17 @@
 Generate a professional IT job resume in JSON format based on the following description.
 
-CRITICAL: THE RESUME MUST FIT ON ONE PAGE. Keep all content concise and focused.
+CRITICAL REQUIREMENTS:
+1. THE RESUME MUST FIT ON ONE PAGE. Keep all content concise and focused.
+2. FOR EVERY PROJECT: The "description" field MUST contain EXACTLY 3 bullet points separated by newlines. Format as: "- Point 1\n- Point 2\n- Point 3". NEVER provide empty descriptions, fewer than 3 points, or more than 3 points. Each point must be substantive and describe a project feature, technology, impact, or accomplishment.
+   - INVALID EXAMPLES (DO NOT DO THIS):
+     - "" (empty string) ❌
+     - "Some description" (only 1 point) ❌
+     - "- Point 1\n- Point 2" (only 2 points) ❌
+     - "- Point 1\n- Point 2\n- Point 3\n- Point 4" (4 points - too many) ❌
+   - VALID EXAMPLES (DO THIS):
+     - "- Built responsive web application using React and Redux\n- Implemented REST APIs with Node.js and Express\n- Deployed on AWS with Docker containerization" ✓
+     - "- Created automated testing suite with 95% code coverage\n- Optimized database queries reducing response time by 40%\n- Integrated real-time notifications using WebSocket" ✓
+3. All content must be professional, realistic, and relevant to the user's description.
 
 TEMPLATE STYLE: {{templateType}}
 
@@ -16,11 +27,19 @@ TEMPLATE-SPECIFIC INSTRUCTIONS:
 CONTENT LENGTH GUIDELINES (CRITICAL FOR ONE-PAGE FIT):
 - Summary: Maximum 2-3 sentences (40-60 words)
 - Experience: Maximum 2-3 most relevant positions, each with 2-3 concise bullet points (max 20 words per point)
-- Projects: Maximum 2-3 most impressive projects with brief descriptions (max 30 words each)
+- Projects: Maximum 2-3 most impressive projects. FOR EACH PROJECT, THE DESCRIPTION FIELD MUST CONTAIN EXACTLY 3 BULLET POINTS (no more, no less). Each point should start with a dash (-) and describe a key feature, technology, impact, or accomplishment. Separate points with \n character. NO EMPTY DESCRIPTIONS ALLOWED.
 - Education: Keep concise - degree, institution, year only
 - Certifications: List only the most relevant (max 3-4)
 - Achievements: Only exceptional ones (max 2-3)
 - Focus on quality over quantity - include only the most impactful and relevant information
+
+ONE-PAGE OVERFLOW PRIORITIZATION (if content exceeds one page):
+1. First, reduce the number of projects (keep most recent/impactful 2 projects)
+2. Then, reduce experience positions (keep most recent/relevant 2 positions)
+3. Only then, shorten individual bullet points to be more concise
+4. Preserve the required bullet count per item (2-4 for projects, 2-3 for experience)
+5. Prefer recent and high-impact achievements over older ones
+6. Never sacrifice clarity for brevity - maintain professional language
 
 IMPORTANT: Please respond ONLY in English language. Do not use Chinese or any other language.
 
@@ -91,7 +110,7 @@ JSON Structure Requirements (all content must be in English):
   "projects": [
     {
       "title": "string (in English)",
-      "description": "string (in English)",
+      "description": "string (in English): EXACTLY 3 bullet points separated by newline characters",
       "technologiesUsed": ["string (in English)"],
       "githubLink": "string or null"
     }
@@ -102,18 +121,7 @@ JSON Structure Requirements (all content must be in English):
       "year": "string"
     }
   ],
-  "extraInformation": "string (in English)",
-  "languages": [
-    {
-      "id": 1,
-      "name": "string (language name in English)"
-    }
-  ],
-  "interests": [
-    {
-      "id": 1,
-    }
-  ]
+  "extraInformation": "string (in English)"
 }
 
 Please generate realistic and professional content based on the user's description. If information is not provided, make reasonable assumptions or leave fields empty/null as appropriate.

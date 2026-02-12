@@ -67,10 +67,9 @@
 {{#HAS_PROJECTS}}
 \section{Projects}
 {{#PROJECTS}}
-\cventry{}{{{PROJECT_TITLE}}}{}{}{}{%
+\cventry{}{\textbf{{{PROJECT_TITLE}}}{{#GITHUB_LINK}} | \href{{{GITHUB_LINK}}}{\textit{GitHub}}{{/GITHUB_LINK}}}{}{}{}{%
 {{PROJECT_DESCRIPTION}}\\
-\textit{Technologies:} {{TECHNOLOGIES}}{{#GITHUB_LINK}}\\
-\textit{GitHub:} \url{{{GITHUB_LINK}}}{{/GITHUB_LINK}}
+\textit{Technologies:} {{TECHNOLOGIES}}
 }
 {{/PROJECTS}}
 {{/HAS_PROJECTS}}
@@ -98,11 +97,5 @@
 \cvitem{{{ACH_YEAR}}}{{{ACH_TITLE}}}
 {{/ACHIEVEMENTS}}
 {{/HAS_ACHIEVEMENTS}}
-
-% Languages
-{{#HAS_LANGUAGES}}
-\section{Languages}
-\cvitem{}{{{LANGUAGES_LIST}}}
-{{/HAS_LANGUAGES}}
 
 \end{document}
