@@ -8,10 +8,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import org.springframework.beans.factory.InitializingBean;
 
 @Service
-public class LatexCompileServiceImpl implements LatexCompileService {
+public class LatexCompileServiceImpl implements LatexCompileService, InitializingBean {
 
     @Value("${latex.compiler:auto}")
     private String compilerMode; // auto | tectonic | pdflatex
@@ -21,6 +23,16 @@ public class LatexCompileServiceImpl implements LatexCompileService {
 
     @Value("${latex.compile.timeoutSeconds:40}")
     private int timeoutSeconds;
+
+    @Value("${latex.compile.max-concurrent:5}")
+    private int maxConcurrent;
+
+    private Semaphore compileSemaphore;
+
+    @Override
+    public void afterPropertiesSet() {
+        this.compileSemaphore = new Semaphore(maxConcurrent, true);
+    }
 
     @Override
     public byte[] compileToPdf(String latexCode) throws IOException, InterruptedException {
@@ -32,35 +44,50 @@ public class LatexCompileServiceImpl implements LatexCompileService {
         Files.write(texFile, latexCode.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE,
                 StandardOpenOption.TRUNCATE_EXISTING);
 
-        // Determine candidate compilers
-        String mode = (compilerMode == null || compilerMode.isBlank()) ? "auto" : compilerMode.trim().toLowerCase();
-        List<List<String>> candidates = new ArrayList<>();
-
-        if ("pdflatex".equals(mode)) {
-            candidates.add(buildPdflatexCommand(tempDir, texFile));
-        } else if ("tectonic".equals(mode)) {
-            candidates.add(buildTectonicCommand(tempDir, texFile));
-        } else { // auto
-            candidates.add(buildTectonicCommand(tempDir, texFile));
-            candidates.add(buildPdflatexCommand(tempDir, texFile));
-        }
-
-        IOException lastError = null;
-        for (List<String> cmd : candidates) {
-            try {
-                byte[] pdf = runCompiler(cmd, tempDir, pdfFile);
+        // Check semaphore
+        boolean acquired = false;
+        try {
+            acquired = compileSemaphore.tryAcquire(30, TimeUnit.SECONDS);
+            if (!acquired) {
                 cleanup(tempDir);
-                return pdf;
-            } catch (IOException ex) {
-                lastError = ex;
-                // try next candidate
+                throw new IOException(
+                        "Server is currently busy compiling other resumes. Please try again in a moment.");
+            }
+
+            // Determine candidate compilers
+            String mode = (compilerMode == null || compilerMode.isBlank()) ? "auto" : compilerMode.trim().toLowerCase();
+            List<List<String>> candidates = new ArrayList<>();
+
+            if ("pdflatex".equals(mode)) {
+                candidates.add(buildPdflatexCommand(tempDir, texFile));
+            } else if ("tectonic".equals(mode)) {
+                candidates.add(buildTectonicCommand(tempDir, texFile));
+            } else { // auto
+                candidates.add(buildTectonicCommand(tempDir, texFile));
+                candidates.add(buildPdflatexCommand(tempDir, texFile));
+            }
+
+            IOException lastError = null;
+            for (List<String> cmd : candidates) {
+                try {
+                    byte[] pdf = runCompiler(cmd, tempDir, pdfFile);
+                    cleanup(tempDir);
+                    return pdf;
+                } catch (IOException ex) {
+                    lastError = ex;
+                    // try next candidate
+                }
+            }
+
+            cleanup(tempDir);
+            if (lastError != null)
+                throw lastError;
+            throw new IOException("LaTeX compilation failed with all available compilers");
+        } finally {
+            if (acquired) {
+                compileSemaphore.release();
             }
         }
-
-        cleanup(tempDir);
-        if (lastError != null)
-            throw lastError;
-        throw new IOException("LaTeX compilation failed with all available compilers");
     }
 
     @Override
