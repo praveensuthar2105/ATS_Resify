@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Snackbar, Alert } from '@mui/material';
+import AgentChat from '../components/AgentChat';
+import { decodeToken, getAuthToken } from '../utils/auth';
+import { API_BASE_URL } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import './EditResume.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api';
 
 const EditResume = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
@@ -15,7 +20,7 @@ const EditResume = () => {
   const [snack, setSnack] = useState({ open: false, type: 'success', text: '' });
   const [zoom, setZoom] = useState(100);
   const saveTimer = useRef(null);
-  
+
   // LaTeX & PDF state
   const [latexCode, setLatexCode] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
@@ -25,7 +30,7 @@ const EditResume = () => {
   const [autoCompile, setAutoCompile] = useState(true);
   const [useOnlineCompiler, setUseOnlineCompiler] = useState(false);
   const autoCompileTimer = useRef(null);
-  
+
   // Monaco editor state
   const [monacoAvailable, setMonacoAvailable] = useState(false);
   const [MonacoEditor, setMonacoEditor] = useState(null);
@@ -57,10 +62,10 @@ const EditResume = () => {
   // Or: [{ title, level }] (array) or ['skill1', 'skill2'] (string array)
   const normalizeSkills = (skills) => {
     if (!skills) return [];
-    
+
     // Already an array - return as-is
     if (Array.isArray(skills)) return skills;
-    
+
     // Categorized object format: { languages: [...], frameworks: [...], tools: [...], ... }
     if (typeof skills === 'object') {
       const result = [];
@@ -77,7 +82,7 @@ const EditResume = () => {
       });
       return result;
     }
-    
+
     return [];
   };
 
@@ -109,7 +114,7 @@ const EditResume = () => {
     const linkedin = pi.linkedIn ? escapeLatex(pi.linkedIn) : '';
     const github = pi.gitHub ? escapeLatex(pi.gitHub) : '';
     const portfolio = pi.portfolio ? escapeLatex(pi.portfolio) : '';
-    
+
     let contactParts = [];
     if (phone) contactParts.push(phone);
     if (email) contactParts.push(email);
@@ -138,7 +143,7 @@ const EditResume = () => {
       }).filter(Boolean).join('\n\n');
       if (eduItems) educationSection = `\\section*{Education}\n${eduItems}`;
     }
-    
+
     // Experience section
     let experienceSection = '';
     if (data?.experience && data.experience.length > 0) {
@@ -148,7 +153,7 @@ const EditResume = () => {
         const title = escapeLatex(exp.jobTitle || exp.title || '');
         const duration = escapeLatex(exp.duration || '');
         if (!company && !title) return null;
-        
+
         let bullets = '';
         if (exp.responsibility) {
           // Split on newlines, or bullet points (• or - at start of line)
@@ -164,19 +169,19 @@ const EditResume = () => {
       }).filter(Boolean).join('\n\n');
       if (expItems) experienceSection = `\\section*{Experience}\n${expItems}`;
     }
-    
+
     // Projects section - limit to 3 bullet points per project
     let projectsSection = '';
     if (data?.projects && data.projects.length > 0) {
       const projItems = data.projects.map(proj => {
         const title = escapeLatex(proj.title || '');
         if (!title) return null;
-        const tech = proj.technologiesUsed 
+        const tech = proj.technologiesUsed
           ? escapeLatex(Array.isArray(proj.technologiesUsed) ? proj.technologiesUsed.join(', ') : proj.technologiesUsed)
           : '';
         let headerLine = `\\textbf{${title}}`;
         if (tech) headerLine += ` $|$ \\textit{${tech}}`;
-        
+
         let bullets = '';
         if (proj.description) {
           // Split on newlines, then remove leading bullet markers (• or - or *)
@@ -184,17 +189,15 @@ const EditResume = () => {
             .split(/\n+/)
             .map(d => d.replace(/^[•\-\*]\s*/, '').trim())
             .filter(d => d.length > 5);
-          // Limit to maximum 3 bullet points
-          const limitedDescList = descList.slice(0, 3);
-          if (limitedDescList.length > 0) {
-            bullets = `\\begin{itemize}\n${limitedDescList.map(d => `\\item ${escapeLatex(d)}`).join('\n')}\n\\end{itemize}`;
+          if (descList.length > 0) {
+            bullets = `\\begin{itemize}\n${descList.map(d => `\\item ${escapeLatex(d)}`).join('\n')}\n\\end{itemize}`;
           }
         }
         return `${headerLine}\n${bullets}`;
       }).filter(Boolean).join('\n\n');
       if (projItems) projectsSection = `\\section*{Projects}\n${projItems}`;
     }
-    
+
     // Skills section
     let skillsSection = '';
     const normalizedSkills = normalizeSkills(data?.skills);
@@ -287,11 +290,197 @@ ${sections}
 \\end{document}`;
   }, []);
 
+  // ── Parse LaTeX back into resumeData (LaTeX → Form sync) ──
+  const parseLatexToData = useCallback((latex) => {
+    if (!latex) return null;
+    const data = {
+      personalInformation: { fullName: '', email: '', phoneNumber: '', location: '', linkedIn: '', gitHub: '', portfolio: '' },
+      summary: '',
+      skills: [],
+      experience: [],
+      education: [],
+      projects: [],
+      certifications: [],
+      achievements: [],
+      languages: [],
+      interests: [],
+    };
+
+    // Helper: un-escape common LaTeX chars
+    const unescape = (s) => s
+      .replace(/\\textbackslash\{\}/g, '\\')
+      .replace(/\\textasciitilde\{\}/g, '~')
+      .replace(/\\textasciicircum\{\}/g, '^')
+      .replace(/\\&/g, '&').replace(/\\%/g, '%').replace(/\\\$/g, '$')
+      .replace(/\\#/g, '#').replace(/\\_/g, '_')
+      .replace(/\\\{/g, '{').replace(/\\\}/g, '}')
+      .trim();
+
+    // Helper: extract href URL
+    const hrefUrl = (s) => { const m = s.match(/\\href\{([^}]*)\}/); return m ? m[1] : ''; };
+
+    // ── Name: \textbf{\uppercase{NAME}} ──
+    const nameMatch = latex.match(/\\textbf\{\\uppercase\{([^}]*)\}\}/);
+    if (nameMatch) data.personalInformation.fullName = unescape(nameMatch[1]);
+
+    // ── Contact line: phone $|$ email $|$ ... ──
+    const contactMatch = latex.match(/\\vspace\{2pt\}\s*\n([^\\]*(?:\\href\{[^}]*\}\{[^}]*\}[^\\]*)*)\s*\n\\end\{center\}/);
+    if (contactMatch) {
+      const parts = contactMatch[1].split('$|$').map(p => p.trim());
+      parts.forEach(part => {
+        if (part.includes('@') || part.includes('email')) {
+          data.personalInformation.email = unescape(part);
+        } else if (/^[+\d\s()-]+$/.test(part.replace(/\\/g, ''))) {
+          data.personalInformation.phoneNumber = unescape(part);
+        } else if (part.includes('\\href')) {
+          const url = hrefUrl(part);
+          const label = part.match(/\{([^}]*)\}\s*$/)?.[1] || '';
+          if (label.toLowerCase().includes('linkedin')) data.personalInformation.linkedIn = url;
+          else if (label.toLowerCase().includes('github')) data.personalInformation.gitHub = url;
+          else if (label.toLowerCase().includes('portfolio')) data.personalInformation.portfolio = url;
+        } else if (part && !data.personalInformation.location) {
+          data.personalInformation.location = unescape(part);
+        }
+      });
+    }
+
+    // ── Split by \section*{...} ──
+    const sectionRegex = /\\section\*\{([^}]*)\}/g;
+    const sectionPositions = [];
+    let m;
+    while ((m = sectionRegex.exec(latex)) !== null) {
+      sectionPositions.push({ name: m[1], start: m.index + m[0].length });
+    }
+    const getSectionContent = (idx) => {
+      const start = sectionPositions[idx].start;
+      const end = idx + 1 < sectionPositions.length ? sectionPositions[idx + 1].start - sectionPositions[idx + 1].name.length - 12 : latex.indexOf('\\end{document}');
+      return latex.substring(start, end > start ? end : latex.length);
+    };
+
+    sectionPositions.forEach((sec, idx) => {
+      const content = getSectionContent(idx);
+      const sectionName = sec.name.toLowerCase();
+
+      if (sectionName === 'summary') {
+        data.summary = unescape(content.trim());
+      }
+
+      else if (sectionName === 'education') {
+        // Pattern: \textbf{University}, Location \hfill Year \n \textit{Degree}
+        const eduBlocks = content.split(/\\textbf\{/).filter(Boolean);
+        eduBlocks.forEach(block => {
+          const uniMatch = block.match(/^([^}]*)\}/);
+          const locMatch = block.match(/\},\s*([^\\]*)\s*\\hfill/);
+          const yearMatch = block.match(/\\hfill\s*(.*)/);
+          const degreeMatch = block.match(/\\textit\{([^}]*)\}/);
+          if (uniMatch) {
+            data.education.push({
+              university: unescape(uniMatch[1]),
+              location: locMatch ? unescape(locMatch[1]) : '',
+              graduationYear: yearMatch ? unescape(yearMatch[1].replace(/\\textit.*/, '').trim()) : '',
+              degree: degreeMatch ? unescape(degreeMatch[1]) : '',
+            });
+          }
+        });
+      }
+
+      else if (sectionName === 'experience') {
+        const expBlocks = content.split(/\\textbf\{/).filter(Boolean);
+        expBlocks.forEach(block => {
+          const companyMatch = block.match(/^([^}]*)\}/);
+          const locMatch = block.match(/\},\s*([^\\]*)\s*\\hfill/);
+          const durationMatch = block.match(/\\hfill\s*(.*)/);
+          const titleMatch = block.match(/\\textit\{([^}]*)\}/);
+          // Bullet items
+          const items = [];
+          const itemRegex = /\\item\s+(.*)/g;
+          let im;
+          while ((im = itemRegex.exec(block)) !== null) items.push(unescape(im[1]));
+          if (companyMatch) {
+            data.experience.push({
+              company: unescape(companyMatch[1]),
+              location: locMatch ? unescape(locMatch[1]) : '',
+              duration: durationMatch ? unescape(durationMatch[1].replace(/\\textit.*/, '').replace(/\n.*/s, '').trim()) : '',
+              jobTitle: titleMatch ? unescape(titleMatch[1]) : '',
+              responsibility: items.join('\n'),
+            });
+          }
+        });
+      }
+
+      else if (sectionName === 'projects') {
+        // Pattern: \textbf{Title} $|$ \textit{Tech} \n \begin{itemize} \item ... \end{itemize}
+        const projBlocks = content.split(/\\textbf\{/).filter(Boolean);
+        projBlocks.forEach(block => {
+          const titleMatch = block.match(/^([^}]*)\}/);
+          const techMatch = block.match(/\\textit\{([^}]*)\}/);
+          const items = [];
+          const itemRegex = /\\item\s+(.*)/g;
+          let im;
+          while ((im = itemRegex.exec(block)) !== null) items.push(unescape(im[1]));
+          if (titleMatch) {
+            data.projects.push({
+              title: unescape(titleMatch[1]),
+              technologiesUsed: techMatch ? unescape(techMatch[1]) : '',
+              description: items.join('\n'),
+              githubLink: '',
+            });
+          }
+        });
+      }
+
+      else if (sectionName === 'technical skills') {
+        // Pattern: \textbf{Category:} item1, item2 \\
+        const skillLines = content.split(/\\\\/).filter(Boolean);
+        skillLines.forEach(line => {
+          const catMatch = line.match(/\\textbf\{([^:}]*):?\}\s*(.*)/);
+          if (catMatch) {
+            const category = unescape(catMatch[1].replace(/:$/, ''));
+            const items = catMatch[2].split(',').map(s => unescape(s)).filter(Boolean);
+            if (items.length > 0) {
+              data.skills.push({ title: category, level: 'Intermediate', items });
+            }
+          }
+        });
+      }
+
+      else if (sectionName === 'certifications') {
+        const itemRegex = /\\item\s+(.*)/g;
+        let im;
+        while ((im = itemRegex.exec(content)) !== null) {
+          const line = im[1];
+          const parts = line.split('--').map(p => p.trim());
+          const yearMatch = line.match(/\(([^)]*)\)/);
+          data.certifications.push({
+            title: unescape(parts[0].replace(/\([^)]*\)/, '').trim()),
+            issuingOrganization: parts.length > 1 ? unescape(parts[1].replace(/\([^)]*\)/, '').trim()) : '',
+            year: yearMatch ? unescape(yearMatch[1]) : '',
+          });
+        }
+      }
+
+      else if (sectionName === 'achievements') {
+        const itemRegex = /\\item\s+(.*)/g;
+        let im;
+        while ((im = itemRegex.exec(content)) !== null) {
+          const line = im[1];
+          const yearMatch = line.match(/\(([^)]*)\)/);
+          data.achievements.push({
+            title: unescape(line.replace(/\([^)]*\)/, '').trim()),
+            year: yearMatch ? unescape(yearMatch[1]) : '',
+          });
+        }
+      }
+    });
+
+    return data;
+  }, []);
+
   // Compile LaTeX to PDF (local backend)
   const compileLocal = useCallback(async (latex) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
-    
+
     try {
       const resp = await fetch(`${API_BASE_URL}/latex/compile`, {
         method: 'POST',
@@ -300,9 +489,9 @@ ${sections}
         signal: controller.signal,
         body: JSON.stringify({ latexCode: latex })
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       if (resp.ok) {
         const contentType = resp.headers.get('content-type');
         if (contentType && contentType.includes('application/pdf')) {
@@ -328,7 +517,7 @@ ${sections}
   const compileOnline = useCallback(async (latex) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
-    
+
     try {
       const resp = await fetch('https://latex.ytotech.com/builds/sync', {
         method: 'POST',
@@ -339,9 +528,9 @@ ${sections}
           resources: [{ main: true, content: latex }]
         })
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       if (resp.ok) {
         const blob = await resp.blob();
         if (blob.type === 'application/pdf') {
@@ -365,9 +554,15 @@ ${sections}
   // Main compile function - tries local first, auto-fallback to online on failure
   const compileToPdf = useCallback(async (latex) => {
     if (!latex) return;
+
+    if (!isAuthenticated) {
+      setCompileError('Please sign in to preview and download your resume.');
+      return;
+    }
+
     setCompiling(true);
     setCompileError(null);
-    
+
     try {
       // Try local compiler first
       const blob = await compileLocal(latex);
@@ -379,7 +574,7 @@ ${sections}
       setUseOnlineCompiler(false);
     } catch (localError) {
       console.warn('Local compile failed, trying online:', localError.message);
-      
+
       // Auto-fallback to online compiler
       try {
         const blob = await compileOnline(latex);
@@ -420,15 +615,15 @@ ${sections}
   // Load resume data from localStorage
   useEffect(() => {
     const storedResume = localStorage.getItem('generatedResume');
-    
+
     if (storedResume) {
       try {
         let data = storedResume;
         if (typeof data === 'string') {
-          try { data = JSON.parse(data); } catch {}
+          try { data = JSON.parse(data); } catch { }
         }
         if (typeof data === 'string') {
-          try { data = JSON.parse(data); } catch {}
+          try { data = JSON.parse(data); } catch { }
         }
 
         const likelyKeys = ['personalInformation', 'summary', 'skills', 'experience'];
@@ -447,16 +642,16 @@ ${sections}
         }
 
         setResumeData(data);
-        
+
         const formProjects = (data.projects || []).map(project => ({
           title: project.title || '',
           description: project.description || '',
-          technologiesUsed: Array.isArray(project.technologiesUsed) 
-            ? project.technologiesUsed.join(', ') 
+          technologiesUsed: Array.isArray(project.technologiesUsed)
+            ? project.technologiesUsed.join(', ')
             : (project.technologiesUsed || ''),
           githubLink: project.githubLink || ''
         }));
-        
+
         const pi = data.personalInformation || data.personalInfo || {};
         const skillsRaw = normalizeSkills(data.skills);
         const expRaw = Array.isArray(data.experience) ? data.experience : [];
@@ -478,11 +673,11 @@ ${sections}
           skills: skillsRaw.map(skill => (
             typeof skill === 'string'
               ? { title: 'Skills', level: 'Intermediate', items: [skill] }
-              : { 
-                  title: skill.title || skill.category || '', 
-                  level: skill.level || 'Intermediate',
-                  items: skill.items || null,
-                }
+              : {
+                title: skill.title || skill.category || '',
+                level: skill.level || 'Intermediate',
+                items: skill.items || null,
+              }
           )),
           experience: expRaw.map(exp => ({
             jobTitle: exp.jobTitle || exp.title || '',
@@ -516,7 +711,7 @@ ${sections}
               : { name: int.name || int.title || '' }
           )),
         });
-        
+
         setLoading(false);
       } catch (error) {
         console.error('Error parsing resume data:', error);
@@ -536,7 +731,7 @@ ${sections}
     if (!resumeData) return;
     const latex = generateLatexFromData(resumeData);
     setLatexCode(latex);
-    
+
     // Auto-compile if enabled
     if (autoCompile && latex) {
       if (autoCompileTimer.current) clearTimeout(autoCompileTimer.current);
@@ -549,7 +744,7 @@ ${sections}
   // Handle LaTeX code changes (when in latex edit mode)
   const handleLatexChange = useCallback((value) => {
     setLatexCode(value || '');
-    
+
     // Auto-compile with debounce
     if (autoCompile) {
       if (autoCompileTimer.current) clearTimeout(autoCompileTimer.current);
@@ -569,15 +764,23 @@ ${sections}
   }, [pdfUrl]);
 
   const handleSave = () => {
+    if (!isAuthenticated) {
+      setSnack({ open: true, type: 'info', text: 'Please sign in to save your changes.' });
+      setTimeout(() => {
+        navigate('/login', { state: { from: location } });
+      }, 1500);
+      return;
+    }
+
     setSaving(true);
-    
+
     const savedProjects = formData.projects?.map(project => ({
       ...project,
-      technologiesUsed: typeof project.technologiesUsed === 'string' 
+      technologiesUsed: typeof project.technologiesUsed === 'string'
         ? project.technologiesUsed.split(',').map(tech => tech.trim()).filter(Boolean)
         : project.technologiesUsed
     })) || [];
-    
+
     const updatedResume = {
       personalInformation: {
         fullName: formData.fullName,
@@ -608,7 +811,7 @@ ${sections}
         name: it.name
       })) || [],
     };
-    
+
     setResumeData(updatedResume);
     localStorage.setItem('generatedResume', JSON.stringify(updatedResume));
     setLastSavedAt(new Date());
@@ -650,7 +853,7 @@ ${sections}
           if (prev) URL.revokeObjectURL(prev);
           return URL.createObjectURL(blob);
         });
-        
+
         const downloadUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = downloadUrl;
@@ -811,13 +1014,44 @@ ${sections}
             <div className="header-actions">
               {/* Edit Mode Toggle */}
               <div className="edit-mode-toggle">
-                <button 
+                <button
                   className={`mode-btn ${editMode === 'form' ? 'active' : ''}`}
-                  onClick={() => setEditMode('form')}
+                  onClick={() => {
+                    // ── Bidirectional sync: parse LaTeX back into form when switching to Form mode ──
+                    if (editMode === 'latex' && latexCode) {
+                      const parsed = parseLatexToData(latexCode);
+                      if (parsed) {
+                        setResumeData(parsed);
+                        const pi = parsed.personalInformation || {};
+                        setFormData({
+                          fullName: pi.fullName || '',
+                          email: pi.email || '',
+                          phoneNumber: pi.phoneNumber || '',
+                          location: pi.location || '',
+                          linkedIn: pi.linkedIn || '',
+                          gitHub: pi.gitHub || '',
+                          portfolio: pi.portfolio || '',
+                          summary: parsed.summary || '',
+                          skills: (parsed.skills || []).map(s => ({
+                            title: s.title || '', level: s.level || 'Intermediate', items: s.items || [],
+                          })),
+                          experience: parsed.experience || [],
+                          education: parsed.education || [],
+                          projects: parsed.projects || [],
+                          certifications: parsed.certifications || [],
+                          achievements: parsed.achievements || [],
+                          languages: parsed.languages || [],
+                          interests: parsed.interests || [],
+                        });
+                        localStorage.setItem('generatedResume', JSON.stringify(parsed));
+                      }
+                    }
+                    setEditMode('form');
+                  }}
                 >
                   📝 Form
                 </button>
-                <button 
+                <button
                   className={`mode-btn ${editMode === 'latex' ? 'active' : ''}`}
                   onClick={() => setEditMode('latex')}
                 >
@@ -833,10 +1067,10 @@ ${sections}
             <div className="latex-editor-panel">
               <div className="latex-toolbar">
                 <label className="auto-compile-toggle">
-                  <input 
-                    type="checkbox" 
-                    checked={autoCompile} 
-                    onChange={(e) => setAutoCompile(e.target.checked)} 
+                  <input
+                    type="checkbox"
+                    checked={autoCompile}
+                    onChange={(e) => setAutoCompile(e.target.checked)}
                   />
                   Auto-Compile
                 </label>
@@ -884,407 +1118,407 @@ ${sections}
           ) : (
             /* Form Editor Mode */
             <>
-          <div className="section-card">
-            <div className="section-header">
-              <div className="section-icon blue">👤</div>
-              <div className="section-info">
-                <h3>Personal Information</h3>
-                <p>Contact details and profile links</p>
-              </div>
-            </div>
-            <div className="form-grid">
-              <div className="form-group">
-                <label>Full Name</label>
-                <input
-                  type="text"
-                  value={formData.fullName}
-                  onChange={(e) => updateField('fullName', e.target.value)}
-                  placeholder="John Doe"
-                />
-              </div>
-              <div className="form-group">
-                <label>Email Address</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => updateField('email', e.target.value)}
-                  placeholder="john@example.com"
-                />
-              </div>
-              <div className="form-group">
-                <label>Phone Number</label>
-                <input
-                  type="text"
-                  value={formData.phoneNumber}
-                  onChange={(e) => updateField('phoneNumber', e.target.value)}
-                  placeholder="123-456-7890"
-                />
-              </div>
-              <div className="form-group">
-                <label>Location</label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => updateField('location', e.target.value)}
-                  placeholder="City, Country"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Professional Summary Section */}
-          <div className="section-card">
-            <div className="section-header">
-              <div className="section-icon purple">📝</div>
-              <div className="section-info">
-                <h3>Professional Summary</h3>
-                <p>A concise overview of your impact</p>
-              </div>
-            </div>
-            <div className="form-group full-width">
-              <textarea
-                value={formData.summary}
-                onChange={(e) => updateField('summary', e.target.value)}
-                placeholder="Write a compelling professional summary that highlights your key achievements and career goals..."
-                rows={5}
-              />
-            </div>
-          </div>
-
-          {/* Skills Section */}
-          <div className="section-card">
-            <div className="section-header">
-              <div className="section-icon cyan">⚡</div>
-              <div className="section-info">
-                <h3>Skills</h3>
-                <p>Your technical and soft skills (by category)</p>
-              </div>
-            </div>
-            {formData.skills.map((skill, index) => (
-              <div key={index} className="repeater-item">
-                <button className="delete-btn" onClick={() => removeSkill(index)}>✕</button>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Category</label>
-                    <input
-                      type="text"
-                      value={skill.title}
-                      onChange={(e) => {
-                        const newSkills = [...formData.skills];
-                        newSkills[index] = { ...newSkills[index], title: e.target.value };
-                        updateField('skills', newSkills);
-                      }}
-                      placeholder="e.g., Languages, Frameworks, Tools"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Skills (comma separated)</label>
-                    <input
-                      type="text"
-                      value={
-                        skill.items 
-                          ? (Array.isArray(skill.items) ? skill.items.join(', ') : skill.items)
-                          : (skill.level || '')
-                      }
-                      onChange={(e) => {
-                        const newSkills = [...formData.skills];
-                        newSkills[index] = { 
-                          ...newSkills[index], 
-                          items: e.target.value.split(',').map(s => s.trim()).filter(Boolean),
-                          level: e.target.value 
-                        };
-                        updateField('skills', newSkills);
-                      }}
-                      placeholder="e.g., Java, Python, JavaScript"
-                    />
+              <div className="section-card">
+                <div className="section-header">
+                  <div className="section-icon blue">👤</div>
+                  <div className="section-info">
+                    <h3>Personal Information</h3>
+                    <p>Contact details and profile links</p>
                   </div>
                 </div>
-              </div>
-            ))}
-            <button className="add-btn" onClick={addSkill}>
-              + Add Skill Category
-            </button>
-          </div>
-
-          {/* Experience Section */}
-          <div className="section-card">
-            <div className="section-header">
-              <div className="section-icon green">💼</div>
-              <div className="section-info">
-                <h3>Work Experience</h3>
-                <p>Your professional journey</p>
-              </div>
-            </div>
-            {formData.experience.map((exp, index) => (
-              <div key={index} className="repeater-item">
-                <button className="delete-btn" onClick={() => removeExperience(index)}>✕</button>
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>Job Title</label>
+                    <label>Full Name</label>
                     <input
                       type="text"
-                      value={exp.jobTitle}
-                      onChange={(e) => {
-                        const newExp = [...formData.experience];
-                        newExp[index] = { ...newExp[index], jobTitle: e.target.value };
-                        updateField('experience', newExp);
-                      }}
-                      placeholder="Software Engineer"
+                      value={formData.fullName}
+                      onChange={(e) => updateField('fullName', e.target.value)}
+                      placeholder="John Doe"
                     />
                   </div>
                   <div className="form-group">
-                    <label>Company</label>
+                    <label>Email Address</label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => updateField('email', e.target.value)}
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Phone Number</label>
                     <input
                       type="text"
-                      value={exp.company}
-                      onChange={(e) => {
-                        const newExp = [...formData.experience];
-                        newExp[index] = { ...newExp[index], company: e.target.value };
-                        updateField('experience', newExp);
-                      }}
-                      placeholder="Company Name"
+                      value={formData.phoneNumber}
+                      onChange={(e) => updateField('phoneNumber', e.target.value)}
+                      placeholder="123-456-7890"
                     />
                   </div>
                   <div className="form-group">
                     <label>Location</label>
                     <input
                       type="text"
-                      value={exp.location}
-                      onChange={(e) => {
-                        const newExp = [...formData.experience];
-                        newExp[index] = { ...newExp[index], location: e.target.value };
-                        updateField('experience', newExp);
-                      }}
+                      value={formData.location}
+                      onChange={(e) => updateField('location', e.target.value)}
                       placeholder="City, Country"
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Duration</label>
-                    <input
-                      type="text"
-                      value={exp.duration}
-                      onChange={(e) => {
-                        const newExp = [...formData.experience];
-                        newExp[index] = { ...newExp[index], duration: e.target.value };
-                        updateField('experience', newExp);
-                      }}
-                      placeholder="Jan 2020 - Present"
-                    />
-                  </div>
-                  <div className="form-group full-width">
-                    <label>Responsibilities</label>
-                    <textarea
-                      value={exp.responsibility}
-                      onChange={(e) => {
-                        const newExp = [...formData.experience];
-                        newExp[index] = { ...newExp[index], responsibility: e.target.value };
-                        updateField('experience', newExp);
-                      }}
-                      placeholder="Describe your key responsibilities and achievements..."
-                      rows={3}
-                    />
-                  </div>
                 </div>
               </div>
-            ))}
-            <button className="add-btn" onClick={addExperience}>
-              + Add Experience
-            </button>
-          </div>
 
-          {/* Education Section */}
-          <div className="section-card">
-            <div className="section-header">
-              <div className="section-icon orange">🎓</div>
-              <div className="section-info">
-                <h3>Education</h3>
-                <p>Your academic qualifications</p>
-              </div>
-            </div>
-            {formData.education.map((edu, index) => (
-              <div key={index} className="repeater-item">
-                <button className="delete-btn" onClick={() => removeEducation(index)}>✕</button>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Degree</label>
-                    <input
-                      type="text"
-                      value={edu.degree}
-                      onChange={(e) => {
-                        const newEdu = [...formData.education];
-                        newEdu[index] = { ...newEdu[index], degree: e.target.value };
-                        updateField('education', newEdu);
-                      }}
-                      placeholder="Bachelor of Technology"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>University/Institution</label>
-                    <input
-                      type="text"
-                      value={edu.university}
-                      onChange={(e) => {
-                        const newEdu = [...formData.education];
-                        newEdu[index] = { ...newEdu[index], university: e.target.value };
-                        updateField('education', newEdu);
-                      }}
-                      placeholder="University Name"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Location</label>
-                    <input
-                      type="text"
-                      value={edu.location}
-                      onChange={(e) => {
-                        const newEdu = [...formData.education];
-                        newEdu[index] = { ...newEdu[index], location: e.target.value };
-                        updateField('education', newEdu);
-                      }}
-                      placeholder="City, Country"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Graduation Year</label>
-                    <input
-                      type="text"
-                      value={edu.graduationYear}
-                      onChange={(e) => {
-                        const newEdu = [...formData.education];
-                        newEdu[index] = { ...newEdu[index], graduationYear: e.target.value };
-                        updateField('education', newEdu);
-                      }}
-                      placeholder="2024"
-                    />
+              {/* Professional Summary Section */}
+              <div className="section-card">
+                <div className="section-header">
+                  <div className="section-icon purple">📝</div>
+                  <div className="section-info">
+                    <h3>Professional Summary</h3>
+                    <p>A concise overview of your impact</p>
                   </div>
                 </div>
+                <div className="form-group full-width">
+                  <textarea
+                    value={formData.summary}
+                    onChange={(e) => updateField('summary', e.target.value)}
+                    placeholder="Write a compelling professional summary that highlights your key achievements and career goals..."
+                    rows={5}
+                  />
+                </div>
               </div>
-            ))}
-            <button className="add-btn" onClick={addEducation}>
-              + Add Education
-            </button>
-          </div>
 
-          {/* Projects Section */}
-          <div className="section-card">
-            <div className="section-header">
-              <div className="section-icon green">📁</div>
-              <div className="section-info">
-                <h3>Projects</h3>
-                <p>Showcase your technical work</p>
-              </div>
-            </div>
-            {formData.projects.map((project, index) => (
-              <div key={index} className="repeater-item">
-                <button className="delete-btn" onClick={() => removeProject(index)}>✕</button>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Project Title</label>
-                    <input
-                      type="text"
-                      value={project.title}
-                      onChange={(e) => {
-                        const newProjects = [...formData.projects];
-                        newProjects[index] = { ...newProjects[index], title: e.target.value };
-                        updateField('projects', newProjects);
-                      }}
-                      placeholder="Project Name"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Technologies</label>
-                    <input
-                      type="text"
-                      value={project.technologiesUsed}
-                      onChange={(e) => {
-                        const newProjects = [...formData.projects];
-                        newProjects[index] = { ...newProjects[index], technologiesUsed: e.target.value };
-                        updateField('projects', newProjects);
-                      }}
-                      placeholder="React, Node.js, MongoDB"
-                    />
-                  </div>
-                  <div className="form-group full-width">
-                    <label>Description</label>
-                    <textarea
-                      value={project.description}
-                      onChange={(e) => {
-                        const newProjects = [...formData.projects];
-                        newProjects[index] = { ...newProjects[index], description: e.target.value };
-                        updateField('projects', newProjects);
-                      }}
-                      placeholder="Describe what you built and the impact it made..."
-                      rows={3}
-                    />
+              {/* Skills Section */}
+              <div className="section-card">
+                <div className="section-header">
+                  <div className="section-icon cyan">⚡</div>
+                  <div className="section-info">
+                    <h3>Skills</h3>
+                    <p>Your technical and soft skills (by category)</p>
                   </div>
                 </div>
+                {formData.skills.map((skill, index) => (
+                  <div key={index} className="repeater-item">
+                    <button className="delete-btn" onClick={() => removeSkill(index)}>✕</button>
+                    <div className="form-grid">
+                      <div className="form-group">
+                        <label>Category</label>
+                        <input
+                          type="text"
+                          value={skill.title}
+                          onChange={(e) => {
+                            const newSkills = [...formData.skills];
+                            newSkills[index] = { ...newSkills[index], title: e.target.value };
+                            updateField('skills', newSkills);
+                          }}
+                          placeholder="e.g., Languages, Frameworks, Tools"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Skills (comma separated)</label>
+                        <input
+                          type="text"
+                          value={
+                            skill.items
+                              ? (Array.isArray(skill.items) ? skill.items.join(', ') : skill.items)
+                              : (skill.level || '')
+                          }
+                          onChange={(e) => {
+                            const newSkills = [...formData.skills];
+                            newSkills[index] = {
+                              ...newSkills[index],
+                              items: e.target.value.split(',').map(s => s.trim()).filter(Boolean),
+                              level: e.target.value
+                            };
+                            updateField('skills', newSkills);
+                          }}
+                          placeholder="e.g., Java, Python, JavaScript"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button className="add-btn" onClick={addSkill}>
+                  + Add Skill Category
+                </button>
               </div>
-            ))}
-            <button className="add-btn" onClick={addProject}>
-              + Add Project
-            </button>
-          </div>
 
-          {/* Certifications Section */}
-          <div className="section-card">
-            <div className="section-header">
-              <div className="section-icon yellow">🏆</div>
-              <div className="section-info">
-                <h3>Certifications</h3>
-                <p>Professional certifications and courses</p>
-              </div>
-            </div>
-            {formData.certifications.map((cert, index) => (
-              <div key={index} className="repeater-item">
-                <button className="delete-btn" onClick={() => removeCertification(index)}>✕</button>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Certification Name</label>
-                    <input
-                      type="text"
-                      value={cert.title}
-                      onChange={(e) => {
-                        const newCerts = [...formData.certifications];
-                        newCerts[index] = { ...newCerts[index], title: e.target.value };
-                        updateField('certifications', newCerts);
-                      }}
-                      placeholder="AWS Certified Developer"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Issuing Organization</label>
-                    <input
-                      type="text"
-                      value={cert.issuingOrganization}
-                      onChange={(e) => {
-                        const newCerts = [...formData.certifications];
-                        newCerts[index] = { ...newCerts[index], issuingOrganization: e.target.value };
-                        updateField('certifications', newCerts);
-                      }}
-                      placeholder="Amazon Web Services"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Year</label>
-                    <input
-                      type="text"
-                      value={cert.year}
-                      onChange={(e) => {
-                        const newCerts = [...formData.certifications];
-                        newCerts[index] = { ...newCerts[index], year: e.target.value };
-                        updateField('certifications', newCerts);
-                      }}
-                      placeholder="2024"
-                    />
+              {/* Experience Section */}
+              <div className="section-card">
+                <div className="section-header">
+                  <div className="section-icon green">💼</div>
+                  <div className="section-info">
+                    <h3>Work Experience</h3>
+                    <p>Your professional journey</p>
                   </div>
                 </div>
+                {formData.experience.map((exp, index) => (
+                  <div key={index} className="repeater-item">
+                    <button className="delete-btn" onClick={() => removeExperience(index)}>✕</button>
+                    <div className="form-grid">
+                      <div className="form-group">
+                        <label>Job Title</label>
+                        <input
+                          type="text"
+                          value={exp.jobTitle}
+                          onChange={(e) => {
+                            const newExp = [...formData.experience];
+                            newExp[index] = { ...newExp[index], jobTitle: e.target.value };
+                            updateField('experience', newExp);
+                          }}
+                          placeholder="Software Engineer"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Company</label>
+                        <input
+                          type="text"
+                          value={exp.company}
+                          onChange={(e) => {
+                            const newExp = [...formData.experience];
+                            newExp[index] = { ...newExp[index], company: e.target.value };
+                            updateField('experience', newExp);
+                          }}
+                          placeholder="Company Name"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Location</label>
+                        <input
+                          type="text"
+                          value={exp.location}
+                          onChange={(e) => {
+                            const newExp = [...formData.experience];
+                            newExp[index] = { ...newExp[index], location: e.target.value };
+                            updateField('experience', newExp);
+                          }}
+                          placeholder="City, Country"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Duration</label>
+                        <input
+                          type="text"
+                          value={exp.duration}
+                          onChange={(e) => {
+                            const newExp = [...formData.experience];
+                            newExp[index] = { ...newExp[index], duration: e.target.value };
+                            updateField('experience', newExp);
+                          }}
+                          placeholder="Jan 2020 - Present"
+                        />
+                      </div>
+                      <div className="form-group full-width">
+                        <label>Responsibilities</label>
+                        <textarea
+                          value={exp.responsibility}
+                          onChange={(e) => {
+                            const newExp = [...formData.experience];
+                            newExp[index] = { ...newExp[index], responsibility: e.target.value };
+                            updateField('experience', newExp);
+                          }}
+                          placeholder="Describe your key responsibilities and achievements..."
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button className="add-btn" onClick={addExperience}>
+                  + Add Experience
+                </button>
               </div>
-            ))}
-            <button className="add-btn" onClick={addCertification}>
-              + Add Certification
-            </button>
-          </div>
-          </>
+
+              {/* Education Section */}
+              <div className="section-card">
+                <div className="section-header">
+                  <div className="section-icon orange">🎓</div>
+                  <div className="section-info">
+                    <h3>Education</h3>
+                    <p>Your academic qualifications</p>
+                  </div>
+                </div>
+                {formData.education.map((edu, index) => (
+                  <div key={index} className="repeater-item">
+                    <button className="delete-btn" onClick={() => removeEducation(index)}>✕</button>
+                    <div className="form-grid">
+                      <div className="form-group">
+                        <label>Degree</label>
+                        <input
+                          type="text"
+                          value={edu.degree}
+                          onChange={(e) => {
+                            const newEdu = [...formData.education];
+                            newEdu[index] = { ...newEdu[index], degree: e.target.value };
+                            updateField('education', newEdu);
+                          }}
+                          placeholder="Bachelor of Technology"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>University/Institution</label>
+                        <input
+                          type="text"
+                          value={edu.university}
+                          onChange={(e) => {
+                            const newEdu = [...formData.education];
+                            newEdu[index] = { ...newEdu[index], university: e.target.value };
+                            updateField('education', newEdu);
+                          }}
+                          placeholder="University Name"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Location</label>
+                        <input
+                          type="text"
+                          value={edu.location}
+                          onChange={(e) => {
+                            const newEdu = [...formData.education];
+                            newEdu[index] = { ...newEdu[index], location: e.target.value };
+                            updateField('education', newEdu);
+                          }}
+                          placeholder="City, Country"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Graduation Year</label>
+                        <input
+                          type="text"
+                          value={edu.graduationYear}
+                          onChange={(e) => {
+                            const newEdu = [...formData.education];
+                            newEdu[index] = { ...newEdu[index], graduationYear: e.target.value };
+                            updateField('education', newEdu);
+                          }}
+                          placeholder="2024"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button className="add-btn" onClick={addEducation}>
+                  + Add Education
+                </button>
+              </div>
+
+              {/* Projects Section */}
+              <div className="section-card">
+                <div className="section-header">
+                  <div className="section-icon green">📁</div>
+                  <div className="section-info">
+                    <h3>Projects</h3>
+                    <p>Showcase your technical work</p>
+                  </div>
+                </div>
+                {formData.projects.map((project, index) => (
+                  <div key={index} className="repeater-item">
+                    <button className="delete-btn" onClick={() => removeProject(index)}>✕</button>
+                    <div className="form-grid">
+                      <div className="form-group">
+                        <label>Project Title</label>
+                        <input
+                          type="text"
+                          value={project.title}
+                          onChange={(e) => {
+                            const newProjects = [...formData.projects];
+                            newProjects[index] = { ...newProjects[index], title: e.target.value };
+                            updateField('projects', newProjects);
+                          }}
+                          placeholder="Project Name"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Technologies</label>
+                        <input
+                          type="text"
+                          value={project.technologiesUsed}
+                          onChange={(e) => {
+                            const newProjects = [...formData.projects];
+                            newProjects[index] = { ...newProjects[index], technologiesUsed: e.target.value };
+                            updateField('projects', newProjects);
+                          }}
+                          placeholder="React, Node.js, MongoDB"
+                        />
+                      </div>
+                      <div className="form-group full-width">
+                        <label>Description</label>
+                        <textarea
+                          value={project.description}
+                          onChange={(e) => {
+                            const newProjects = [...formData.projects];
+                            newProjects[index] = { ...newProjects[index], description: e.target.value };
+                            updateField('projects', newProjects);
+                          }}
+                          placeholder="Describe what you built and the impact it made..."
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button className="add-btn" onClick={addProject}>
+                  + Add Project
+                </button>
+              </div>
+
+              {/* Certifications Section */}
+              <div className="section-card">
+                <div className="section-header">
+                  <div className="section-icon yellow">🏆</div>
+                  <div className="section-info">
+                    <h3>Certifications</h3>
+                    <p>Professional certifications and courses</p>
+                  </div>
+                </div>
+                {formData.certifications.map((cert, index) => (
+                  <div key={index} className="repeater-item">
+                    <button className="delete-btn" onClick={() => removeCertification(index)}>✕</button>
+                    <div className="form-grid">
+                      <div className="form-group">
+                        <label>Certification Name</label>
+                        <input
+                          type="text"
+                          value={cert.title}
+                          onChange={(e) => {
+                            const newCerts = [...formData.certifications];
+                            newCerts[index] = { ...newCerts[index], title: e.target.value };
+                            updateField('certifications', newCerts);
+                          }}
+                          placeholder="AWS Certified Developer"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Issuing Organization</label>
+                        <input
+                          type="text"
+                          value={cert.issuingOrganization}
+                          onChange={(e) => {
+                            const newCerts = [...formData.certifications];
+                            newCerts[index] = { ...newCerts[index], issuingOrganization: e.target.value };
+                            updateField('certifications', newCerts);
+                          }}
+                          placeholder="Amazon Web Services"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Year</label>
+                        <input
+                          type="text"
+                          value={cert.year}
+                          onChange={(e) => {
+                            const newCerts = [...formData.certifications];
+                            newCerts[index] = { ...newCerts[index], year: e.target.value };
+                            updateField('certifications', newCerts);
+                          }}
+                          placeholder="2024"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button className="add-btn" onClick={addCertification}>
+                  + Add Certification
+                </button>
+              </div>
+            </>
           )}
         </div>
 
@@ -1298,9 +1532,9 @@ ${sections}
               </div>
               <div className="preview-actions">
                 {useOnlineCompiler && <span className="online-indicator" title="Using online compiler">🌐</span>}
-                <button 
-                  className="compile-btn" 
-                  onClick={handleManualCompile} 
+                <button
+                  className="compile-btn"
+                  onClick={handleManualCompile}
                   disabled={compiling}
                   title="Compile LaTeX to PDF"
                 >
@@ -1333,13 +1567,13 @@ ${sections}
                   </p>
                 </div>
               ) : pdfUrl ? (
-                <iframe 
-                  src={pdfUrl} 
+                <iframe
+                  src={pdfUrl}
                   className="pdf-iframe"
                   title="PDF Preview"
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
+                  style={{
+                    width: '100%',
+                    height: '100%',
                     border: 'none',
                     transform: `scale(${zoom / 100})`,
                     transformOrigin: 'top center'
@@ -1375,14 +1609,28 @@ ${sections}
       </div>
 
       {/* Snackbar */}
+      {/* AI Agent Chat */}
+      <AgentChat
+        formData={formData}
+        resumeContext={latexCode}
+        userId={(() => {
+          const token = getAuthToken();
+          if (token) {
+            const decoded = decodeToken(token);
+            return decoded?.sub || decoded?.email || 'anonymous';
+          }
+          return 'anonymous';
+        })()}
+      />
+
       <Snackbar
         open={snack.open}
         autoHideDuration={3000}
         onClose={() => setSnack(s => ({ ...s, open: false }))}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert 
-          severity={snack.type} 
+        <Alert
+          severity={snack.type}
           onClose={() => setSnack(s => ({ ...s, open: false }))}
         >
           {snack.text}

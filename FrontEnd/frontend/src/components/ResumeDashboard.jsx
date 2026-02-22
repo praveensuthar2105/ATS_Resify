@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './ResumeDashboard.css';
+import { API_BASE_URL } from '../services/api';
 
 const ResumeDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
@@ -12,7 +13,7 @@ const ResumeDashboard = () => {
 
     const fetchResumeData = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/resume-sync/data');
+            const response = await fetch(`${API_BASE_URL}/resume-sync/data`);
             const data = await response.json();
             setResumeData(data);
             setLoading(false);
@@ -167,7 +168,7 @@ const EditorTab = ({ data, onUpdate }) => {
 
     const handleSave = async () => {
         try {
-            await fetch('http://localhost:8080/api/resume-sync/update-data', {
+            await fetch(`${API_BASE_URL}/resume-sync/update-data`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)

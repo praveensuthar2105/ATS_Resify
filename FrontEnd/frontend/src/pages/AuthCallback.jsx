@@ -1,62 +1,82 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography, Alert } from '@mui/material';
+import { API_BASE_URL, API_ROOT_URL } from '../services/api';
+
+import { useAuth } from '../context/AuthContext';
 
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [error, setError] = useState(null);
+  const { login } = useAuth();
 
   useEffect(() => {
-    // Extract token, name, and email from URL parameters
-    const token = searchParams.get('token');
-    const name = searchParams.get('name');
-    const email = searchParams.get('email');
+    const code = searchParams.get('code');
 
-    if (token && name && email) {
-      // Fetch user details to get role
-      fetch('http://localhost:8081/api/user/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+    if (!code) {
+      setError('Invalid authentication response. Missing authorization code.');
+      return;
+    }
+
+    // Exchange the one-time code for JWT + user info
+    fetch(`${API_ROOT_URL}/auth/exchange`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Code exchange failed. The code may have expired.');
         }
+        return res.json();
       })
-      .then(res => res.json())
       .then(data => {
-        // Store token and user info in localStorage
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('userName', name);
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('userRole', data.role || 'USER');
+        const { token, name, email } = data;
 
-        console.log('✅ Login successful!');
-        console.log('Token:', token);
-        console.log('Name:', name);
-        console.log('Email:', email);
-        console.log('Role:', data.role);
+        // Fetch user details to get role
+        return fetch(`${API_BASE_URL}/user/me`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        })
+          .then(res => res.json())
+          .then(userData => {
+            login({
+              token,
+              name,
+              email,
+              role: userData.role || 'USER'
+            });
 
-        // Redirect to home page after 1 second
-        setTimeout(() => {
-          navigate('/');
-          // Reload to update navbar with user info
-          window.location.reload();
-        }, 1000);
+            console.log('✅ Login successful!');
+
+            const redirectTo = localStorage.getItem('redirectAfterAuth') || '/';
+            localStorage.removeItem('redirectAfterAuth');
+
+            setTimeout(() => {
+              navigate(redirectTo);
+            }, 500);
+          })
+          .catch(err => {
+            console.error('Error fetching user details:', err);
+            login({
+              token,
+              name,
+              email,
+              role: 'USER'
+            });
+
+            const redirectTo = localStorage.getItem('redirectAfterAuth') || '/';
+            localStorage.removeItem('redirectAfterAuth');
+
+            setTimeout(() => {
+              navigate(redirectTo);
+            }, 500);
+          });
       })
       .catch(err => {
-        console.error('Error fetching user details:', err);
-        // Still store basic info even if role fetch fails
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('userName', name);
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('userRole', 'USER');
-        
-        setTimeout(() => {
-          navigate('/');
-          window.location.reload();
-        }, 1000);
+        console.error('Code exchange error:', err);
+        setError(err.message || 'Authentication failed. Please try again.');
       });
-    } else {
-      setError('Invalid authentication response. Missing token or user information.');
-    }
   }, [searchParams, navigate]);
 
   if (error) {
@@ -98,3 +118,4 @@ const AuthCallback = () => {
 };
 
 export default AuthCallback;
+

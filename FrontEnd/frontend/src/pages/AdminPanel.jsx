@@ -28,6 +28,7 @@ import {
 } from '@mui/material';
 import { SafetyOutlined, UserOutlined, SearchOutlined, DeleteOutlined, ReloadOutlined, TeamOutlined } from '@ant-design/icons';
 import { getAuthHeaders } from '../utils/auth';
+import { API_BASE_URL } from '../services/api';
 
 const AdminPanel = () => {
   const [users, setUsers] = useState([]);
@@ -46,7 +47,7 @@ const AdminPanel = () => {
     const verifyAdmin = async () => {
       const token = localStorage.getItem('authToken');
       const role = localStorage.getItem('userRole');
-      
+
       if (!token || role !== 'ADMIN') {
         setError('Access denied. Admin role required.');
         setLoading(false);
@@ -55,7 +56,7 @@ const AdminPanel = () => {
 
       // Verify admin status with backend
       try {
-        const response = await fetch('http://localhost:8081/api/user/me', {
+        const response = await fetch(`${API_BASE_URL}/user/me`, {
           headers: getAuthHeaders(),
         });
 
@@ -64,7 +65,7 @@ const AdminPanel = () => {
         }
 
         const userData = await response.json();
-        
+
         if (userData.role !== 'ADMIN') {
           localStorage.setItem('userRole', userData.role);
           setError('Access denied. Admin privileges have been revoked.');
@@ -86,7 +87,7 @@ const AdminPanel = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8081/api/admin/users', {
+      const response = await fetch(`${API_BASE_URL}/admin/users`, {
         headers: getAuthHeaders(),
       });
 
@@ -97,13 +98,13 @@ const AdminPanel = () => {
       const data = await response.json();
       setUsers(data);
       setFilteredUsers(data);
-      
+
       // Calculate stats
       const totalUsers = data.length;
       const admins = data.filter(u => u.role === 'ADMIN').length;
       const regularUsers = totalUsers - admins;
       setStats({ totalUsers, admins, regularUsers });
-      
+
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -129,7 +130,7 @@ const AdminPanel = () => {
 
   const grantAdminRole = async (userId, userName) => {
     try {
-      const response = await fetch(`http://localhost:8081/api/admin/grant-admin/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/grant-admin/${userId}`, {
         method: 'PUT',
         headers: getAuthHeaders(),
       });
@@ -148,7 +149,7 @@ const AdminPanel = () => {
 
   const revokeAdminRole = async (userId, userName) => {
     try {
-      const response = await fetch(`http://localhost:8081/api/admin/revoke-admin/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/revoke-admin/${userId}`, {
         method: 'PUT',
         headers: getAuthHeaders(),
       });
@@ -169,7 +170,7 @@ const AdminPanel = () => {
     if (!userToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:8081/api/admin/delete-user/${userToDelete.id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/delete-user/${userToDelete.id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });

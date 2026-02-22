@@ -13,8 +13,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
-@CrossOrigin(origins = { "http://localhost:5175", "http://localhost:5178", "http://localhost:5173",
-        "http://localhost:5174" })
 public class UserController {
 
     @Autowired
@@ -41,7 +39,7 @@ public class UserController {
             response.put("email", user.getEmail());
             response.put("name", user.getName());
             response.put("picture", user.getPicture());
-            response.put("role", user.getRole().toString());
+            response.put("role", user.getRole() != null ? user.getRole().toString() : null);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

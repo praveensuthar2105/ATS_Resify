@@ -7,7 +7,7 @@ Hard requirements (follow exactly):
 - Do NOT wrap your response in <think> tags, XML tags, or markdown code fences.
 - Do NOT include any text before or after the JSON object.
 - Use these EXACT top-level keys and types (no extras, no renames):
-  - atsScore: string percentage with no decimals, e.g., "85%". Range 0%–100%.
+  - atsScore: string percentage with no decimals, e.g., "72%". Range 0%–100%.
   - scoreBreakdown: object with EXACT keys and values as string on a 10-point scale: "N/10" where N is an integer 0–10.
     - keywordMatch: "N/10"
     - formatting: "N/10"
@@ -26,31 +26,27 @@ Consistency rules:
 
 Response structure (output this exact JSON structure, no wrapping):
 {
-  "atsScore": "85%",
+  "atsScore": "[Calculate a realistic percentage based on content, e.g., 65%]",
   "scoreBreakdown": {
-    "keywordMatch": "7/10",
-    "formatting": "9/10",
-    "sectionCompleteness": "8/10"
+    "keywordMatch": "[N/10]",
+    "formatting": "[N/10]",
+    "sectionCompleteness": "[N/10]"
   },
   "strengths": [
-    "Excellent use of action verbs to describe accomplishments.",
-    "Clean, professional formatting that is easy for an ATS to parse."
+    "Brief strength description"
   ],
   "weaknesses": [
-    "Lacks specific, quantifiable metrics in the experience section.",
-    "Missing some key industry-specific skills for the target role."
+    "Brief weakness description"
   ],
   "detailedSuggestions": [
     {
       "section": "Experience",
-      "suggestion": "Quantify impact in role descriptions, e.g., 'Developed 3 features improving engagement by 15%'."
-    },
-    {
-      "section": "Skills",
-      "suggestion": "Add relevant keywords you possess, e.g., 'CI/CD', 'Docker', 'Kubernetes', for better ATS matching."
+      "suggestion": "Specific improvement suggestion"
     }
   ]
 }
+
+CRITICAL: Do not simply copy the example values above. You must PERFORM A REAL, OBJECTIVE ANALYSIS of the provided resume text and generate unique, realistic scores and feedback for every single request. Do not default to 85%.
 
 Here is the resume text to analyze:
 {{resumeText}}

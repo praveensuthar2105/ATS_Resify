@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
+import { API_BASE_URL, API_ROOT_URL } from '../services/api';
 
 const ResumeSyncEditor = () => {
     const [resumeData, setResumeData] = useState(null);
@@ -11,7 +12,7 @@ const ResumeSyncEditor = () => {
 
     useEffect(() => {
         // Connect to WebSocket
-        const socket = new SockJS('http://localhost:8080/ws-resume');
+        const socket = new SockJS(`${API_ROOT_URL}/ws-resume`);
         const client = Stomp.over(socket);
 
         client.connect({}, () => {
@@ -45,15 +46,15 @@ const ResumeSyncEditor = () => {
 
     const fetchResumeData = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/resume-sync/data');
+            const response = await fetch(`${API_BASE_URL}/resume-sync/data`);
             const data = await response.json();
             setResumeData(data);
 
-            const jsonResponse = await fetch('http://localhost:8080/api/resume-sync/json');
+            const jsonResponse = await fetch(`${API_BASE_URL}/resume-sync/json`);
             const jsonResult = await jsonResponse.json();
             setJsonData(jsonResult.json);
 
-            const latexResponse = await fetch('http://localhost:8080/api/resume-sync/latex');
+            const latexResponse = await fetch(`${API_BASE_URL}/resume-sync/latex`);
             const latexResult = await latexResponse.json();
             setLatexData(latexResult.latex);
         } catch (error) {
@@ -63,7 +64,7 @@ const ResumeSyncEditor = () => {
 
     const updateFromJson = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/resume-sync/update-from-json', {
+            const response = await fetch(`${API_BASE_URL}/resume-sync/update-from-json`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ json: jsonData })
@@ -79,7 +80,7 @@ const ResumeSyncEditor = () => {
 
     const updateFromLatex = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/resume-sync/update-from-latex', {
+            const response = await fetch(`${API_BASE_URL}/resume-sync/update-from-latex`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ latex: latexData })
@@ -95,7 +96,7 @@ const ResumeSyncEditor = () => {
 
     const updateFromForm = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/resume-sync/update-data', {
+            const response = await fetch(`${API_BASE_URL}/resume-sync/update-data`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(resumeData)

@@ -1,0 +1,747 @@
+/* AI Agent Chat Styles - Matches Resume.AI design system */
+
+:root {
+  --agent-primary: #6366f1;
+  --agent-primary-dark: #4f46e5;
+  --agent-primary-light: #818cf8;
+  --agent-purple: #a855f7;
+  --agent-green: #22c55e;
+  --agent-orange: #f97316;
+  --agent-pink: #ec4899;
+  --agent-bg: #ffffff;
+  --agent-bg-light: #f8fafc;
+  --agent-bg-chat: #f1f5f9;
+  --agent-text-dark: #1f2937;
+  --agent-text-light: #6b7280;
+  --agent-text-muted: #9ca3af;
+  --agent-border: #e5e7eb;
+  --agent-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --agent-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --agent-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --agent-radius: 12px;
+  --agent-radius-lg: 16px;
+}
+
+/* ==================== Floating Toggle Button ==================== */
+.agent-toggle-btn {
+  position: fixed;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  color: white;
+  border: none;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+  transition: background 0.3s, box-shadow 0.3s;
+  z-index: 1000;
+  user-select: none;
+  touch-action: none;
+}
+
+.agent-toggle-btn.dragging {
+  cursor: grabbing;
+  transform: scale(1.1);
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.55);
+  transition: none;
+}
+
+.agent-toggle-btn:hover {
+  box-shadow: 0 6px 28px rgba(99, 102, 241, 0.5);
+}
+
+.agent-toggle-btn:active {
+  cursor: grabbing;
+}
+
+.agent-toggle-btn.active {
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+}
+
+.agent-toggle-btn svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s;
+}
+
+.agent-toggle-btn.active svg {
+  transform: rotate(90deg);
+}
+
+.agent-toggle-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  animation: agentPulse 2s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes agentPulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.3); opacity: 0; }
+}
+
+/* ==================== Chat Panel ==================== */
+.agent-chat-panel {
+  position: fixed;
+  background: var(--agent-bg);
+  border-radius: var(--agent-radius-lg);
+  box-shadow: var(--agent-shadow-lg);
+  border: 1px solid var(--agent-border);
+  display: flex;
+  flex-direction: column;
+  z-index: 999;
+  overflow: hidden;
+  animation: agentSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.agent-chat-panel.resizing {
+  user-select: none;
+  transition: none;
+}
+
+/* ==================== Resize Handles ==================== */
+.agent-resize-handle {
+  position: absolute;
+  z-index: 10;
+}
+
+.agent-resize-handle.top {
+  top: 0; left: 12px; right: 12px;
+  height: 6px;
+  cursor: ns-resize;
+}
+
+.agent-resize-handle.left {
+  left: 0; top: 12px; bottom: 12px;
+  width: 6px;
+  cursor: ew-resize;
+}
+
+.agent-resize-handle.corner {
+  top: 0; left: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+}
+
+.agent-resize-handle:hover {
+  background: rgba(99, 102, 241, 0.12);
+  border-radius: 3px;
+}
+
+@keyframes agentSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 480px) {
+  .agent-chat-panel {
+    width: calc(100vw - 24px) !important;
+    height: calc(100vh - 140px) !important;
+    right: 12px !important;
+    bottom: 80px !important;
+  }
+  .agent-resize-handle {
+    display: none;
+  }
+}
+
+/* ==================== Chat Header ==================== */
+.agent-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+  color: white;
+}
+
+.agent-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.agent-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.agent-header-info h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.agent-header-info span {
+  font-size: 12px;
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.agent-status-dot {
+  width: 6px;
+  height: 6px;
+  background: #22c55e;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.agent-header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.agent-header-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.agent-header-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ==================== Agent Mode Tabs ==================== */
+.agent-mode-tabs {
+  display: flex;
+  background: var(--agent-bg-light);
+  border-bottom: 1px solid var(--agent-border);
+  padding: 4px;
+  gap: 2px;
+}
+
+.agent-mode-tab {
+  flex: 1;
+  padding: 8px 4px;
+  border: none;
+  background: transparent;
+  color: var(--agent-text-light);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.2;
+}
+
+.agent-mode-tab:hover {
+  background: rgba(99, 102, 241, 0.05);
+  color: var(--agent-text-dark);
+}
+
+.agent-mode-tab.active {
+  background: white;
+  color: var(--agent-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.agent-mode-tab .tab-icon {
+  font-size: 16px;
+}
+
+/* ==================== Messages Area ==================== */
+.agent-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--agent-bg-chat);
+}
+
+.agent-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.agent-messages::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+/* Welcome Screen */
+.agent-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 24px;
+}
+
+.agent-welcome-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+
+.agent-welcome h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--agent-text-dark);
+  margin: 0 0 8px 0;
+}
+
+.agent-welcome p {
+  font-size: 13px;
+  color: var(--agent-text-light);
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.agent-quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.agent-quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: white;
+  border: 1px solid var(--agent-border);
+  border-radius: var(--agent-radius);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  font-size: 13px;
+  color: var(--agent-text-dark);
+}
+
+.agent-quick-btn:hover {
+  border-color: var(--agent-primary);
+  background: rgba(99, 102, 241, 0.03);
+  transform: translateY(-1px);
+  box-shadow: var(--agent-shadow);
+}
+
+.agent-quick-btn .qb-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.agent-quick-btn .qb-text strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.agent-quick-btn .qb-text span {
+  font-size: 11px;
+  color: var(--agent-text-light);
+}
+
+/* ==================== Message Bubbles ==================== */
+.agent-message {
+  display: flex;
+  gap: 8px;
+  max-width: 88%;
+  animation: agentMsgIn 0.25s ease-out;
+}
+
+@keyframes agentMsgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.agent-message.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.agent-message.assistant {
+  align-self: flex-start;
+}
+
+.msg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.agent-message.user .msg-avatar {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: white;
+}
+
+.agent-message.assistant .msg-avatar {
+  background: linear-gradient(135deg, #a855f7, #c084fc);
+  color: white;
+}
+
+.msg-content {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.agent-message.user .msg-content {
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.agent-message.assistant .msg-content {
+  background: white;
+  color: var(--agent-text-dark);
+  border: 1px solid var(--agent-border);
+  border-bottom-left-radius: 4px;
+}
+
+.msg-content strong {
+  font-weight: 600;
+}
+
+.msg-content ul, .msg-content ol {
+  margin: 6px 0;
+  padding-left: 18px;
+}
+
+.msg-content li {
+  margin-bottom: 3px;
+}
+
+.msg-content code {
+  background: rgba(99, 102, 241, 0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+}
+
+.msg-time {
+  font-size: 10px;
+  color: var(--agent-text-muted);
+  margin-top: 4px;
+  text-align: right;
+}
+
+.agent-message.assistant .msg-time {
+  text-align: left;
+}
+
+.msg-cached-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--agent-green);
+  margin-left: 6px;
+}
+
+/* ==================== Suggestions ==================== */
+.agent-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.agent-suggestion-chip {
+  padding: 6px 12px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--agent-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.agent-suggestion-chip:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--agent-primary);
+}
+
+/* ==================== Typing Indicator ==================== */
+.agent-typing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.agent-typing-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.agent-typing-dots span {
+  width: 6px;
+  height: 6px;
+  background: var(--agent-primary-light);
+  border-radius: 50%;
+  animation: agentDotBounce 1.4s ease-in-out infinite;
+}
+
+.agent-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.agent-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes agentDotBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+.agent-typing-text {
+  font-size: 12px;
+  color: var(--agent-text-muted);
+  font-style: italic;
+}
+
+/* ==================== Input Area ==================== */
+.agent-input-area {
+  padding: 12px 16px;
+  background: white;
+  border-top: 1px solid var(--agent-border);
+}
+
+.agent-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--agent-bg-light);
+  border: 1px solid var(--agent-border);
+  border-radius: var(--agent-radius);
+  padding: 8px 12px;
+  transition: border-color 0.2s;
+}
+
+.agent-input-wrapper:focus-within {
+  border-color: var(--agent-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.agent-input-wrapper textarea {
+  flex: 1;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--agent-text-dark);
+  line-height: 1.5;
+  max-height: 100px;
+  outline: none;
+  padding: 4px 0;
+}
+
+.agent-input-wrapper textarea::placeholder {
+  color: var(--agent-text-muted);
+}
+
+.agent-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.agent-send-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+}
+
+.agent-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.agent-send-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ==================== Score Card (Job Matching) ==================== */
+.agent-score-card {
+  background: white;
+  border-radius: var(--agent-radius);
+  padding: 16px;
+  border: 1px solid var(--agent-border);
+  margin: 8px 0;
+}
+
+.agent-score-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.agent-score-value {
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.agent-score-bar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.agent-score-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
+  transition: width 0.6s ease-out;
+}
+
+.agent-score-categories {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.agent-score-cat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--agent-bg-light);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.agent-score-cat .cat-label {
+  color: var(--agent-text-light);
+}
+
+.agent-score-cat .cat-value {
+  font-weight: 600;
+  color: var(--agent-text-dark);
+}
+
+/* ==================== Improvement Card ==================== */
+.agent-improvement-card {
+  background: white;
+  border-radius: var(--agent-radius);
+  padding: 12px;
+  border: 1px solid var(--agent-border);
+  margin: 6px 0;
+}
+
+.agent-improvement-original {
+  padding: 8px 12px;
+  background: #fef2f2;
+  border-left: 3px solid #ef4444;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #991b1b;
+  margin-bottom: 8px;
+}
+
+.agent-improvement-improved {
+  padding: 8px 12px;
+  background: #f0fdf4;
+  border-left: 3px solid #22c55e;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #166534;
+}
+
+.agent-improvement-explanation {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--agent-text-light);
+  font-style: italic;
+}
+
+/* ==================== Keywords List ==================== */
+.agent-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.agent-keyword {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.agent-keyword.matched {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.agent-keyword.missing {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.agent-keyword.added {
+  background: #ede9fe;
+  color: #5b21b6;
+}

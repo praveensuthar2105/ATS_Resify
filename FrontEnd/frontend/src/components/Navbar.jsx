@@ -1,24 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const menuRef = useRef(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const name = localStorage.getItem('userName');
-    const email = localStorage.getItem('userEmail');
-
-    if (token && name && email) {
-      setUser({ name, email });
-    }
-  }, []);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -38,19 +29,12 @@ const Navbar = () => {
   }, [location.pathname]);
 
   const handleLogin = () => {
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
-    window.location.href = `${backendUrl}/oauth2/authorization/google`;
+    navigate('/login');
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userRole');
-    setUser(null);
+    logout();
     setMenuOpen(false);
-    // Full page refresh to clear all state and force re-authentication
-    window.location.href = '/';
   };
 
   const baseLinks = [
@@ -77,10 +61,10 @@ const Navbar = () => {
         <RouterLink to="/" className="navbar-logo" onClick={() => setMobileNavOpen(false)}>
           <div className="logo-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="2" width="18" height="20" rx="3" stroke="currentColor" strokeWidth="2"/>
-              <path d="M8 7h8M8 11h8M8 15h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <circle cx="17" cy="17" r="4" fill="#818cf8" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M16 17l1 1 2-2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <rect x="3" y="2" width="18" height="20" rx="3" stroke="currentColor" strokeWidth="2" />
+              <path d="M8 7h8M8 11h8M8 15h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="17" cy="17" r="4" fill="#818cf8" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M16 17l1 1 2-2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
           <span className="logo-text">Resume<span className="logo-dot">.</span>AI</span>
@@ -111,7 +95,7 @@ const Navbar = () => {
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </button>
-                
+
                 {menuOpen && (
                   <div className="dropdown-menu">
                     <div className="dropdown-header">

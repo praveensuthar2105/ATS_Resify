@@ -1,0 +1,188 @@
+.login-page {
+    min-height: calc(100vh - 70px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    position: relative;
+    overflow: hidden;
+    background-color: #f8fafc;
+}
+
+/* Background Blobs */
+.login-circles {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.login-circle {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+}
+
+.blob-1 {
+    width: 400px;
+    height: 400px;
+    background: #6366f1;
+    top: -100px;
+    right: -100px;
+    animation: float 20s infinite alternate;
+}
+
+.blob-2 {
+    width: 500px;
+    height: 500px;
+    background: #3b82f6;
+    bottom: -150px;
+    left: -150px;
+    animation: float 25s infinite alternate-reverse;
+}
+
+@keyframes float {
+    from {
+        transform: translate(0, 0) scale(1);
+    }
+
+    to {
+        transform: translate(50px, 50px) scale(1.1);
+    }
+}
+
+.login-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 480px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 24px;
+    padding: 48px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05),
+        0 1px 3px rgba(0, 0, 0, 0.02);
+    text-align: center;
+}
+
+.login-header {
+    margin-bottom: 40px;
+}
+
+.login-logo {
+    width: 56px;
+    height: 56px;
+    background: #6366f1;
+    color: white;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    box-shadow: 0 8px 16px rgba(99, 102, 241, 0.25);
+}
+
+.login-header h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+}
+
+.logo-accent {
+    color: #6366f1;
+}
+
+.login-header p {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.login-content {
+    margin-bottom: 32px;
+}
+
+.login-benefits {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding: 24px;
+    background: rgba(248, 250, 252, 0.5);
+    border-radius: 16px;
+    border: 1px solid #f1f5f9;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #334155;
+}
+
+.benefit-icon {
+    font-size: 1.1rem;
+}
+
+.google-login-btn {
+    width: 100%;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    color: #334155;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.google-login-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+
+.google-login-btn:active {
+    transform: translateY(0);
+}
+
+.google-icon {
+    flex-shrink: 0;
+}
+
+.login-footer {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+.login-footer a {
+    color: #6366f1;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+    .login-card {
+        padding: 32px 24px;
+    }
+}

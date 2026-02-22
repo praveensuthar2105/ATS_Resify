@@ -4,9 +4,12 @@ import com.Backend.AI_Resume_Builder_Backend.Entity.Role;
 import com.Backend.AI_Resume_Builder_Backend.Entity.User;
 import com.Backend.AI_Resume_Builder_Backend.Repository.UserRepository;
 import com.Backend.AI_Resume_Builder_Backend.Security.JwtUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -16,9 +19,9 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = { "http://localhost:5175", "http://localhost:5178", "http://localhost:5173",
-        "http://localhost:5174" })
 public class AdminController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -43,15 +46,18 @@ public class AdminController {
                         userMap.put("email", user.getEmail());
                         userMap.put("name", user.getName());
                         userMap.put("picture", user.getPicture());
-                        userMap.put("role", user.getRole().toString());
+                        userMap.put("role", user.getRole() != null ? user.getRole().toString() : null);
                         userMap.put("createdAt", user.getCreatedAt().toString());
                         return userMap;
                     })
                     .collect(Collectors.toList());
 
             return new ResponseEntity<>(users, HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (AuthenticationException e) {
             return new ResponseEntity<>(Map.of("error", "Unauthorized"), HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            logger.error("AdminController error in getAllUsers", e);
+            return new ResponseEntity<>(Map.of("error", "Internal server error"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -95,17 +101,30 @@ public class AdminController {
                         HttpStatus.FORBIDDEN);
             }
 
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            // Prevent admin from revoking their own admin role
+            String token = extractToken(authHeader);
+            if (token != null) {
+                String currentUserEmail = jwtUtil.getEmailFromToken(token);
+                User targetUser = userRepository.findById(userId)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
-            user.setRole(Role.USER);
-            userRepository.save(user);
+                if (targetUser.getEmail().equals(currentUserEmail)) {
+                    return new ResponseEntity<>(Map.of("error", "You cannot revoke your own admin role"),
+                            HttpStatus.FORBIDDEN);
+                }
 
-            return new ResponseEntity<>(Map.of(
-                    "message", "Admin role revoked successfully",
-                    "userId", userId,
-                    "email", user.getEmail(),
-                    "role", user.getRole().toString()), HttpStatus.OK);
+                targetUser.setRole(Role.USER);
+                userRepository.save(targetUser);
+
+                return new ResponseEntity<>(Map.of(
+                        "message", "Admin role revoked successfully",
+                        "userId", userId,
+                        "email", targetUser.getEmail(),
+                        "role", targetUser.getRole().toString()), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(Map.of("error", "Invalid authorization header"),
+                        HttpStatus.UNAUTHORIZED);
+            }
         } catch (Exception e) {
             return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST);
         }
@@ -124,7 +143,11 @@ public class AdminController {
             }
 
             // Get current admin's email to prevent self-deletion
-            String token = authHeader.replace("Bearer ", "");
+            String token = extractToken(authHeader);
+            if (token == null) {
+                return new ResponseEntity<>(Map.of("error", "Invalid authorization header"),
+                        HttpStatus.UNAUTHORIZED);
+            }
             String currentUserEmail = jwtUtil.getEmailFromToken(token);
 
             User userToDelete = userRepository.findById(userId)
@@ -147,10 +170,25 @@ public class AdminController {
         }
     }
 
+    /**
+     * Extracts the Bearer token from the Authorization header.
+     * Returns null if the header is null, blank, or malformed.
+     */
+    private String extractToken(String authHeader) {
+        if (authHeader == null || !authHeader.trim().startsWith("Bearer ")) {
+            return null;
+        }
+        String token = authHeader.trim().substring(7).trim();
+        return token.isEmpty() ? null : token;
+    }
+
     // Helper method to check if user is admin
     private boolean isAdmin(String authHeader) {
         try {
-            String token = authHeader.replace("Bearer ", "");
+            String token = extractToken(authHeader);
+            if (token == null) {
+                return false;
+            }
 
             if (!jwtUtil.validateToken(token)) {
                 return false;

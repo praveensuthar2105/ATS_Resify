@@ -2,6 +2,8 @@ package com.Backend.AI_Resume_Builder_Backend.Controller;
 
 import com.Backend.AI_Resume_Builder_Backend.Entity.ResumeData;
 import com.Backend.AI_Resume_Builder_Backend.Service.ResumeDataSyncService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -12,9 +14,9 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/resume-sync")
-@CrossOrigin(origins = { "http://localhost:5175", "http://localhost:5178", "http://localhost:5173",
-        "http://localhost:5174" })
 public class ResumeSyncController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ResumeSyncController.class);
 
     @Autowired
     private ResumeDataSyncService syncService;
@@ -45,6 +47,13 @@ public class ResumeSyncController {
     public ResponseEntity<Map<String, Object>> updateFromJson(@RequestBody Map<String, String> request) {
         try {
             String json = request.get("json");
+            if (json == null || json.trim().isEmpty()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("error", "The 'json' field is required and must not be blank");
+                return ResponseEntity.badRequest().body(response);
+            }
+
             syncService.updateFromJson(json);
 
             // Broadcast updates via WebSocket
@@ -58,9 +67,10 @@ public class ResumeSyncController {
             response.put("latex", syncService.getCurrentLatex());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            logger.error("ResumeSyncController error in updateFromJson", e);
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put("error", "An internal error occurred");
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -69,6 +79,13 @@ public class ResumeSyncController {
     public ResponseEntity<Map<String, Object>> updateFromLatex(@RequestBody Map<String, String> request) {
         try {
             String latex = request.get("latex");
+            if (latex == null || latex.trim().isEmpty()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("error", "The 'latex' field is required and must not be blank");
+                return ResponseEntity.badRequest().body(response);
+            }
+
             syncService.updateFromLatex(latex);
 
             // Broadcast updates via WebSocket
@@ -82,9 +99,10 @@ public class ResumeSyncController {
             response.put("json", syncService.getCurrentJson());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            logger.error("ResumeSyncController error in updateFromLatex", e);
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put("error", "An internal error occurred");
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -106,9 +124,10 @@ public class ResumeSyncController {
             response.put("latex", syncService.getCurrentLatex());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            logger.error("ResumeSyncController error in updateData", e);
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put("error", "An internal error occurred");
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -131,9 +150,10 @@ public class ResumeSyncController {
             response.put("canRedo", syncService.canRedo());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            logger.error("ResumeSyncController error in undo", e);
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put("error", "An internal error occurred");
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -156,9 +176,10 @@ public class ResumeSyncController {
             response.put("canRedo", syncService.canRedo());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            logger.error("ResumeSyncController error in redo", e);
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put("error", "An internal error occurred");
             return ResponseEntity.badRequest().body(response);
         }
     }

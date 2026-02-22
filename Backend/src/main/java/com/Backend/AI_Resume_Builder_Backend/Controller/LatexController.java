@@ -12,18 +12,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/latex")
-@CrossOrigin(origins = {
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-        "http://localhost:5178",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://127.0.0.1:5175",
-        "http://127.0.0.1:5178",
-        "http://127.0.0.1:3000"
-}, allowCredentials = "true")
 public class LatexController {
 
     @Autowired
@@ -151,6 +139,9 @@ public class LatexController {
                     .header("Content-Disposition", "inline; filename=resume.pdf")
                     .body(pdf);
         } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Compilation failed");
             error.put("message", e.getMessage());

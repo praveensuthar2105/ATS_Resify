@@ -78,9 +78,40 @@ public class ResumeDataConverterService {
         return sb.toString();
     }
 
-    // Parse LaTeX string to ResumeData (stub, needs advanced parsing)
     public ResumeData fromLatex(String latex) {
-        // For demo, return empty ResumeData. Real implementation would parse LaTeX.
-        return new ResumeData();
+        ResumeData data = new ResumeData();
+        if (latex == null || latex.trim().isEmpty()) {
+            return data;
+        }
+
+        try {
+            // Very basic extraction for demo/autosync purposes
+            // In a real app, this would use regex or a proper parser
+            if (latex.contains("\\section*{")) {
+                int start = latex.indexOf("\\section*{") + 10;
+                int end = latex.indexOf("}", start);
+                if (end > start) {
+                    data.setName(latex.substring(start, end).trim());
+                }
+            }
+
+            // Simple line-based extraction for Email|Phone|Address line
+            String[] lines = latex.split("\n");
+            for (String line : lines) {
+                if (line.contains("|")) {
+                    String[] parts = line.split("\\|");
+                    if (parts.length >= 3) {
+                        data.setEmail(parts[0].trim());
+                        data.setPhone(parts[1].trim());
+                        data.setAddress(parts[2].replace("\\\\", "").trim());
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Fallback to empty data on parse error to avoid crashing sync
+            return new ResumeData();
+        }
+        return data;
     }
 }

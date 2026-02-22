@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8081/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+export const API_ROOT_URL = API_BASE_URL.replace(/\/api\/?$/, '') || 'http://localhost:8080';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -36,7 +37,7 @@ export const resumeAPI = {
     if (jobDescription && jobDescription.trim()) {
       formData.append('jobDescription', jobDescription.trim());
     }
-    
+
     const response = await axios.post(`${API_BASE_URL}/resume/ats-score`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

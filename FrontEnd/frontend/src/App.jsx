@@ -11,18 +11,21 @@ import Features from './pages/Features';
 import About from './pages/About';
 import AuthCallback from './pages/AuthCallback';
 import AdminPanel from './pages/AdminPanel';
+import Login from './pages/Login';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 // 404 Not Found Component
 const NotFound = () => (
-  <Box sx={{ 
-    display: 'flex', 
-    flexDirection: 'column', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
+  <Box sx={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
     minHeight: '60vh',
     textAlign: 'center',
-    p: 4 
+    p: 4
   }}>
     <Box sx={{ fontSize: '72px', mb: 2 }}>🔍</Box>
     <Box component="h1" sx={{ fontSize: '2rem', fontWeight: 700, mb: 1, color: '#1f2937' }}>
@@ -31,9 +34,9 @@ const NotFound = () => (
     <Box sx={{ color: '#6b7280', mb: 3 }}>
       The page you're looking for doesn't exist or has been moved.
     </Box>
-    <Link to="/" style={{ 
-      color: '#6366f1', 
-      textDecoration: 'none', 
+    <Link to="/" style={{
+      color: '#6366f1',
+      textDecoration: 'none',
       fontWeight: 600,
       padding: '12px 24px',
       border: '2px solid #6366f1',
@@ -67,13 +70,18 @@ function AppContent() {
       <Box component="main" sx={{ width: '100%', flex: 1, mt: '70px' }}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/generate" element={<GenerateResume />} />
           <Route path="/edit-resume" element={<EditResume />} />
           <Route path="/ats-checker" element={<AtsChecker />} />
           <Route path="/features" element={<Features />} />
           <Route path="/about" element={<About />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <AdminPanel />
+            </ProtectedRoute>
+          } />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Box>
@@ -84,14 +92,15 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        <AppContent />
-      </Router>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router>
+          <AppContent />
+        </Router>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 
 export default App;
-
