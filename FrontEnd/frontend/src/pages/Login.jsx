@@ -9,8 +9,8 @@ const Login = () => {
 
     const handleGoogleLogin = () => {
         // Store the 'from' path to redirect back after OAuth callback
-        // Route through the local proxy setup in vercel.json
-        window.location.href = `${API_BASE_URL.replace('/api', '')}/oauth2/authorization/google`;
+        // Directly connect to the native HTTPS AWS backend
+        window.location.href = `${API_ROOT_URL}/oauth2/authorization/google`;
     };
 
     return (

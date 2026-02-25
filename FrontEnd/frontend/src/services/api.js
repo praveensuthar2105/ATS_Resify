@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-// If in production, strictly use the relative path for Vercel proxying.
-// This prevents bugs if VITE_API_BASE_URL is accidentally set to localhost in Vercel.
-export const API_BASE_URL = import.meta.env.PROD ? '/api' : (import.meta.env.VITE_API_BASE_URL || '/api');
+// Connect directly to the Load Balanced AWS Backend with native SSL
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.atsresify.me/api';
 export const API_ROOT_URL = API_BASE_URL.replace(/\/api\/?$/, '') || '';
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
