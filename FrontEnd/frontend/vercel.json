@@ -13,6 +13,10 @@
             "destination": "http://ats-resify-env.eba-yhbmq4cr.ap-south-1.elasticbeanstalk.com/login/oauth2/:path*"
         },
         {
+            "source": "/auth/:path*",
+            "destination": "http://ats-resify-env.eba-yhbmq4cr.ap-south-1.elasticbeanstalk.com/auth/:path*"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
