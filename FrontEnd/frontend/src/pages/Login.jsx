@@ -10,8 +10,8 @@ const Login = () => {
         // Store the 'from' path to redirect back after OAuth callback
         localStorage.setItem('redirectAfterAuth', from);
 
-        const backendUrl = import.meta.env.VITE_API_URL || (import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '') : 'http://localhost:8080');
-        window.location.href = `${backendUrl}/oauth2/authorization/google`;
+        // Route through the local proxy setup in vercel.json
+        window.location.href = '/oauth2/authorization/google';
     };
 
     return (

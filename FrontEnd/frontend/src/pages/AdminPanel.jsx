@@ -44,12 +44,9 @@ import {
   DatabaseOutlined,
   CloudServerOutlined,
   UnorderedListOutlined,
-<<<<<<< HEAD
-=======
   StarOutlined,
   MessageOutlined,
   MailOutlined,
->>>>>>> 36da45bb (Fix: MySQL reserved keyword, OAuth failure handling, and port configuration)
 } from '@ant-design/icons';
 import {
   LineChart,
@@ -98,8 +95,6 @@ const AdminPanel = () => {
   const [auditPage, setAuditPage] = useState(0);
   const [auditRowsPerPage, setAuditRowsPerPage] = useState(20);
   const [totalAuditLogs, setTotalAuditLogs] = useState(0);
-<<<<<<< HEAD
-=======
 
   // Feedback State
   const [feedbacks, setFeedbacks] = useState([]);
@@ -113,7 +108,6 @@ const AdminPanel = () => {
   const [contactRowsPerPage, setContactRowsPerPage] = useState(20);
   const [totalContacts, setTotalContacts] = useState(0);
   const [unreadContacts, setUnreadContacts] = useState(0);
->>>>>>> 36da45bb (Fix: MySQL reserved keyword, OAuth failure handling, and port configuration)
 
   useEffect(() => {
     verifyAdmin();
@@ -125,15 +119,10 @@ const AdminPanel = () => {
       else if (tabValue === 1) fetchAnalytics();
       else if (tabValue === 2) fetchHealth();
       else if (tabValue === 3) fetchAuditLogs();
-<<<<<<< HEAD
-    }
-  }, [currentUserRole, tabValue, page, rowsPerPage, orderBy, order, auditPage, auditRowsPerPage]);
-=======
       else if (tabValue === 4) fetchFeedbacks();
       else if (tabValue === 5) fetchContacts();
     }
   }, [currentUserRole, tabValue, page, rowsPerPage, orderBy, order, auditPage, auditRowsPerPage, feedbackPage, feedbackRowsPerPage, contactPage, contactRowsPerPage]);
->>>>>>> 36da45bb (Fix: MySQL reserved keyword, OAuth failure handling, and port configuration)
 
   const verifyAdmin = async () => {
     const token = localStorage.getItem('authToken');
@@ -229,8 +218,6 @@ const AdminPanel = () => {
     }
   };
 
-<<<<<<< HEAD
-=======
   const fetchFeedbacks = async () => {
     setLoading(true);
     try {
@@ -288,8 +275,6 @@ const AdminPanel = () => {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) { setError(err.message); }
   };
-
->>>>>>> 36da45bb (Fix: MySQL reserved keyword, OAuth failure handling, and port configuration)
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
@@ -438,11 +423,8 @@ const AdminPanel = () => {
           <Tab icon={<DatabaseOutlined />} label="Analytics" />
           <Tab icon={<CloudServerOutlined />} label="System Health" />
           <Tab icon={<UnorderedListOutlined />} label="Audit Log" />
-<<<<<<< HEAD
-=======
           <Tab icon={<StarOutlined />} label="Feedback" />
           <Tab icon={<MailOutlined />} label={`Messages${unreadContacts > 0 ? ` (${unreadContacts})` : ''}`} />
->>>>>>> 36da45bb (Fix: MySQL reserved keyword, OAuth failure handling, and port configuration)
         </Tabs>
       </Paper>
 
@@ -652,8 +634,6 @@ const AdminPanel = () => {
         </Box>
       )}
 
-<<<<<<< HEAD
-=======
       {/* FEEDBACK TAB */}
       {tabValue === 4 && (
         <Box>
@@ -775,8 +755,6 @@ const AdminPanel = () => {
           </TableContainer>
         </Box>
       )}
-
->>>>>>> 36da45bb (Fix: MySQL reserved keyword, OAuth failure handling, and port configuration)
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Delete User</DialogTitle>
