@@ -1,0 +1,61 @@
+interactive rebase in progress; onto 1647b7a4
+Last command done (1 command done):
+   pick 36da45bb Fix: MySQL reserved keyword, OAuth failure handling, and port configuration
+No commands remaining.
+You are currently rebasing branch 'main' on '1647b7a4'.
+  (fix conflicts and then run "git rebase --continue")
+  (use "git rebase --skip" to skip this patch)
+  (use "git rebase --abort" to check out the original branch)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   .env
+	new file:   Backend/.ebextensions/latex.config
+	new file:   Backend/.env
+	new file:   Backend/AI_Resume_Builder_Backend-0.0.1-SNAPSHOT.jar
+	new file:   Backend/Procfile
+	new file:   Backend/backend-file.zip
+	modified:   Backend/src/main/java/com/Backend/AI_Resume_Builder_Backend/AiResumeBuilderBackendApplication.java
+	modified:   Backend/src/main/java/com/Backend/AI_Resume_Builder_Backend/Configuration/SecurityConfig.java
+	new file:   Backend/src/main/java/com/Backend/AI_Resume_Builder_Backend/Controller/PublicController.java
+	new file:   Backend/src/main/java/com/Backend/AI_Resume_Builder_Backend/Entity/ContactMessage.java
+	new file:   Backend/src/main/java/com/Backend/AI_Resume_Builder_Backend/Entity/Feedback.java
+	new file:   Backend/src/main/java/com/Backend/AI_Resume_Builder_Backend/Repository/ContactMessageRepository.java
+	new file:   Backend/src/main/java/com/Backend/AI_Resume_Builder_Backend/Repository/FeedbackRepository.java
+	modified:   Backend/src/main/java/com/Backend/AI_Resume_Builder_Backend/Service/GeminiService.java
+	modified:   Backend/src/main/java/com/Backend/AI_Resume_Builder_Backend/Service/LatexServiceImpl.java
+	modified:   Backend/src/main/resources/application.properties
+	new file:   FrontEnd/frontend/.env.production
+	modified:   FrontEnd/frontend/src/App.jsx
+	modified:   FrontEnd/frontend/src/components/AgentChat.css
+	modified:   FrontEnd/frontend/src/components/Footer.jsx
+	modified:   FrontEnd/frontend/src/components/LatexEditor.jsx
+	modified:   FrontEnd/frontend/src/components/Navbar.jsx
+	modified:   FrontEnd/frontend/src/pages/About.jsx
+	modified:   FrontEnd/frontend/src/pages/AtsChecker.jsx
+	new file:   FrontEnd/frontend/src/pages/Contact.css
+	new file:   FrontEnd/frontend/src/pages/Contact.jsx
+	new file:   FrontEnd/frontend/src/pages/Feedback.css
+	new file:   FrontEnd/frontend/src/pages/Feedback.jsx
+	modified:   FrontEnd/frontend/src/pages/Home.jsx
+	new file:   FrontEnd/frontend/src/pages/Legal.css
+	new file:   FrontEnd/frontend/src/pages/PrivacyPolicy.jsx
+	new file:   FrontEnd/frontend/src/pages/Team.css
+	new file:   FrontEnd/frontend/src/pages/Team.jsx
+	new file:   FrontEnd/frontend/src/pages/Terms.jsx
+	modified:   FrontEnd/frontend/vite.config.js
+
+Unmerged paths:
+  (use "git restore --staged <file>..." to unstage)
+  (use "git add <file>..." to mark resolution)
+	both modified:   Backend/src/main/java/com/Backend/AI_Resume_Builder_Backend/Controller/AdminController.java
+	both modified:   FrontEnd/frontend/package-lock.json
+	both modified:   FrontEnd/frontend/src/pages/AdminPanel.jsx
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	git_status.txt
+	git_status_new.txt
+	second_try.txt
+	status.txt
+

@@ -1,6 +1,11 @@
 package com.Backend.AI_Resume_Builder_Backend.Controller;
 
 import com.Backend.AI_Resume_Builder_Backend.Entity.AdminAuditLog;
+<<<<<<< HEAD
+import com.Backend.AI_Resume_Builder_Backend.Entity.Role;
+import com.Backend.AI_Resume_Builder_Backend.Entity.User;
+import com.Backend.AI_Resume_Builder_Backend.Repository.AdminAuditLogRepository;
+=======
 import com.Backend.AI_Resume_Builder_Backend.Entity.ContactMessage;
 import com.Backend.AI_Resume_Builder_Backend.Entity.Feedback;
 import com.Backend.AI_Resume_Builder_Backend.Entity.Role;
@@ -8,6 +13,7 @@ import com.Backend.AI_Resume_Builder_Backend.Entity.User;
 import com.Backend.AI_Resume_Builder_Backend.Repository.AdminAuditLogRepository;
 import com.Backend.AI_Resume_Builder_Backend.Repository.ContactMessageRepository;
 import com.Backend.AI_Resume_Builder_Backend.Repository.FeedbackRepository;
+>>>>>>> 36da45bb (Fix: MySQL reserved keyword, OAuth failure handling, and port configuration)
 import com.Backend.AI_Resume_Builder_Backend.Repository.ResumeRepository;
 import com.Backend.AI_Resume_Builder_Backend.Repository.UserRepository;
 import com.Backend.AI_Resume_Builder_Backend.Security.JwtUtil;
@@ -47,12 +53,15 @@ public class AdminController {
     private ResumeRepository resumeRepository;
 
     @Autowired
+<<<<<<< HEAD
+=======
     private FeedbackRepository feedbackRepository;
 
     @Autowired
     private ContactMessageRepository contactMessageRepository;
 
     @Autowired
+>>>>>>> 36da45bb (Fix: MySQL reserved keyword, OAuth failure handling, and port configuration)
     private SystemStatsService systemStatsService;
 
     @Autowired
