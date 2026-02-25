@@ -53,7 +53,7 @@ const Footer = () => {
                 { icon: <GithubOutlined />, href: '#', label: 'GitHub' },
                 { icon: <LinkedinOutlined />, href: '#', label: 'LinkedIn' },
                 { icon: <TwitterOutlined />, href: '#', label: 'Twitter' },
-                { icon: <MailOutlined />, href: 'mailto:contact@resume.ai', label: 'Email' },
+                { icon: <MailOutlined />, href: 'mailto:contact@atsresify.me', label: 'Email' },
               ].map((social, idx) => (
                 <MLink
                   key={idx}

@@ -19,11 +19,11 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
   const autoTimer = useRef(null);
   const syncTimer = useRef(null);
   const isInitialLoad = useRef(true);
-  
+
   // State for compile errors
   const [compileError, setCompileError] = useState(null);
   const [useOnlineCompiler, setUseOnlineCompiler] = useState(false);
-  
+
   // Resizable panel state
   const [editorWidth, setEditorWidth] = useState(50); // percentage
   const [isResizing, setIsResizing] = useState(false);
@@ -37,11 +37,11 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
 
   const handleMouseMove = useCallback((e) => {
     if (!isResizing || !containerRef.current) return;
-    
+
     const container = containerRef.current;
     const containerRect = container.getBoundingClientRect();
     const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
-    
+
     // Clamp between 20% and 80%
     const clampedWidth = Math.min(Math.max(newWidth, 20), 80);
     setEditorWidth(clampedWidth);
@@ -64,7 +64,7 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     }
-    
+
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
@@ -271,7 +271,7 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
             if (skillMatch) {
               let category = unescapeLatex(skillMatch[1].replace(/:$/, '').trim());
               let itemsStr = unescapeLatex(skillMatch[2].replace(/:$/, '').trim());
-              
+
               // If items contain comma-separated values, expand into individual skills
               if (itemsStr && itemsStr.includes(',')) {
                 const individualSkills = itemsStr.split(',').map(s => s.trim()).filter(Boolean);
@@ -337,10 +337,10 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
   // Auto-sync LaTeX changes back to form with debounce
   const handleLatexChange = useCallback((value) => {
     setLatexCode(value || '');
-    
+
     // Don't sync during initial load
     if (isInitialLoad.current) return;
-    
+
     // Debounce sync - wait 1.5s after user stops typing
     if (syncTimer.current) clearTimeout(syncTimer.current);
     syncTimer.current = setTimeout(() => {
@@ -368,7 +368,7 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
     if (!open) return;
     setLoading(true);
     isInitialLoad.current = true;
-    
+
     // Use frontend-generated LaTeX for reliable compilation
     // Backend templates have custom commands that may fail with incomplete data
     setTimeout(() => {
@@ -389,7 +389,7 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
     const linkedin = pi.linkedIn ? escapeLatex(pi.linkedIn) : '';
     const github = pi.gitHub ? escapeLatex(pi.gitHub) : '';
     const portfolio = pi.portfolio ? escapeLatex(pi.portfolio) : '';
-    
+
     // Build contact line
     let contactParts = [phone, email];
     if (linkedin) contactParts.push(`\\href{${linkedin}}{LinkedIn}`);
@@ -407,15 +407,15 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
         const degree = escapeLatex(edu.degree || 'Degree');
         const year = escapeLatex(edu.graduationYear || edu.endDate || '');
         const gpa = edu.gpa ? ` $|$ GPA: ${escapeLatex(edu.gpa)}` : '';
-        
+
         return `\\textbf{${university}}${eduLocation ? `, ${eduLocation}` : ''} \\hfill ${year}
 
 \\textit{${degree}}${gpa}`;
       }).join('\n\n');
-      
+
       educationSection = `\\section*{Education}\n${eduItems}`;
     }
-    
+
     // Build experience section with bullet points
     let experienceSection = '';
     if (data?.experience && data.experience.length > 0) {
@@ -424,7 +424,7 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
         const expLocation = escapeLatex(exp.location || '');
         const title = escapeLatex(exp.jobTitle || exp.title || 'Position');
         const duration = escapeLatex(exp.duration || `${exp.startDate || ''} -- ${exp.endDate || 'Present'}`);
-        
+
         // Parse responsibilities into bullet points
         let bullets = '';
         if (exp.responsibility || exp.responsibilities) {
@@ -440,33 +440,33 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
             bullets = `\\begin{itemize}\n${respList.map(r => `\\item ${escapeLatex(r)}`).join('\n')}\n\\end{itemize}`;
           }
         }
-        
+
         return `\\textbf{${company}}${expLocation ? `, ${expLocation}` : ''} \\hfill ${duration}
 
 \\textit{${title}}
 ${bullets}`;
       }).join('\n\n');
-      
+
       experienceSection = `\\section*{Experience}\n${expItems}`;
     }
-    
+
     // Build projects section with bullet points
     let projectsSection = '';
     if (data?.projects && data.projects.length > 0) {
       const projItems = data.projects.map(proj => {
         const title = escapeLatex(proj.title || proj.name || 'Project');
-        const tech = proj.technologiesUsed 
+        const tech = proj.technologiesUsed
           ? escapeLatex(Array.isArray(proj.technologiesUsed) ? proj.technologiesUsed.join(', ') : proj.technologiesUsed)
           : '';
         const githubLink = proj.githubLink ? escapeLatex(proj.githubLink) : '';
         const liveLink = proj.liveLink ? escapeLatex(proj.liveLink) : '';
-        
+
         // Project header line
         let headerLine = `\\textbf{${title}}`;
         if (tech) headerLine += ` $|$ \\textit{${tech}}`;
         if (githubLink) headerLine += ` \\hfill \\href{${githubLink}}{GitHub}`;
         if (liveLink) headerLine += `${githubLink ? ' $|$' : ' \\hfill'} \\href{${liveLink}}{Live}`;
-        
+
         // Parse description into bullet points
         let bullets = '';
         if (proj.description) {
@@ -485,14 +485,14 @@ ${bullets}`;
             bullets = `\\begin{itemize}\n${descList.map(d => `\\item ${escapeLatex(d)}`).join('\n')}\n\\end{itemize}`;
           }
         }
-        
+
         return `${headerLine}
 ${bullets}`;
       }).join('\n\n');
-      
+
       projectsSection = `\\section*{Projects}\n${projItems}`;
     }
-    
+
     // Normalize skills from any format
     const normalizeSkillsForLatex = (skills) => {
       if (!skills) return [];
@@ -520,12 +520,12 @@ ${bullets}`;
           return `\\textbf{Skills:} ${escapeLatex(s)}`;
         }
         const category = escapeLatex(s.title || s.category || 'Skills');
-        const items = s.items 
+        const items = s.items
           ? escapeLatex(Array.isArray(s.items) ? s.items.join(', ') : s.items)
           : escapeLatex(s.level || '');
         return `\\textbf{${category}:} ${items}`;
       }).filter(Boolean);
-      
+
       if (skillLines.length > 0) {
         skillsSection = `\\section*{Technical Skills}\n${skillLines.join(' \\\\\n')}`;
       }
@@ -540,7 +540,7 @@ ${bullets}`;
         const year = cert.year ? ` (${escapeLatex(cert.year)})` : '';
         return `\\item ${title}${org ? ` -- ${org}` : ''}${year}`;
       }).join('\n');
-      
+
       certificationsSection = `\\section*{Certifications}\n\\begin{itemize}\n${certItems}\n\\end{itemize}`;
     }
 
@@ -556,10 +556,10 @@ ${bullets}`;
         const year = ach.year ? ` (${escapeLatex(ach.year)})` : '';
         return `\\item ${title}${desc}${year}`;
       }).join('\n');
-      
+
       achievementsSection = `\\section*{Achievements}\n\\begin{itemize}\n${achItems}\n\\end{itemize}`;
     }
-    
+
     return `\\documentclass[10pt,letterpaper]{article}
 
 \\usepackage[utf8]{inputenc}
@@ -602,24 +602,24 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
   // Extract meaningful error from LaTeX log
   const extractLatexError = (message) => {
     if (!message) return 'Compilation failed';
-    
+
     // Look for LaTeX error patterns
     const errorMatch = message.match(/! LaTeX Error: (.+?)(?:\r?\n|$)/);
     if (errorMatch) return `LaTeX Error: ${errorMatch[1]}`;
-    
+
     const lineMatch = message.match(/l\.(\d+)\s+(.+?)(?:\r?\n|$)/);
     if (lineMatch) return `Error at line ${lineMatch[1]}: ${lineMatch[2]}`;
-    
+
     // Check for security/privilege error
     if (message.includes('elevated privileges')) {
       return 'MiKTeX security warning: Try running VS Code without administrator privileges, or use "Download .TEX" and compile with Overleaf/ShareLaTeX';
     }
-    
+
     // Truncate if too long
     if (message.length > 200) {
       return message.substring(0, 200) + '...';
     }
-    
+
     return message;
   };
 
@@ -631,7 +631,7 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
    */
   const compileOnline = async () => {
     if (!latexCode) return;
-    
+
     // Check for user consent before sending to external service
     const hasConsent = localStorage.getItem('externalCompileConsent');
     if (!hasConsent) {
@@ -646,13 +646,13 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
       }
       localStorage.setItem('externalCompileConsent', 'true');
     }
-    
+
     setCompiling(true);
     setCompileError(null);
-    
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
-    
+
     try {
       // Use latex.ytotech.com free API
       const resp = await fetch('https://latex.ytotech.com/builds/sync', {
@@ -667,7 +667,7 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
           }]
         })
       });
-      
+
       if (resp.ok) {
         const blob = await resp.blob();
         if (blob.type === 'application/pdf') {
@@ -705,10 +705,10 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
     if (!latexCode) return;
     setCompiling(true);
     setCompileError(null);
-    
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
-    
+
     try {
       const resp = await fetch(`${API_BASE_URL}/latex/compile`, {
         method: 'POST',
@@ -717,13 +717,13 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
         signal: controller.signal,
         body: JSON.stringify({ latexCode })
       });
-      
+
       if (resp.ok) {
         const contentType = resp.headers.get('content-type');
         if (contentType && contentType.includes('application/pdf')) {
           const blob = await resp.blob();
           setPdfBlob(blob);
-          
+
           // Use functional update to avoid stale closure
           setPdfUrl(prev => {
             if (prev) URL.revokeObjectURL(prev);
@@ -736,7 +736,7 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
           const errorData = await resp.json().catch(() => ({ error: 'Unknown error' }));
           console.error('Compile error:', errorData);
           const errorMsg = extractLatexError(errorData.message || errorData.error);
-          
+
           // If local fails with privilege error, suggest online compiler
           if (errorData.message?.includes('elevated privileges')) {
             setCompileError(errorMsg);
@@ -781,12 +781,12 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
     if (!autoCompile || !latexCode) return;
     if (autoTimer.current) clearTimeout(autoTimer.current);
     setPreviewSynced(false);
-    
+
     autoTimer.current = setTimeout(() => {
       // Compile LaTeX to PDF
       compileToPdf();
     }, 2000); // Wait 2s after typing stops
-    
+
     return () => { if (autoTimer.current) clearTimeout(autoTimer.current); };
   }, [latexCode, autoCompile, compileToPdf]);
 
@@ -820,44 +820,44 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
     } else {
       // Compile first then download - use appropriate endpoint based on useOnlineCompiler
       setCompiling(true);
-      
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
-      
+
       try {
-        const endpoint = useOnlineCompiler 
+        const endpoint = useOnlineCompiler
           ? 'https://latex.ytotech.com/builds/sync'
           : `${API_BASE_URL}/latex/compile`;
-        
+
         const fetchOptions = useOnlineCompiler
           ? {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              signal: controller.signal,
-              body: JSON.stringify({
-                compiler: 'pdflatex',
-                resources: [{ main: true, content: latexCode }]
-              })
-            }
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+              compiler: 'pdflatex',
+              resources: [{ main: true, content: latexCode }]
+            })
+          }
           : {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              signal: controller.signal,
-              body: JSON.stringify({ latexCode })
-            };
-        
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            signal: controller.signal,
+            body: JSON.stringify({ latexCode })
+          };
+
         const resp = await fetch(endpoint, fetchOptions);
         if (resp.ok) {
           const blob = await resp.blob();
           setPdfBlob(blob);
-          
+
           // Revoke previous URL before creating new one
           setPdfUrl(prev => {
             if (prev) URL.revokeObjectURL(prev);
             return URL.createObjectURL(blob);
           });
-          
+
           // Auto download using the blob directly
           const downloadUrl = URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -936,7 +936,7 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
         <div className="header-left">
           <div className="logo">
             <span className="logo-icon">📄</span>
-            <span className="logo-text">Resume.AI</span>
+            <span className="logo-text">ATS Resify</span>
             <span className="logo-badge">Editor</span>
           </div>
           <div className="breadcrumb">
@@ -947,9 +947,9 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
         </div>
         <div className="header-center">
           <label className="auto-compile-toggle">
-            <input 
-              type="checkbox" 
-              checked={autoCompile} 
+            <input
+              type="checkbox"
+              checked={autoCompile}
               onChange={(e) => setAutoCompile(e.target.checked)}
             />
             <span className="toggle-slider"></span>
@@ -1002,7 +1002,7 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
         </div>
 
         {/* Resizable Divider */}
-        <div 
+        <div
           className="resize-handle"
           onMouseDown={handleMouseDown}
           title="Drag to resize panels"
@@ -1022,9 +1022,9 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
             </div>
             <div className="preview-actions">
               <label className="compiler-toggle" title="Toggle between local and online compiler">
-                <input 
-                  type="checkbox" 
-                  checked={useOnlineCompiler} 
+                <input
+                  type="checkbox"
+                  checked={useOnlineCompiler}
                   onChange={(e) => setUseOnlineCompiler(e.target.checked)}
                 />
                 <span>Online Compiler</span>
@@ -1055,8 +1055,8 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
                   <button className="retry-btn" onClick={handleCompile}>
                     🔄 Retry Compile
                   </button>
-                  <button 
-                    className="retry-btn" 
+                  <button
+                    className="retry-btn"
                     onClick={() => { setUseOnlineCompiler(!useOnlineCompiler); setCompileError(null); }}
                     style={{ background: useOnlineCompiler ? '#38a169' : '#667eea' }}
                   >
@@ -1067,16 +1067,16 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
                   </button>
                 </div>
                 <p className="error-hint">
-                  💡 {useOnlineCompiler 
-                    ? 'Using online compiler. If it fails, download .tex and use Overleaf.' 
+                  💡 {useOnlineCompiler
+                    ? 'Using online compiler. If it fails, download .tex and use Overleaf.'
                     : 'Local compilation failed. Try the online compiler or download .tex file.'}
                   {' '}
                   <a href="https://www.overleaf.com" target="_blank" rel="noopener noreferrer">Open Overleaf</a>
                 </p>
               </div>
             ) : pdfUrl ? (
-              <iframe 
-                src={pdfUrl} 
+              <iframe
+                src={pdfUrl}
                 className="pdf-viewer"
                 title="PDF Preview"
                 style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }}
