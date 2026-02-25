@@ -68,7 +68,7 @@ const Home = () => {
                     lineHeight: 1.2,
                   }}
                 >
-                  This resume builder gets you promoted
+                  ATS Resify gets you promoted
                 </Typography>
                 <Typography
                   variant="h5"

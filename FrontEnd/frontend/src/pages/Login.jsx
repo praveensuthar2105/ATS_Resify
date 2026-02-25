@@ -8,8 +8,6 @@ const Login = () => {
 
     const handleGoogleLogin = () => {
         // Store the 'from' path to redirect back after OAuth callback
-        localStorage.setItem('redirectAfterAuth', from);
-
         // Route through the local proxy setup in vercel.json
         window.location.href = '/oauth2/authorization/google';
     };

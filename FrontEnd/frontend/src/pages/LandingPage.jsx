@@ -124,7 +124,7 @@ const LandingPage = () => {
       <section className="hero-section">
         <div className="hero-badge">
           <SparkleIcon />
-          <span>AI-POWERED RESUME BUILDER</span>
+          <span>ATS RESIFY</span>
         </div>
 
         <h1 className="hero-title">

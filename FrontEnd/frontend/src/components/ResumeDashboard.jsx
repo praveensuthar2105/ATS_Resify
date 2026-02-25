@@ -32,7 +32,7 @@ const ResumeDashboard = () => {
             {/* Header */}
             <header className="dashboard-header">
                 <div className="header-content">
-                    <h1>Resume Builder</h1>
+                    <h1>ATS Resify</h1>
                     <p>Create beautiful, professional resumes in minutes with AI assistance.</p>
                 </div>
                 <div className="header-actions">
