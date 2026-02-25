@@ -28,12 +28,10 @@ public class AtsScoreServiceImpl implements AtsScoreService {
 
     private final GeminiService geminiService;
     private final ResumeServiceImpl resumeService;
-    private final SystemStatsService systemStatsService;
 
-    public AtsScoreServiceImpl(GeminiService geminiService, ResumeServiceImpl resumeService, SystemStatsService systemStatsService) {
+    public AtsScoreServiceImpl(GeminiService geminiService, ResumeServiceImpl resumeService) {
         this.geminiService = geminiService;
         this.resumeService = resumeService;
-        this.systemStatsService = systemStatsService;
     }
 
     @Override
@@ -43,7 +41,6 @@ public class AtsScoreServiceImpl implements AtsScoreService {
 
     @Override
     public Map<String, Object> getAtsScore(MultipartFile resumeFile, String jobDescription) throws IOException {
-        systemStatsService.incrementAtsChecks();
         String resumeText = extractTextFromPdf(resumeFile);
         String promptTemplate = resumeService.loadPromptFromFile("ats_prompt.txt");
 

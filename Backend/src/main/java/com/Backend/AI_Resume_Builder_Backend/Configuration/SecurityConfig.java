@@ -3,18 +3,17 @@ package com.Backend.AI_Resume_Builder_Backend.Configuration;
 import com.Backend.AI_Resume_Builder_Backend.Security.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -22,12 +21,6 @@ public class SecurityConfig {
 
         @Autowired
         private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-
-        @Value("${app.frontend-url:http://localhost:5173}")
-        private String frontendUrl;
-
-        @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:3000}")
-        private String allowedOrigins;
 
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -41,27 +34,19 @@ public class SecurityConfig {
                                                                 "/api/admin/**",
                                                                 "/api/latex/**",
                                                                 "/api/agent/**",
-                                                                "/api/public/**",
                                                                 "/api/health/**",
-                                                                "/auth/**",
                                                                 "/actuator/**",
                                                                 "/oauth2/**",
                                                                 "/login/**")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth2 -> oauth2
-                                                .successHandler(oAuth2LoginSuccessHandler)
-                                                .failureHandler((request, response, exception) -> {
-                                                        String targetUrl = frontendUrl + "/login?error="
-                                                                        + exception.getLocalizedMessage();
-                                                        response.sendRedirect(targetUrl);
-                                                }))
+                                                .successHandler(oAuth2LoginSuccessHandler))
                                 .exceptionHandling(ex -> ex
                                                 .authenticationEntryPoint((request, response, authException) -> {
                                                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                                                         response.setContentType("application/json");
-                                                        response.getWriter().write(
-                                                                        "{\"error\":\"Unauthorized\",\"loginUrl\":\"/oauth2/authorization/google\"}");
+                                                        response.getWriter().write("{\"error\":\"Unauthorized\",\"loginUrl\":\"/oauth2/authorization/google\"}");
                                                 }));
 
                 return http.build();
@@ -70,8 +55,11 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                List<String> origins = Arrays.asList(allowedOrigins.split(","));
-                configuration.setAllowedOrigins(origins);
+                configuration.setAllowedOrigins(Arrays.asList(
+                                "http://localhost:5173",
+                                "http://localhost:5174",
+                                "http://localhost:5175",
+                                "http://localhost:3000"));
                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 configuration.setAllowedHeaders(Arrays.asList("*"));
                 configuration.setAllowCredentials(true);

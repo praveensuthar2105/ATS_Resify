@@ -1,38 +1,93 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { CircularProgress, Snackbar, Alert } from '@mui/material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { resumeAPI } from '../services/api';
-import { useAuth } from '../context/AuthContext';
 import './AtsChecker.css';
+
+// Donut Chart Component
+const DonutChart = ({ value = 0, size = 180, thickness = 14 }) => {
+  const radius = (size - thickness) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const clamped = Math.max(0, Math.min(100, value));
+  const dash = (clamped / 100) * circumference;
+  
+  const getColor = (score) => {
+    if (score >= 80) return '#22c55e';
+    if (score >= 60) return '#3b82f6';
+    if (score >= 40) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  return (
+    <div className="donut-chart" style={{ width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={size/2} cy={size/2} r={radius} stroke="#e5e7eb" strokeWidth={thickness} fill="none" />
+        <circle
+          cx={size/2} cy={size/2} r={radius}
+          stroke={getColor(clamped)} strokeWidth={thickness} strokeLinecap="round" fill="none"
+          strokeDasharray={`${dash} ${circumference - dash}`}
+          style={{ transition: 'stroke-dasharray 0.8s ease' }}
+        />
+      </svg>
+      <div className="donut-content">
+        <span className="donut-value">{clamped}</span>
+        <span className="donut-percent">%</span>
+      </div>
+    </div>
+  );
+};
+
+// Mini Score Ring for breakdown items
+const MiniRing = ({ value = 0, max = 10, size = 44, thickness = 4 }) => {
+  const radius = (size - thickness) / 2;
+  const circumference = 2 * Math.PI * radius;
+  // Guard against division by zero
+  const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
+  const dash = (pct / 100) * circumference;
+
+  const getColor = (p) => {
+    if (p >= 80) return '#22c55e';
+    if (p >= 60) return '#3b82f6';
+    if (p >= 40) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  return (
+    <div className="mini-ring" style={{ width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={size/2} cy={size/2} r={radius} stroke="#e5e7eb" strokeWidth={thickness} fill="none" />
+        <circle
+          cx={size/2} cy={size/2} r={radius}
+          stroke={getColor(pct)} strokeWidth={thickness} strokeLinecap="round" fill="none"
+          strokeDasharray={`${dash} ${circumference - dash}`}
+          style={{ transition: 'stroke-dasharray 0.6s ease' }}
+        />
+      </svg>
+      <span className="mini-ring-value">{value}</span>
+    </div>
+  );
+};
 
 const AtsChecker = () => {
   const [uploading, setUploading] = useState(false);
   const [atsResult, setAtsResult] = useState(null);
-  const [jobDescription, setJobDescription] = useState('');
-  const [dragActive, setDragActive] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [snack, setSnack] = useState({ open: false, type: 'success', text: '' });
   const [rawResponse, setRawResponse] = useState(null);
+  const [jobDescription, setJobDescription] = useState('');
   const [showRaw, setShowRaw] = useState(false);
-  const fileInputRef = useRef(null);
+  const [snack, setSnack] = useState({ open: false, type: 'success', text: '' });
   const navigate = useNavigate();
-  const location = useLocation();
-  const { isAuthenticated } = useAuth();
 
   const handleUpload = async (file) => {
     setUploading(true);
     setAtsResult(null);
-
+    setRawResponse(null);
+    
     try {
       const response = await resumeAPI.calculateAtsScore(file, jobDescription);
+      console.log('Backend ATS response:', response);
       setRawResponse(response);
       const normalized = normalizeAtsResponse(response);
-      console.log('Normalized ATS Result:', normalized);
-      if (!normalized.hasContent) {
-        setAtsResult(null);
-        setSnack({ open: true, type: 'error', text: normalized.error || 'No ATS data returned. Please try again.' });
-        return;
-      }
+      console.log('Normalized ATS result:', normalized);
       setAtsResult(normalized);
       setSnack({ open: true, type: 'success', text: 'ATS analysis complete!' });
     } catch (error) {
@@ -43,58 +98,27 @@ const AtsChecker = () => {
     }
   };
 
-  const validateAndSelect = (file) => {
-    if (!file) return;
-    if (file.type !== 'application/pdf') {
-      setSnack({ open: true, type: 'error', text: 'Please upload a PDF file!' });
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setSnack({ open: true, type: 'error', text: 'File must be smaller than 5MB!' });
-      return;
-    }
-    setSelectedFile(file);
-  };
-
-  const handleSubmit = () => {
-    if (!isAuthenticated) {
-      // Prompt login if not authenticated
-      setSnack({ open: true, type: 'info', text: 'Please sign in to analyze your resume.' });
-      setTimeout(() => {
-        navigate('/login', { state: { from: location } });
-      }, 1500);
-      return;
-    }
-
-    if (!selectedFile) {
-      setSnack({ open: true, type: 'error', text: 'Please select a resume file first!' });
-      return;
-    }
-    handleUpload(selectedFile);
-    setSelectedFile(null);
-  };
-
   const onPickFile = (event) => {
     const file = event.target.files?.[0];
-    validateAndSelect(file);
+    if (!file) return;
+    
+    if (file.type !== 'application/pdf') {
+      setSnack({ open: true, type: 'error', text: 'Please upload a PDF file!' });
+      event.target.value = '';
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      setSnack({ open: true, type: 'error', text: 'File must be smaller than 5MB!' });
+      event.target.value = '';
+      return;
+    }
+    
+    handleUpload(file);
     event.target.value = '';
   };
 
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
-    else if (e.type === 'dragleave') setDragActive(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    const file = e.dataTransfer?.files?.[0];
-    validateAndSelect(file);
-  };
-
+  // Parse "7/10" → { num: 7, den: 10 }
   const parseScore = (val) => {
     if (!val) return null;
     if (typeof val === 'number') return { num: val, den: 10 };
@@ -105,24 +129,21 @@ const AtsChecker = () => {
   };
 
   const normalizeAtsResponse = (res) => {
-    // Backend returns { think, data } where data holds the ATS fields; unwrap it once.
-    const core = res?.data ?? res ?? {};
-
-    const rawScore = core?.atsScore ?? core?.overallScore ?? core?.score;
+    // Backend returns { data: { atsScore, scoreBreakdown, ... }, think: ... }
+    const payload = res?.data ?? res ?? {};
+    const rawScore = payload?.atsScore ?? payload?.overallScore ?? payload?.score;
     const percent = typeof rawScore === 'string'
       ? parseInt(String(rawScore).replace(/[^\d]/g, ''), 10)
       : (typeof rawScore === 'number' ? rawScore : null);
 
-    const breakdown = core?.scoreBreakdown ?? core?.breakdown ?? {};
-    const strengths = Array.isArray(core?.strengths) ? core.strengths : [];
-    const weaknesses = Array.isArray(core?.weaknesses) ? core.weaknesses : [];
-    const suggestions = Array.isArray(core?.detailedSuggestions)
-      ? core.detailedSuggestions.map(s => typeof s === 'string' ? { section: 'General', suggestion: s } : s)
-      : (Array.isArray(core?.suggestions)
-        ? core.suggestions.map(s => typeof s === 'string' ? { section: 'General', suggestion: s } : s)
+    const breakdown = payload?.scoreBreakdown ?? payload?.breakdown ?? {};
+    const strengths = Array.isArray(payload?.strengths) ? payload.strengths : [];
+    const weaknesses = Array.isArray(payload?.weaknesses) ? payload.weaknesses : [];
+    const suggestions = Array.isArray(payload?.detailedSuggestions)
+      ? payload.detailedSuggestions.map(s => typeof s === 'string' ? { section: 'General', suggestion: s } : s)
+      : (Array.isArray(payload?.suggestions)
+        ? payload.suggestions.map(s => typeof s === 'string' ? { section: 'General', suggestion: s } : s)
         : []);
-
-    const hasContent = Object.keys(core || {}).length > 0;
 
     return {
       score: Number.isFinite(percent) ? percent : null,
@@ -134,192 +155,95 @@ const AtsChecker = () => {
       strengths,
       weaknesses,
       suggestions,
-      // Legacy fields fallback
-      keywords: core?.keywords || [],
-      missingKeywords: core?.missingKeywords || [],
-      feedback: core?.feedback,
-      error: core?.error || res?.error,
-      hasContent,
     };
   };
 
-  const getScoreLabel = (score) => {
-    if (score >= 90) return 'Excellent';
-    if (score >= 75) return 'Good';
-    if (score >= 60) return 'Fair';
-    if (score >= 40) return 'Needs Work';
-    return 'Poor';
-  };
-
-  const getScoreTier = (score) => {
-    if (score >= 85) return 'Top 10%';
-    if (score >= 70) return 'Top 25%';
-    if (score >= 50) return 'Top 50%';
-    return 'Below Average';
-  };
-
-  // SVG circular progress
-  const circleRadius = 42;
-  const circumference = 2 * Math.PI * circleRadius;
-
   const sectionMeta = {
-    Summary: { icon: 'description', color: 'blue' },
-    Experience: { icon: 'rocket_launch', color: 'indigo' },
-    Education: { icon: 'school', color: 'green' },
-    Projects: { icon: 'terminal', color: 'cyan' },
-    Skills: { icon: 'psychology', color: 'orange' },
-    Certifications: { icon: 'workspace_premium', color: 'green' },
-    Achievements: { icon: 'emoji_events', color: 'purple' },
-    Languages: { icon: 'translate', color: 'blue' },
-    Contact: { icon: 'contact_page', color: 'teal' },
-    Formatting: { icon: 'view_column', color: 'blue' },
-    Keywords: { icon: 'key', color: 'amber' },
-    General: { icon: 'task_alt', color: 'emerald' },
+    Summary: { icon: '📝', color: 'blue' },
+    Experience: { icon: '💼', color: 'purple' },
+    Education: { icon: '🎓', color: 'green' },
+    Projects: { icon: '🚀', color: 'cyan' },
+    Skills: { icon: '⚡', color: 'orange' },
+    Certifications: { icon: '🏆', color: 'green' },
+    Achievements: { icon: '🏅', color: 'purple' },
+    Languages: { icon: '🌐', color: 'blue' },
+    Contact: { icon: '📧', color: 'cyan' },
+    Formatting: { icon: '📐', color: 'red' },
+    Keywords: { icon: '🔑', color: 'orange' },
+    General: { icon: '📋', color: 'blue' },
   };
 
-  const breakdownConfig = [
-    { key: 'keywordMatch', label: 'Keyword Match', icon: 'key', bgClass: 'bd-amber' },
-    { key: 'formatting', label: 'Formatting', icon: 'view_column', bgClass: 'bd-blue' },
-    { key: 'sectionCompleteness', label: 'Section Completeness', icon: 'contact_page', bgClass: 'bd-teal' },
+  const getScoreLabel = (score) => {
+    if (score >= 90) return { text: 'Excellent', cls: 'excellent' };
+    if (score >= 75) return { text: 'Good', cls: 'good' };
+    if (score >= 60) return { text: 'Fair', cls: 'fair' };
+    if (score >= 40) return { text: 'Needs Work', cls: 'needs-work' };
+    return { text: 'Poor', cls: 'poor' };
+  };
+
+  const getBarColorClass = (pct) => {
+    if (pct >= 80) return 'bar-green';
+    if (pct >= 60) return 'bar-blue';
+    if (pct >= 40) return 'bar-orange';
+    return 'bar-red';
+  };
+
+  const breakdownItems = [
+    { key: 'keywordMatch', label: 'Keyword Match', icon: '🔑' },
+    { key: 'formatting', label: 'Formatting', icon: '📐' },
+    { key: 'sectionCompleteness', label: 'Section Completeness', icon: '📋' },
   ];
 
   return (
     <div className="ats-page">
-      {/* ══════════ HERO ══════════ */}
+      {/* Hero */}
       <section className="ats-hero">
-        <div className="ats-hero-badge">
-          <span className="ping-dot">
-            <span className="ping-ring"></span>
-            <span className="ping-core"></span>
-          </span>
-          {atsResult ? 'LIVE ANALYSIS COMPLETE' : 'ATS READINESS CHECK'}
-        </div>
-        <h1>{atsResult ? 'ATS Analysis Results' : <>Score your resume for <span className="hero-accent">ATS</span> in minutes</>}</h1>
-        <p className="hero-subtitle">
-          {atsResult
-            ? "We've analyzed your resume to ensure it bypasses modern enterprise ATS filters."
-            : 'Upload your PDF resume to get instant scoring, keyword coverage, and section-level guidance tailored for Applicant Tracking Systems.'}
-        </p>
-        {!atsResult && (
-          <div className="hero-tags">
-            <span className="hero-tag">📄 PDF Files</span>
-            <span className="hero-tag">📦 &lt; 5 MB</span>
-            <span className="hero-tag">🔑 Keyword Insights</span>
-          </div>
+        {atsResult ? (
+          <>
+            <div className="analysis-badge">
+              <span className="dot"></span>
+              ANALYSIS COMPLETE
+            </div>
+            <h1>Your ATS Score Report</h1>
+            <p>Here's how your resume performs against Applicant Tracking Systems.</p>
+          </>
+        ) : (
+          <>
+            <h1>ATS Resume Checker</h1>
+            <p>Upload your resume to get instant ATS scoring, keyword analysis, and optimization suggestions powered by AI.</p>
+          </>
         )}
       </section>
 
       <main className="ats-main">
-        {/* ══════════ UPLOAD + CHECKLIST (pre-results) ══════════ */}
+        {/* Upload */}
         {!atsResult && !uploading && (
-          <>
-            <div className="upload-checklist-row">
-              <div className="upload-panel">
-                <h2 className="panel-title">Upload &amp; analyze</h2>
-                <p className="panel-subtitle">Drop in your resume to get ATS scoring, keyword coverage, and prioritized fixes.</p>
-
-                <div
-                  className={`drop-zone ${dragActive ? 'drag-active' : ''}`}
-                  onDragEnter={handleDrag}
-                  onDragOver={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <div className="drop-icon">📁</div>
-                  <p className="drop-text">Click to select a file or drag and drop</p>
-                  <p className="drop-hint">Accepted: PDF • Max 5MB</p>
-                  <button className="select-file-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-                    📁 SELECT FILE
-                  </button>
-                  <input ref={fileInputRef} type="file" accept=".pdf" onChange={onPickFile} style={{ display: 'none' }} />
-                </div>
-
-                {selectedFile && (
-                  <div className="selected-file-row">
-                    <span className="selected-file-name">📄 {selectedFile.name}</span>
-                    <button className="remove-file-btn" onClick={() => setSelectedFile(null)}>✕</button>
-                  </div>
-                )}
-
-                <button
-                  className={`submit-btn ${selectedFile ? 'active' : 'disabled'}`}
-                  onClick={handleSubmit}
-                  disabled={!selectedFile}
-                >
-                  🚀 Analyze Resume
-                </button>
-
-                <div className="jd-section">
-                  <label className="jd-label">
-                    🎯 Paste Job Description <span className="jd-optional">(optional — improves keyword matching)</span>
-                  </label>
-                  <textarea
-                    className="jd-textarea"
-                    placeholder="Paste the job description here to get a targeted analysis with keyword matching..."
-                    value={jobDescription}
-                    onChange={(e) => setJobDescription(e.target.value)}
-                    rows={4}
-                  />
-                </div>
-              </div>
-
-              <div className="checklist-panel">
-                <h2 className="panel-title">ATS-friendly checklist</h2>
-                <p className="panel-subtitle">Quick wins to boost your score before you upload.</p>
-                <ul className="checklist">
-                  <li className="checklist-item"><span className="check-icon">✅</span>Use standard headings: Summary, Experience, Education, Skills</li>
-                  <li className="checklist-item"><span className="check-icon">✅</span>Keep fonts simple (Inter, Arial, Calibri) and avoid images</li>
-                  <li className="checklist-item"><span className="check-icon">✅</span>Mirror keywords from the job description naturally</li>
-                  <li className="checklist-item"><span className="check-icon">✅</span>Prefer bullet points, avoid dense paragraphs</li>
-                  <li className="checklist-item"><span className="check-icon">✅</span>Export to PDF for consistency unless a DOCX is required</li>
-                </ul>
-                <div className="pro-tip">
-                  <span className="pro-tip-badge">PRO TIP</span>
-                  <p>Our AI suggests specific action verbs like "spearheaded" or "optimized" to grab recruiter attention.</p>
-                </div>
-              </div>
+          <div className="upload-section">
+            <div className="upload-area">
+              <div className="upload-icon">📄</div>
+              <p className="upload-text">Click to select a file</p>
+              <p className="upload-hint">Accepted: PDF • Max 5MB</p>
+              <label className="upload-btn">
+                📁 SELECT FILE
+                <input type="file" accept=".pdf" onChange={onPickFile} />
+              </label>
             </div>
-
-            <section className="info-section">
-              <h2 className="info-title">What is an ATS Score?</h2>
-              <p className="info-text">
-                An Applicant Tracking System (ATS) is software used by employers to manage job applications. Your ATS score indicates how
-                well your resume is formatted and optimized for these systems. A higher score means your resume is more likely to be seen
-                by human recruiters.
-              </p>
-            </section>
-
-            <div className="practices-row">
-              <div className="practices-card good">
-                <h3><span className="practices-icon good-icon">✅</span> Good ATS Practices</h3>
-                <ul>
-                  <li><span className="practice-bullet good-bullet">+</span> Use standard fonts and formatting</li>
-                  <li><span className="practice-bullet good-bullet">+</span> Include relevant keywords</li>
-                  <li><span className="practice-bullet good-bullet">+</span> Use clear section headings</li>
-                  <li><span className="practice-bullet good-bullet">+</span> Avoid images and graphics</li>
-                </ul>
-              </div>
-              <div className="practices-card poor">
-                <h3><span className="practices-icon poor-icon">❌</span> Poor ATS Practices</h3>
-                <ul>
-                  <li><span className="practice-bullet poor-bullet">−</span> Complex tables and columns</li>
-                  <li><span className="practice-bullet poor-bullet">−</span> Headers and footers</li>
-                  <li><span className="practice-bullet poor-bullet">−</span> Special characters</li>
-                  <li><span className="practice-bullet poor-bullet">−</span> Unconventional section names</li>
-                </ul>
-              </div>
+            <div className="jd-section">
+              <label className="jd-label">
+                🎯 Paste Job Description <span className="jd-optional">(optional — improves keyword matching)</span>
+              </label>
+              <textarea
+                className="jd-textarea"
+                placeholder="Paste the job description here to get a targeted analysis with keyword matching..."
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+                rows={5}
+              />
             </div>
-
-            <section className="cta-band">
-              <h2>Ready to Build Your Resume?</h2>
-              <p>Join thousands of job seekers who have already landed their dream jobs.</p>
-              <button className="cta-band-btn" onClick={() => navigate('/generate')}>Get Started Now</button>
-            </section>
-          </>
+          </div>
         )}
 
-        {/* ══════════ LOADING ══════════ */}
+        {/* Loading */}
         {uploading && (
           <div className="loading-container">
             <CircularProgress size={48} sx={{ color: '#6366f1' }} />
@@ -328,116 +252,53 @@ const AtsChecker = () => {
           </div>
         )}
 
-        {/* ══════════ RESULTS (Glassmorphic Design) ══════════ */}
+        {/* ─── Results ─── */}
         {atsResult && (
           <>
-            {/* Score + Breakdown Row */}
-            <div className="results-grid">
-              {/* Left: Score Card with Circular Progress */}
-              <div className="glass-card score-main-card">
-                <div className="score-flex">
-                  {/* Circular SVG Progress */}
-                  <div className="score-circle-wrap">
-                    <svg className="score-svg" viewBox="0 0 100 100">
-                      <defs>
-                        <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#14b8a6" />
-                          <stop offset="100%" stopColor="#3b82f6" />
-                        </linearGradient>
-                      </defs>
-                      <circle className="score-bg-ring" cx="50" cy="50" r={circleRadius} strokeWidth="10" />
-                      <circle
-                        className="score-fg-ring"
-                        cx="50" cy="50" r={circleRadius}
-                        strokeWidth="10"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={circumference - (circumference * (atsResult.score ?? 0)) / 100}
-                      />
-                    </svg>
-                    <div className="score-center-text">
-                      <span className="score-big-num">{atsResult.score ?? 0}</span>
-                      <span className="score-percent">%</span>
-                      <span className="score-label-text">Overall Score</span>
-                    </div>
-                  </div>
-
-                  {/* Breakdown Bars */}
-                  <div className="score-breakdown-section">
-                    <div className="breakdown-header">
-                      <h3 className="breakdown-heading">
-                        <span className="heading-bar"></span>
-                        Score Breakdown
-                      </h3>
-                      <span className="tier-badge">{getScoreTier(atsResult.score ?? 0)}</span>
-                    </div>
-
-                    <div className="breakdown-bars">
-                      {breakdownConfig.map(({ key, label, icon, bgClass }) => {
-                        const s = atsResult.breakdown?.[key];
-                        const pct = s ? Math.round((s.num / s.den) * 100) : 0;
-                        return (
-                          <div key={key} className="bd-item">
-                            <div className="bd-item-top">
-                              <div className="bd-icon-label">
-                                <div className={`bd-icon-box ${bgClass}`}>
-                                  <span className="material-symbols-outlined">{icon}</span>
-                                </div>
-                                <span className="bd-label">{label}</span>
-                              </div>
-                              <span className={`bd-pct ${bgClass}`}>{pct}%</span>
-                            </div>
-                            <div className="bd-bar-track">
-                              <div className={`bd-bar-fill ${bgClass}`} style={{ width: `${pct}%` }}></div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+            {/* Row 1: Overall Score + Breakdown */}
+            <div className="results-top">
+              <div className="card overall-score-card">
+                <DonutChart value={atsResult.score ?? 0} size={170} thickness={14} />
+                <div className="score-meta">
+                  <span className={`score-label-badge ${getScoreLabel(atsResult.score ?? 0).cls}`}>
+                    {getScoreLabel(atsResult.score ?? 0).text}
+                  </span>
+                  <span className="score-subtitle">Overall ATS Score</span>
                 </div>
               </div>
 
-              {/* Right: AI Summary Sidebar */}
-              <div className="glass-card summary-sidebar">
-                <div className="summary-content">
-                  <div className="summary-icon-box">
-                    <span className="material-symbols-outlined">query_stats</span>
-                  </div>
-                  <div>
-                    <h4 className="summary-title">AI Summary</h4>
-                    <p className="summary-text">
-                      Your resume shows <strong>{getScoreLabel(atsResult.score ?? 0).toLowerCase()} compatibility</strong> with ATS systems.
-                      {atsResult.score >= 75
-                        ? ' Fine-tuning keywords and formatting could push you into the elite bracket.'
-                        : ' Focus on the improvements below to significantly boost your score.'}
-                    </p>
-                  </div>
-                  <div className="parser-status">
-                    <div className="parser-icon">
-                      <span className="material-symbols-outlined">verified_user</span>
-                    </div>
-                    <div>
-                      <p className="parser-label">Parser Status</p>
-                      <p className="parser-value">100% Compatible</p>
-                    </div>
-                  </div>
+              <div className="card breakdown-card">
+                <h3 className="card-title">Score Breakdown</h3>
+                <div className="breakdown-list">
+                  {breakdownItems.map(({ key, label, icon }) => {
+                    const s = atsResult.breakdown?.[key];
+                    const pct = s ? Math.round((s.num / s.den) * 100) : 0;
+                    return (
+                      <div key={key} className="breakdown-row">
+                        <div className="breakdown-left">
+                          <MiniRing value={s?.num ?? 0} max={s?.den ?? 10} />
+                          <div className="breakdown-info">
+                            <span className="breakdown-label">{icon} {label}</span>
+                            <span className="breakdown-score-text">{s ? `${s.num} / ${s.den}` : '—'}</span>
+                          </div>
+                        </div>
+                        <div className="breakdown-bar-wrap">
+                          <div className={`breakdown-bar-fill ${getBarColorClass(pct)}`} style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <button className="download-report-btn" onClick={() => navigate('/generate')}>
-                  <span className="material-symbols-outlined">auto_fix_high</span>
-                  Generate Optimized Resume
-                </button>
               </div>
             </div>
 
-            {/* Strengths & Weaknesses */}
-            <div className="sw-grid">
-              <div className="glass-card sw-card">
-                <h3 className="sw-heading">
-                  <div className="sw-icon-box emerald">
-                    <span className="material-symbols-outlined">task_alt</span>
-                  </div>
+            {/* Row 2: Strengths & Weaknesses */}
+            <div className="results-middle">
+              <div className="card sw-card">
+                <h3 className="card-title">
+                  <span className="title-icon green-bg">✅</span>
                   Strengths
-                  <span className="sw-count emerald">{atsResult.strengths.length}</span>
+                  <span className="count-badge green-badge">{atsResult.strengths.length}</span>
                 </h3>
                 {atsResult.strengths.length > 0 ? (
                   <ul className="sw-list">
@@ -453,13 +314,11 @@ const AtsChecker = () => {
                 )}
               </div>
 
-              <div className="glass-card sw-card">
-                <h3 className="sw-heading">
-                  <div className="sw-icon-box rose">
-                    <span className="material-symbols-outlined">warning</span>
-                  </div>
+              <div className="card sw-card">
+                <h3 className="card-title">
+                  <span className="title-icon red-bg">⚠️</span>
                   Weaknesses
-                  <span className="sw-count rose">{atsResult.weaknesses.length}</span>
+                  <span className="count-badge red-badge">{atsResult.weaknesses.length}</span>
                 </h3>
                 {atsResult.weaknesses.length > 0 ? (
                   <ul className="sw-list">
@@ -476,31 +335,28 @@ const AtsChecker = () => {
               </div>
             </div>
 
-            {/* Critical Improvements / Suggestions */}
+            {/* Row 3: Detailed Suggestions */}
             {atsResult.suggestions.length > 0 && (
-              <div className="improvements-section">
-                <div className="improvements-header">
+              <div className="card suggestions-card">
+                <div className="suggestions-header">
                   <div>
-                    <h2 className="improvements-title">Critical Improvements</h2>
-                    <p className="improvements-sub">Strategic adjustments recommended by our AI model.</p>
+                    <h3 className="card-title" style={{ marginBottom: 4 }}>💡 AI Recommendations</h3>
+                    <p className="suggestions-subtitle">Actionable improvements to boost your ATS score</p>
                   </div>
-                  <div className="insights-count-box">
-                    <span>{atsResult.suggestions.length} Insights Found</span>
-                  </div>
+                  <span className="count-badge purple-badge">{atsResult.suggestions.length} suggestions</span>
                 </div>
-
-                <div className="improvements-grid">
+                <div className="suggestions-list">
                   {atsResult.suggestions.map((s, idx) => {
                     const section = s.section || 'General';
-                    const meta = sectionMeta[section] || { icon: 'task_alt', color: 'blue' };
-                    const isWarning = ['Keywords', 'Formatting', 'General'].includes(section);
+                    const meta = sectionMeta[section] || { icon: '📋', color: 'blue' };
                     return (
-                      <div key={idx} className={`glass-card improvement-card ${isWarning ? `border-left-${meta.color}` : ''}`}>
-                        <div className={`improve-icon-box ${meta.color}`}>
-                          <span className="material-symbols-outlined">{meta.icon}</span>
+                      <div key={idx} className="suggestion-item">
+                        <div className={`suggestion-icon-wrap ${meta.color}`}>{meta.icon}</div>
+                        <div className="suggestion-content">
+                          <span className={`suggestion-section-tag ${meta.color}`}>{section}</span>
+                          <p className="suggestion-text">{s.suggestion}</p>
                         </div>
-                        <h4 className="improve-title">{section}</h4>
-                        <p className="improve-text">{s.suggestion}</p>
+                        <span className="suggestion-num">#{idx + 1}</span>
                       </div>
                     );
                   })}
@@ -508,37 +364,29 @@ const AtsChecker = () => {
               </div>
             )}
 
-            {/* Raw Backend Response Toggle */}
-            {rawResponse && (
-              <div className="glass-card raw-response-card">
-                <button className="raw-toggle-btn" onClick={() => setShowRaw(!showRaw)}>
-                  <span className="material-symbols-outlined">{showRaw ? 'visibility_off' : 'data_object'}</span>
-                  {showRaw ? 'Hide Backend Response' : 'Show Backend Response'}
-                </button>
-                {showRaw && (
-                  <pre className="raw-json-block">{JSON.stringify(rawResponse, null, 2)}</pre>
-                )}
-              </div>
-            )}
+            {/* Raw Response */}
+            <div className="raw-toggle-section">
+              <button className="raw-toggle-btn" onClick={() => setShowRaw(!showRaw)}>
+                {showRaw ? '🔼 Hide' : '🔽 Show'} Raw AI Response
+              </button>
+              {showRaw && rawResponse && (
+                <pre className="raw-response-block">{JSON.stringify(rawResponse, null, 2)}</pre>
+              )}
+            </div>
 
-            {/* CTA - Mesh gradient */}
-            <section className="results-cta-mesh">
-              <div className="mesh-blur mesh-blur-1"></div>
-              <div className="mesh-blur mesh-blur-2"></div>
-              <div className="mesh-cta-content">
-                <h2>Ready to reach 100%?</h2>
-                <p>Let our AI engine rewrite your sections instantly to match the highest industry standards.</p>
-                <div className="mesh-cta-buttons">
-                  <button className="mesh-btn-primary" onClick={() => navigate('/generate')}>
-                    <span className="material-symbols-outlined">auto_fix_high</span>
-                    Apply AI Suggestions
-                  </button>
-                  <button className="mesh-btn-secondary" onClick={() => { setAtsResult(null); setJobDescription(''); }}>
-                    Analyze Another Resume
-                  </button>
-                </div>
+            {/* CTA */}
+            <div className="cta-section">
+              <h2>Ready to improve your score?</h2>
+              <p>Use our AI resume generator to apply the suggestions above automatically.</p>
+              <div className="cta-buttons">
+                <button className="cta-btn-primary" onClick={() => navigate('/generate')}>
+                  ✨ Generate Optimized Resume
+                </button>
+                <button className="cta-btn-secondary" onClick={() => { setAtsResult(null); setRawResponse(null); setJobDescription(''); }}>
+                  🔄 Analyze Another Resume
+                </button>
               </div>
-            </section>
+            </div>
           </>
         )}
       </main>

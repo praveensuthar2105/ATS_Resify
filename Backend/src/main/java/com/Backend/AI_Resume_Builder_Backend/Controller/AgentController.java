@@ -19,23 +19,24 @@ import java.util.Map;
  * 
  * REST API endpoints for the AI Resume Agent:
  * 
- * POST /api/agent/chat - Send a message to the agent
- * POST /api/agent/bullet/improve - Improve a bullet point
- * POST /api/agent/bullet/batch - Batch improve bullets
- * POST /api/agent/bullet/suggest - Get real-time suggestions
- * POST /api/agent/job/match - Analyze job match
- * POST /api/agent/job/keywords - Keyword gap analysis
- * POST /api/agent/job/tailor - Generate tailored content
- * POST /api/agent/content/summary - Generate professional summary
+ * POST /api/agent/chat              - Send a message to the agent
+ * POST /api/agent/bullet/improve    - Improve a bullet point
+ * POST /api/agent/bullet/batch      - Batch improve bullets
+ * POST /api/agent/bullet/suggest    - Get real-time suggestions
+ * POST /api/agent/job/match         - Analyze job match
+ * POST /api/agent/job/keywords      - Keyword gap analysis
+ * POST /api/agent/job/tailor        - Generate tailored content
+ * POST /api/agent/content/summary   - Generate professional summary
  * POST /api/agent/content/experience - Generate experience bullets
- * POST /api/agent/content/project - Generate project description
- * POST /api/agent/content/skills - Generate skills section
- * GET /api/agent/conversations - Get user's conversations
- * GET /api/agent/conversation/{id} - Get conversation messages
+ * POST /api/agent/content/project   - Generate project description
+ * POST /api/agent/content/skills    - Generate skills section
+ * GET  /api/agent/conversations     - Get user's conversations
+ * GET  /api/agent/conversation/{id} - Get conversation messages
  * DELETE /api/agent/conversation/{id} - End conversation
  */
 @RestController
 @RequestMapping("/api/agent")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"})
 public class AgentController {
 
     private static final Logger log = LoggerFactory.getLogger(AgentController.class);
@@ -66,12 +67,14 @@ public class AgentController {
 
         if (request.getMessage() == null || request.getMessage().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(
-                    AgentChatResponse.of(request.getSessionId(), "Please provide a message."));
+                AgentChatResponse.of(request.getSessionId(), "Please provide a message.")
+            );
         }
 
         if (request.getUserId() == null || request.getUserId().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(
-                    AgentChatResponse.of(null, "User ID is required."));
+                AgentChatResponse.of(null, "User ID is required.")
+            );
         }
 
         AgentChatResponse response = agentChatService.processMessage(request);
@@ -142,8 +145,7 @@ public class AgentController {
         String jobDescription = request.get("jobDescription");
 
         if (resumeContent == null || jobDescription == null) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Both resumeContent and jobDescription are required"));
+            return ResponseEntity.badRequest().body(Map.of("error", "Both resumeContent and jobDescription are required"));
         }
 
         Map<String, Object> analysis = jobMatcherService.analyzeMatch(resumeContent, jobDescription);
@@ -159,8 +161,7 @@ public class AgentController {
         String jobDescription = request.get("jobDescription");
 
         if (resumeContent == null || jobDescription == null) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Both resumeContent and jobDescription are required"));
+            return ResponseEntity.badRequest().body(Map.of("error", "Both resumeContent and jobDescription are required"));
         }
 
         Map<String, Object> gaps = jobMatcherService.getKeywordGaps(resumeContent, jobDescription);
@@ -180,8 +181,7 @@ public class AgentController {
             return ResponseEntity.badRequest().body(Map.of("error", "currentContent and jobDescription are required"));
         }
 
-        Map<String, Object> tailored = jobMatcherService.generateTailoredContent(currentContent, jobDescription,
-                section);
+        Map<String, Object> tailored = jobMatcherService.generateTailoredContent(currentContent, jobDescription, section);
         return ResponseEntity.ok(tailored);
     }
 
@@ -193,13 +193,12 @@ public class AgentController {
     @PostMapping("/content/summary")
     public ResponseEntity<Map<String, Object>> generateSummary(@RequestBody Map<String, Object> request) {
         String jobTitle = (String) request.getOrDefault("jobTitle", "Software Engineer");
-        int yearsExp = request.containsKey("yearsExperience") ? ((Number) request.get("yearsExperience")).intValue()
-                : 3;
+        int yearsExp = request.containsKey("yearsExperience") ? 
+            ((Number) request.get("yearsExperience")).intValue() : 3;
         String targetRole = (String) request.get("targetRole");
         String keySkills = (String) request.get("keySkills");
 
-        Map<String, Object> summary = contentGeneratorService.generateSummary(jobTitle, yearsExp, targetRole,
-                keySkills);
+        Map<String, Object> summary = contentGeneratorService.generateSummary(jobTitle, yearsExp, targetRole, keySkills);
         return ResponseEntity.ok(summary);
     }
 
@@ -351,9 +350,10 @@ public class AgentController {
                 .toList();
 
         return ResponseEntity.ok(Map.of(
-                "sessionId", sessionId,
-                "messages", messageMaps,
-                "count", messageMaps.size()));
+            "sessionId", sessionId,
+            "messages", messageMaps,
+            "count", messageMaps.size()
+        ));
     }
 
     /**

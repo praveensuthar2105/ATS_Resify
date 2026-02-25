@@ -1,17 +1,16 @@
 ﻿import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  CircularProgress,
-  Snackbar,
-  Alert,
+import { 
+  Box, 
+  Typography, 
+  TextField, 
+  Button, 
+  CircularProgress, 
+  Snackbar, 
+  Alert, 
   LinearProgress
 } from '@mui/material';
 import { resumeAPI } from '../services/api';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import './GenerateResume.css';
 
 const GenerateResume = () => {
@@ -21,8 +20,6 @@ const GenerateResume = () => {
   const [charCount, setCharCount] = useState(0);
   const [snack, setSnack] = useState({ open: false, type: 'success', text: '' });
   const navigate = useNavigate();
-  const location = useLocation();
-  const { isAuthenticated } = useAuth();
 
   const writingTips = [
     { num: 1, text: 'Quantify your impact with numbers and percentages.' },
@@ -43,15 +40,7 @@ const GenerateResume = () => {
 
   const handleGenerateResume = async (e) => {
     e.preventDefault();
-
-    if (!isAuthenticated) {
-      setSnack({ open: true, type: 'info', text: 'Please sign in to generate your resume.' });
-      setTimeout(() => {
-        navigate('/login', { state: { from: location } });
-      }, 1500);
-      return;
-    }
-
+    
     if (!description || description.length < 50) {
       setSnack({ open: true, type: 'error', text: 'Please provide at least 50 characters for better results' });
       return;
@@ -61,23 +50,23 @@ const GenerateResume = () => {
     try {
       const response = await resumeAPI.generateResume(description, selectedTemplate);
       console.log('Backend response:', response);
-
+      
       const resumeWithTemplate = {
         ...response,
         selectedTemplate: selectedTemplate
       };
       localStorage.setItem('generatedResume', JSON.stringify(resumeWithTemplate));
       setSnack({ open: true, type: 'success', text: 'Resume generated successfully!' });
-
+      
       setTimeout(() => {
         navigate('/edit-resume');
       }, 1000);
     } catch (error) {
       console.error('Error generating resume:', error);
-      setSnack({
-        open: true,
-        type: 'error',
-        text: error.response?.data?.message || 'Failed to generate resume. Please try again.'
+      setSnack({ 
+        open: true, 
+        type: 'error', 
+        text: error.response?.data?.message || 'Failed to generate resume. Please try again.' 
       });
     } finally {
       setLoading(false);
@@ -147,8 +136,8 @@ const GenerateResume = () => {
                 <span className="examples-title">Quick Examples</span>
               </div>
               {quickExamples.map((example, idx) => (
-                <div
-                  key={idx}
+                <div 
+                  key={idx} 
                   className="example-item"
                   tabIndex={0}
                   role="button"
@@ -179,7 +168,7 @@ const GenerateResume = () => {
                 <span className="step-icon">✅</span>
                 <span className="step-title">ATS-Optimized Template Selected</span>
               </div>
-
+              
               <div className="ats-template-badge">
                 <div className="ats-badge-icon">📋</div>
                 <div className="ats-badge-content">
@@ -200,9 +189,9 @@ const GenerateResume = () => {
                 <div className="progress-indicator">
                   <span className="progress-label">Progress:</span>
                   <div className="progress-bar-container">
-                    <LinearProgress
-                      variant="determinate"
-                      value={getProgressValue()}
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={getProgressValue()} 
                       sx={{
                         height: 8,
                         borderRadius: 4,
@@ -241,7 +230,7 @@ const GenerateResume = () => {
                 <span className="read-time">⏱️ {getReadTime()}</span>
               </div>
 
-              <button
+              <button 
                 className="generate-btn"
                 onClick={handleGenerateResume}
                 disabled={loading || charCount < 50}
