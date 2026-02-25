@@ -45,9 +45,9 @@ const Home = () => {
   return (
     <Box sx={{ width: '100%', bgcolor: '#FFFFFF' }}>
       {/* Hero Section */}
-      <Box 
-        component="section" 
-        sx={{ 
+      <Box
+        component="section"
+        sx={{
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           pt: { xs: 12, md: 16 },
           pb: { xs: 8, md: 12 },
@@ -59,9 +59,9 @@ const Home = () => {
           <Grid container spacing={4} alignItems="center">
             <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ color: 'white' }}>
-                <Typography 
-                  variant="h1" 
-                  sx={{ 
+                <Typography
+                  variant="h1"
+                  sx={{
                     fontSize: { xs: '2.5rem', md: '3.5rem' },
                     fontWeight: 800,
                     mb: 3,
@@ -70,9 +70,9 @@ const Home = () => {
                 >
                   This resume builder gets you promoted
                 </Typography>
-                <Typography 
-                  variant="h5" 
-                  sx={{ 
+                <Typography
+                  variant="h5"
+                  sx={{
                     fontSize: { xs: '1.1rem', md: '1.3rem' },
                     fontWeight: 400,
                     mb: 4,
@@ -87,7 +87,7 @@ const Home = () => {
                     variant="contained"
                     size="large"
                     onClick={() => navigate('/generate')}
-                    sx={{ 
+                    sx={{
                       bgcolor: 'white',
                       color: '#764ba2',
                       height: 56,
@@ -110,7 +110,7 @@ const Home = () => {
                     variant="outlined"
                     size="large"
                     onClick={() => navigate('/ats-checker')}
-                    sx={{ 
+                    sx={{
                       borderColor: 'white',
                       color: 'white',
                       height: 56,
@@ -129,12 +129,12 @@ const Home = () => {
                     Upload my resume
                   </Button>
                 </Stack>
-                
+
                 {/* Trust Badges */}
                 <Box sx={{ display: 'flex', gap: 3, alignItems: 'center', flexWrap: 'wrap' }}>
                   <Box>
                     <Box sx={{ display: 'flex', gap: 0.5, mb: 0.5 }}>
-                      {[1,2,3,4,5].map(i => (
+                      {[1, 2, 3, 4, 5].map(i => (
                         <StarFilled key={i} style={{ color: '#FCD34D', fontSize: '18px' }} />
                       ))}
                     </Box>
@@ -154,8 +154,8 @@ const Home = () => {
               </Box>
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Box 
-                sx={{ 
+              <Box
+                sx={{
                   position: 'relative',
                   display: { xs: 'none', md: 'flex' },
                   alignItems: 'center',
@@ -163,7 +163,7 @@ const Home = () => {
                   height: 400,
                 }}
               >
-                <Box 
+                <Box
                   sx={{
                     position: 'relative',
                     width: '100%',
@@ -184,7 +184,7 @@ const Home = () => {
                     backdropFilter: 'blur(10px)',
                     border: '1px solid rgba(255,255,255,0.3)',
                   }} />
-                  
+
                   <Box sx={{
                     position: 'absolute',
                     bottom: '20%',
@@ -196,7 +196,7 @@ const Home = () => {
                     backdropFilter: 'blur(10px)',
                     border: '1px solid rgba(255,255,255,0.3)',
                   }} />
-                  
+
                   <Box sx={{
                     position: 'absolute',
                     top: '40%',
@@ -220,8 +220,8 @@ const Home = () => {
         <Grid container spacing={3}>
           {features.map((feature, index) => (
             <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
-              <Card 
-                sx={{ 
+              <Card
+                sx={{
                   height: '100%',
                   borderRadius: 3,
                   border: '1px solid #E5E7EB',
@@ -235,8 +235,8 @@ const Home = () => {
                 }}
               >
                 <CardContent sx={{ p: 3, textAlign: 'center' }}>
-                  <Box 
-                    sx={{ 
+                  <Box
+                    sx={{
                       width: 64,
                       height: 64,
                       borderRadius: 2,
@@ -267,22 +267,22 @@ const Home = () => {
       {/* How It Works Section */}
       <Box sx={{ bgcolor: '#F9FAFB', py: { xs: 8, md: 12 } }}>
         <Container maxWidth="lg">
-          <Typography 
-            variant="h2" 
-            sx={{ 
-              textAlign: 'center', 
-              fontWeight: 800, 
+          <Typography
+            variant="h2"
+            sx={{
+              textAlign: 'center',
+              fontWeight: 800,
               mb: 2,
               fontSize: { xs: '2rem', md: '2.5rem' },
             }}
           >
             Way beyond a resume builder
           </Typography>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              textAlign: 'center', 
-              color: 'text.secondary', 
+          <Typography
+            variant="h6"
+            sx={{
+              textAlign: 'center',
+              color: 'text.secondary',
               mb: 8,
               fontWeight: 400,
               maxWidth: 700,
@@ -291,26 +291,26 @@ const Home = () => {
           >
             Every tool you need to create, optimize, and land your dream job
           </Typography>
-          
+
           <Grid container spacing={6}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Chip 
-                  label="AI-powered" 
-                  size="small" 
-                  sx={{ 
-                    mb: 2, 
-                    bgcolor: '#EEF2FF', 
+                <Chip
+                  label="AI-powered"
+                  size="small"
+                  sx={{
+                    mb: 2,
+                    bgcolor: '#EEF2FF',
                     color: '#6366F1',
                     fontWeight: 600,
                     width: 'fit-content',
-                  }} 
+                  }}
                 />
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
                   Step-by-step guidance
                 </Typography>
                 <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.8, mb: 3, flexGrow: 1 }}>
-                  No need to think much. We guide you through every step of the process. 
+                  No need to think much. We guide you through every step of the process.
                   We show you what to add, and where to add it. It's clear and simple.
                 </Typography>
                 <Button
@@ -326,22 +326,22 @@ const Home = () => {
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Chip 
-                  label="AI-powered" 
-                  size="small" 
-                  sx={{ 
-                    mb: 2, 
-                    bgcolor: '#FEF3C7', 
+                <Chip
+                  label="AI-powered"
+                  size="small"
+                  sx={{
+                    mb: 2,
+                    bgcolor: '#FEF3C7',
                     color: '#F59E0B',
                     fontWeight: 600,
                     width: 'fit-content',
-                  }} 
+                  }}
                 />
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
                   AI writes for you
                 </Typography>
                 <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.8, mb: 3, flexGrow: 1 }}>
-                  Stuck? Click to add phrases that sound professional. Our AI helps you 
+                  Stuck? Click to add phrases that sound professional. Our AI helps you
                   articulate your experience in the best possible way.
                 </Typography>
                 <Button
@@ -357,22 +357,22 @@ const Home = () => {
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Chip 
-                  label="ATS-optimized" 
-                  size="small" 
-                  sx={{ 
-                    mb: 2, 
-                    bgcolor: '#D1FAE5', 
+                <Chip
+                  label="ATS-optimized"
+                  size="small"
+                  sx={{
+                    mb: 2,
+                    bgcolor: '#D1FAE5',
                     color: '#10B981',
                     fontWeight: 600,
                     width: 'fit-content',
-                  }} 
+                  }}
                 />
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
                   Instant ATS scoring
                 </Typography>
                 <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.8, mb: 3, flexGrow: 1 }}>
-                  Upload your resume and get instant feedback. We analyze your resume 
+                  Upload your resume and get instant feedback. We analyze your resume
                   against ATS systems and provide detailed suggestions to improve your score.
                 </Typography>
                 <Button
@@ -388,22 +388,22 @@ const Home = () => {
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Chip 
-                  label="Professional" 
-                  size="small" 
-                  sx={{ 
-                    mb: 2, 
-                    bgcolor: '#F3E8FF', 
+                <Chip
+                  label="Professional"
+                  size="small"
+                  sx={{
+                    mb: 2,
+                    bgcolor: '#F3E8FF',
                     color: '#8B5CF6',
                     fontWeight: 600,
                     width: 'fit-content',
-                  }} 
+                  }}
                 />
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
                   ATS-Optimized Template
                 </Typography>
                 <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.8, mb: 3, flexGrow: 1 }}>
-                  Our professionally designed template passes ATS screening with 95%+ success rate. 
+                  Our professionally designed template passes ATS screening with 95%+ success rate.
                   Your resume will look polished and get noticed by recruiters.
                 </Typography>
                 <Button
@@ -421,17 +421,17 @@ const Home = () => {
       </Box>
 
       {/* CTA Section */}
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           py: { xs: 8, md: 12 },
           textAlign: 'center',
         }}
       >
         <Container maxWidth="md">
-          <Typography 
-            variant="h2" 
-            sx={{ 
+          <Typography
+            variant="h2"
+            sx={{
               color: 'white',
               fontWeight: 800,
               mb: 3,
@@ -440,22 +440,22 @@ const Home = () => {
           >
             Start now and get hired faster
           </Typography>
-          <Typography 
-            variant="h6" 
-            sx={{ 
+          <Typography
+            variant="h6"
+            sx={{
               color: 'white',
               opacity: 0.9,
               mb: 5,
               fontWeight: 400,
             }}
           >
-            Join thousands of job seekers who got hired with our AI resume builder
+            Join thousands of job seekers who got hired with our ATS Resify
           </Typography>
           <Button
             variant="contained"
             size="large"
             onClick={() => navigate('/generate')}
-            sx={{ 
+            sx={{
               bgcolor: 'white',
               color: '#764ba2',
               height: 64,

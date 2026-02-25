@@ -3,15 +3,22 @@ package com.Backend.AI_Resume_Builder_Backend.Controller;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.Backend.AI_Resume_Builder_Backend.Entity.Resume;
+import com.Backend.AI_Resume_Builder_Backend.Entity.User;
+import com.Backend.AI_Resume_Builder_Backend.Repository.ResumeRepository;
+import com.Backend.AI_Resume_Builder_Backend.Repository.UserRepository;
+import com.Backend.AI_Resume_Builder_Backend.Security.JwtUtil;
 import com.Backend.AI_Resume_Builder_Backend.Service.ResumeRequest;
 import com.Backend.AI_Resume_Builder_Backend.Service.ResumeService;
 import com.Backend.AI_Resume_Builder_Backend.Service.AtsScoreService;
@@ -28,8 +35,19 @@ public class resumeController {
 	@Autowired
 	private AtsScoreService atsScoreService;
 
+	@Autowired
+	private JwtUtil jwtUtil;
+
+	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
+	private ResumeRepository resumeRepository;
+
 	@PostMapping("/generate")
-	public ResponseEntity<Map<String, Object>> getResumeData(@RequestBody ResumeRequest resumeRequest) {
+	public ResponseEntity<Map<String, Object>> getResumeData(
+			@RequestBody ResumeRequest resumeRequest,
+			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 		try {
 			// Validate input
 			if (resumeRequest == null || resumeRequest.getUserResumeDescription() == null ||
@@ -44,6 +62,19 @@ public class resumeController {
 			String templateType = resumeRequest.getTemplateType();
 			if (templateType == null || templateType.trim().isEmpty()) {
 				templateType = "modern";
+			}
+
+			// Save resume generation record if user is authenticated
+			if (authHeader != null && authHeader.startsWith("Bearer ")) {
+				String token = authHeader.substring(7);
+				if (jwtUtil.validateToken(token)) {
+					String email = jwtUtil.getEmailFromToken(token);
+					Optional<User> userOpt = userRepository.findByEmail(email);
+					if (userOpt.isPresent()) {
+						Resume resume = new Resume(userOpt.get(), templateType);
+						resumeRepository.save(resume);
+					}
+				}
 			}
 
 			Map<String, Object> jsonObject = resumeService

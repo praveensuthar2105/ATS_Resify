@@ -20,4 +20,9 @@ public interface LatexCompileService {
      *         availability and version output
      */
     java.util.Map<String, Object> getCompilerStatus();
+
+    /**
+     * Get current number of compilations in progress or queued.
+     */
+    int getQueueUsage();
 }

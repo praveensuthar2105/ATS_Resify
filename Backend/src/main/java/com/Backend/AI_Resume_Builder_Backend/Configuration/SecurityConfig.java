@@ -23,6 +23,9 @@ public class SecurityConfig {
         @Autowired
         private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
+        @Value("${app.frontend-url:http://localhost:5173}")
+        private String frontendUrl;
+
         @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:3000}")
         private String allowedOrigins;
 
@@ -38,6 +41,7 @@ public class SecurityConfig {
                                                                 "/api/admin/**",
                                                                 "/api/latex/**",
                                                                 "/api/agent/**",
+                                                                "/api/public/**",
                                                                 "/api/health/**",
                                                                 "/auth/**",
                                                                 "/actuator/**",
@@ -46,7 +50,12 @@ public class SecurityConfig {
                                                 .permitAll()
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth2 -> oauth2
-                                                .successHandler(oAuth2LoginSuccessHandler))
+                                                .successHandler(oAuth2LoginSuccessHandler)
+                                                .failureHandler((request, response, exception) -> {
+                                                        String targetUrl = frontendUrl + "/login?error="
+                                                                        + exception.getLocalizedMessage();
+                                                        response.sendRedirect(targetUrl);
+                                                }))
                                 .exceptionHandling(ex -> ex
                                                 .authenticationEntryPoint((request, response, authException) -> {
                                                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

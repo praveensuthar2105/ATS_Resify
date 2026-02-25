@@ -104,10 +104,12 @@ public class LatexServiceImpl implements LatexService {
         // LinkedIn and GitHub display (without https://)
         String linkedin = getStringValue(personalInfo, "linkedIn");
         String github = getStringValue(personalInfo, "gitHub");
+        String linkedinDisplay = linkedin.replace("https://", "").replace("http://", "");
+        String githubDisplay = github.replace("https://", "").replace("http://", "");
         template = replacePlaceholder(template, "LINKEDIN_DISPLAY",
-                linkedin.replace("https://", "").replace("http://", ""));
+                escapeLatexSpecialChars(linkedinDisplay));
         template = replacePlaceholder(template, "GITHUB_DISPLAY",
-                github.replace("https://", "").replace("http://", ""));
+                escapeLatexSpecialChars(githubDisplay));
 
         // Summary
         template = handleOptionalSection(template, "SUMMARY",

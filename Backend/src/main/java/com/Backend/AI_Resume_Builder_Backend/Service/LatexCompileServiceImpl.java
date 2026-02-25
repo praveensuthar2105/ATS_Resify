@@ -91,6 +91,13 @@ public class LatexCompileServiceImpl implements LatexCompileService, Initializin
     }
 
     @Override
+    public int getQueueUsage() {
+        if (compileSemaphore == null)
+            return 0;
+        return maxConcurrent - compileSemaphore.availablePermits();
+    }
+
+    @Override
     public java.util.Map<String, Object> getCompilerStatus() {
         java.util.Map<String, Object> out = new java.util.HashMap<>();
         String mode = (compilerMode == null || compilerMode.isBlank()) ? "auto" : compilerMode.trim().toLowerCase();

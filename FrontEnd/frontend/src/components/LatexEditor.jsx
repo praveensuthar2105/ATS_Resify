@@ -936,7 +936,7 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
         <div className="header-left">
           <div className="logo">
             <span className="logo-icon">📄</span>
-            <span className="logo-text">Resume.AI</span>
+            <span className="logo-text">ATS Resify</span>
             <span className="logo-badge">Editor</span>
           </div>
           <div className="breadcrumb">

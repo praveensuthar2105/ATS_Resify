@@ -67,7 +67,7 @@ const Navbar = () => {
               <path d="M16 17l1 1 2-2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="logo-text">Resume<span className="logo-dot">.</span>AI</span>
+          <span className="logo-text">ATS Resify</span>
         </RouterLink>
 
         {/* Desktop Navigation Links */}

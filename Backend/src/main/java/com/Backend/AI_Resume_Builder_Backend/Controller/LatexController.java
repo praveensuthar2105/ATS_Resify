@@ -1,6 +1,7 @@
 package com.Backend.AI_Resume_Builder_Backend.Controller;
 
 import com.Backend.AI_Resume_Builder_Backend.Service.LatexService;
+import com.Backend.AI_Resume_Builder_Backend.Service.SystemStatsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,9 @@ public class LatexController {
 
     @Autowired
     private com.Backend.AI_Resume_Builder_Backend.Service.LatexCompileService latexCompileService;
+
+    @Autowired
+    private SystemStatsService systemStatsService;
 
     /**
      * Generate LaTeX code from resume data
@@ -133,6 +137,7 @@ public class LatexController {
                 return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
             }
             String latexCode = codeObj.toString();
+            systemStatsService.incrementPdfCompilations();
             byte[] pdf = latexCompileService.compileToPdf(latexCode);
             return ResponseEntity.ok()
                     .header("Content-Type", "application/pdf")

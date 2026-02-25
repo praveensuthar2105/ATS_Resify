@@ -1,0 +1,204 @@
+.feedback-page {
+    min-height: 80vh;
+    background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+}
+
+.feedback-hero {
+    text-align: center;
+    padding: 80px 20px 40px;
+}
+
+.feedback-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #6366f1;
+    margin-bottom: 20px;
+}
+
+.feedback-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1f2937;
+    margin-bottom: 16px;
+}
+
+.feedback-title .gradient-text {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.feedback-subtitle {
+    font-size: 1.1rem;
+    color: #6b7280;
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.feedback-container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+}
+
+.feedback-form-wrapper {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.feedback-form-wrapper h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 24px;
+}
+
+.feedback-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.feedback-form .form-group {
+    margin-bottom: 20px;
+}
+
+.feedback-form label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.feedback-form input,
+.feedback-form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    color: #1f2937;
+    background: #fafafb;
+    transition: all 0.2s;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.feedback-form input:focus,
+.feedback-form textarea:focus {
+    border-color: #6366f1;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.feedback-form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.star-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.star-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    color: #d1d5db;
+    transition: all 0.15s;
+}
+
+.star-btn.active {
+    color: #f59e0b;
+    transform: scale(1.1);
+}
+
+.star-btn:hover {
+    transform: scale(1.2);
+}
+
+.rating-label {
+    margin-left: 12px;
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.feedback-form .submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    justify-content: center;
+}
+
+.feedback-form .submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+.feedback-form .submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.success-message {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+    border: 1px solid #86efac;
+    border-radius: 10px;
+    color: #166534;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+}
+
+.error-message {
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #fef2f2, #fff1f2);
+    border: 1px solid #fca5a5;
+    border-radius: 10px;
+    color: #991b1b;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 640px) {
+    .feedback-form .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .feedback-title {
+        font-size: 2rem;
+    }
+
+    .feedback-form-wrapper {
+        padding: 24px;
+    }
+}

@@ -1,0 +1,1 @@
+web: java -jar AI_Resume_Builder_Backend-0.0.1-SNAPSHOT.jar

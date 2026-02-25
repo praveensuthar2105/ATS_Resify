@@ -80,11 +80,16 @@ public class GeminiService {
                     .body(requestBody)
                     .retrieve()
                     .body(JsonNode.class);
-        } catch (org.springframework.web.client.HttpClientErrorException.TooManyRequests e) {
-            log.error("Vertex AI Quota Exceeded (429): {}", e.getResponseBodyAsString());
-            throw e;
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.error("Vertex AI HTTP error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("Vertex AI error (" + e.getStatusCode() + "): " + e.getResponseBodyAsString(),
+                    e);
+        } catch (org.springframework.web.client.HttpServerErrorException e) {
+            log.error("Vertex AI server error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException(
+                    "Vertex AI server error (" + e.getStatusCode() + "): " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
-            log.error("Vertex AI call failed: {}", e.getMessage());
+            log.error("Vertex AI call failed: {}", e.getMessage(), e);
             throw e;
         }
 

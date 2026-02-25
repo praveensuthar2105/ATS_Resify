@@ -33,7 +33,7 @@ const About = () => {
     {
       date: 'EARLY 2025',
       title: 'Project Started',
-      description: 'Began development of AI Resume Builder as a comprehensive learning project to master full-stack integration.',
+      description: 'Began development of ATS Resify as a comprehensive learning project to master full-stack integration.',
       colorClass: 'purple'
     },
     {
@@ -84,23 +84,23 @@ const About = () => {
     <div className="about-page">
       {/* Hero Section */}
       <section className="about-hero">
-        <h1 className="about-title">About AI Resume Builder</h1>
-        
+        <h1 className="about-title">About ATS Resify</h1>
+
         <p className="about-description">
-          <strong>Developed an AI-powered resume builder</strong> using Spring Boot 3.3.5 and React 18, integrating Google 
-          Gemini 2.0 Flash API via Spring RestClient to transform user descriptions into professional LaTeX 
+          <strong>Developed an AI-powered resume builder</strong> using Spring Boot 3.3.5 and React 18, integrating Google
+          Gemini 2.0 Flash API via Spring RestClient to transform user descriptions into professional LaTeX
           code, automatically compiling to PDF with MiKTeX across 4 ATS-optimized templates.
         </p>
-        
+
         <p className="about-description">
-          <strong>Engineered robust backend services</strong> including custom prompt template engine for AI content 
-          generation, JSON response parsing, PDF text extraction using Apache PDFBox for ATS score 
+          <strong>Engineered robust backend services</strong> including custom prompt template engine for AI content
+          generation, JSON response parsing, PDF text extraction using Apache PDFBox for ATS score
           analysis, and automated LaTeX compilation pipeline with error handling.
         </p>
-        
+
         <p className="about-description">
           <strong>Implemented secure authentication</strong> with Spring Security and Google OAuth2 login, JWT token-
-          based sessions, user role management, and MySQL 8.0 persistence using Spring Data JPA and 
+          based sessions, user role management, and MySQL 8.0 persistence using Spring Data JPA and
           Hibernate ORM with HikariCP connection pooling.
         </p>
       </section>
@@ -116,9 +116,9 @@ const About = () => {
           <div className="info-card-content">
             <h3>Project Goal</h3>
             <p>
-              To create a functional AI-powered resume builder that demonstrates 
-              the practical application of modern web technologies including React, 
-              Spring Boot, and AI APIs. This project serves as a hands-on learning 
+              To create a functional AI-powered resume builder that demonstrates
+              the practical application of modern web technologies including React,
+              Spring Boot, and AI APIs. This project serves as a hands-on learning
               experience in full-stack development.
             </p>
           </div>
@@ -135,8 +135,8 @@ const About = () => {
           <div className="info-card-content">
             <h3>Technology Stack</h3>
             <p>
-              Frontend built with React and Tailwind UI. Backend powered by 
-              Spring Boot with integration to Google's Gemini AI for intelligent 
+              Frontend built with React and Tailwind UI. Backend powered by
+              Spring Boot with integration to Google's Gemini AI for intelligent
               resume generation and ATS scoring capabilities.
             </p>
           </div>
@@ -182,7 +182,7 @@ const About = () => {
         <div className="how-it-works-container">
           <h2 className="section-title">How It Works</h2>
           <p className="how-it-works-subtitle">Create your perfect resume in three simple steps</p>
-          
+
           <div className="steps-grid">
             {steps.map((step, index) => (
               <div key={index} className="step-card">

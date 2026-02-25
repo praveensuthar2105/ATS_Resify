@@ -27,6 +27,12 @@ const AtsChecker = () => {
       const response = await resumeAPI.calculateAtsScore(file, jobDescription);
       setRawResponse(response);
       const normalized = normalizeAtsResponse(response);
+      console.log('Normalized ATS Result:', normalized);
+      if (!normalized.hasContent) {
+        setAtsResult(null);
+        setSnack({ open: true, type: 'error', text: normalized.error || 'No ATS data returned. Please try again.' });
+        return;
+      }
       setAtsResult(normalized);
       setSnack({ open: true, type: 'success', text: 'ATS analysis complete!' });
     } catch (error) {
@@ -99,20 +105,24 @@ const AtsChecker = () => {
   };
 
   const normalizeAtsResponse = (res) => {
-    const payload = res?.data ?? res ?? {};
-    const rawScore = payload?.atsScore ?? payload?.overallScore ?? payload?.score;
+    // Backend returns { think, data } where data holds the ATS fields; unwrap it once.
+    const core = res?.data ?? res ?? {};
+
+    const rawScore = core?.atsScore ?? core?.overallScore ?? core?.score;
     const percent = typeof rawScore === 'string'
       ? parseInt(String(rawScore).replace(/[^\d]/g, ''), 10)
       : (typeof rawScore === 'number' ? rawScore : null);
 
-    const breakdown = payload?.scoreBreakdown ?? payload?.breakdown ?? {};
-    const strengths = Array.isArray(payload?.strengths) ? payload.strengths : [];
-    const weaknesses = Array.isArray(payload?.weaknesses) ? payload.weaknesses : [];
-    const suggestions = Array.isArray(payload?.detailedSuggestions)
-      ? payload.detailedSuggestions.map(s => typeof s === 'string' ? { section: 'General', suggestion: s } : s)
-      : (Array.isArray(payload?.suggestions)
-        ? payload.suggestions.map(s => typeof s === 'string' ? { section: 'General', suggestion: s } : s)
+    const breakdown = core?.scoreBreakdown ?? core?.breakdown ?? {};
+    const strengths = Array.isArray(core?.strengths) ? core.strengths : [];
+    const weaknesses = Array.isArray(core?.weaknesses) ? core.weaknesses : [];
+    const suggestions = Array.isArray(core?.detailedSuggestions)
+      ? core.detailedSuggestions.map(s => typeof s === 'string' ? { section: 'General', suggestion: s } : s)
+      : (Array.isArray(core?.suggestions)
+        ? core.suggestions.map(s => typeof s === 'string' ? { section: 'General', suggestion: s } : s)
         : []);
+
+    const hasContent = Object.keys(core || {}).length > 0;
 
     return {
       score: Number.isFinite(percent) ? percent : null,
@@ -124,6 +134,12 @@ const AtsChecker = () => {
       strengths,
       weaknesses,
       suggestions,
+      // Legacy fields fallback
+      keywords: core?.keywords || [],
+      missingKeywords: core?.missingKeywords || [],
+      feedback: core?.feedback,
+      error: core?.error || res?.error,
+      hasContent,
     };
   };
 

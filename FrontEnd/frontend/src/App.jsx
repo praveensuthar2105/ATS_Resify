@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ResumeDashboard from './components/ResumeDashboard';
 import LandingPage from './pages/LandingPage';
 import GenerateResume from './pages/GenerateResume';
 import EditResume from './pages/EditResume';
@@ -12,6 +13,11 @@ import About from './pages/About';
 import AuthCallback from './pages/AuthCallback';
 import AdminPanel from './pages/AdminPanel';
 import Login from './pages/Login';
+import Team from './pages/Team';
+import Terms from './pages/Terms';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Contact from './pages/Contact';
+import Feedback from './pages/Feedback';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -82,6 +88,11 @@ function AppContent() {
               <AdminPanel />
             </ProtectedRoute>
           } />
+          <Route path="/team" element={<Team />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/feedback" element={<Feedback />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Box>
