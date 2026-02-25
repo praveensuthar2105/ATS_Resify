@@ -17,7 +17,8 @@ const Contact = () => {
         setSubmitting(true);
         setError('');
         try {
-            const res = await fetch(`${API_BASE_URL.replace('/api', '')}/api/public/contact`, {
+            // Route through Vercel proxy to avoid Mixed Content errors
+            const res = await fetch(`${API_BASE_URL}/public/contact`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -95,7 +96,7 @@ const Contact = () => {
                             Message sent successfully! We'll get back to you soon.
                         </div>
                     )}
-                    {error && <div className="error-message" style={{padding:'14px 18px',background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:'10px',color:'#991b1b',marginBottom:'16px'}}>{error}</div>}
+                    {error && <div className="error-message" style={{ padding: '14px 18px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px', color: '#991b1b', marginBottom: '16px' }}>{error}</div>}
                     <form onSubmit={handleSubmit} className="contact-form">
                         <div className="form-row">
                             <div className="form-group">

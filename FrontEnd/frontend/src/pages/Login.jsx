@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
+import { API_BASE_URL } from '../services/api';
 import './Login.css';
 
 const Login = () => {
@@ -9,7 +10,7 @@ const Login = () => {
     const handleGoogleLogin = () => {
         // Store the 'from' path to redirect back after OAuth callback
         // Route through the local proxy setup in vercel.json
-        window.location.href = '/oauth2/authorization/google';
+        window.location.href = `${API_BASE_URL.replace('/api', '')}/oauth2/authorization/google`;
     };
 
     return (
