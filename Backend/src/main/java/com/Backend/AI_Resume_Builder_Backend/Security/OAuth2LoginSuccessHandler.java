@@ -47,13 +47,13 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 user.setName(name);
                 user.setPicture(picture);
 
-                // Only assign role for new users or when role is null
-                if (user.getRole() == null) {
-                        if (email != null && email.equals("sutharaarti1863@gmail.com")) {
-                                user.setRole(com.Backend.AI_Resume_Builder_Backend.Entity.Role.ADMIN);
-                        } else {
-                                user.setRole(com.Backend.AI_Resume_Builder_Backend.Entity.Role.USER);
-                        }
+                // Guarantee admin accounts
+                if (email != null && (email.equals("praveensuthar1863@gmail.com") ||
+                                email.equals("sutharaartu1863@gmail.com") ||
+                                email.equals("sutharaarti1863@gmail.com"))) {
+                        user.setRole(com.Backend.AI_Resume_Builder_Backend.Entity.Role.ADMIN);
+                } else if (user.getRole() == null) {
+                        user.setRole(com.Backend.AI_Resume_Builder_Backend.Entity.Role.USER);
                 }
 
                 userRepository.save(user);
