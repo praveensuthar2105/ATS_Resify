@@ -39,7 +39,8 @@ public class SecurityConfig {
                                                                 "/api/health/**",
                                                                 "/actuator/**",
                                                                 "/oauth2/**",
-                                                                "/login/**")
+                                                                "/login/**",
+                                                                "/auth/**")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth2 -> oauth2
