@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Snackbar, Alert } from '@mui/material';
 import AgentChat from '../components/AgentChat';
 import { decodeToken, getAuthToken } from '../utils/auth';
+import { API_BASE_URL } from '../services/api';
 import './EditResume.css';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api';
 
 const EditResume = () => {
   const navigate = useNavigate();

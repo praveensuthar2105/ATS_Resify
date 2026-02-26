@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { API_BASE_URL } from '../services/api';
 import './LatexEditor.css';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api';
 
 export default function LatexEditor({ open, onClose, resumeData, templateType = 'professional', onSyncBack }) {
   const [loading, setLoading] = useState(false);
