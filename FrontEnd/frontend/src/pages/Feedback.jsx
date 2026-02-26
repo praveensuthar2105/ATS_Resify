@@ -22,7 +22,7 @@ const Feedback = () => {
         setSubmitting(true);
         setError('');
         try {
-            const res = await fetch(`${API_BASE_URL.replace('/api', '')}/api/public/feedback`, {
+            const res = await fetch(`${API_BASE_URL}/public/feedback`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),

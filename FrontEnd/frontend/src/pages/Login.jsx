@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { API_BASE_URL } from '../services/api';
+import { API_BASE_URL, API_ROOT_URL } from '../services/api';
 import './Login.css';
 
 const Login = () => {
