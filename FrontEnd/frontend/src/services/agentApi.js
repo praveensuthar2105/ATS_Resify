@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.atsresify.me/api';
 
+import { API_BASE_URL } from './api';
 const agentClient = axios.create({
   baseURL: `${API_BASE_URL}/agent`,
   headers: {
@@ -12,7 +13,7 @@ const agentClient = axios.create({
 
 export const agentAPI = {
   // ==================== Main Chat ====================
-  
+
   /**
    * Send a message to the AI agent
    * @param {Object} params
