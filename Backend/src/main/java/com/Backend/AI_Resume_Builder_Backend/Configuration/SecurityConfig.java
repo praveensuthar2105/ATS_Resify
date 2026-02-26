@@ -30,6 +30,7 @@ public class SecurityConfig {
                                 .csrf(csrf -> csrf.disable())
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(
+                                                                "/api/public/**",
                                                                 "/api/resume/**",
                                                                 "/api/user/**",
                                                                 "/api/admin/**",
@@ -54,7 +55,7 @@ public class SecurityConfig {
                 return http.build();
         }
 
-        @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:3000}")
+        @Value("${cors.allowed-origins:https://atsresify.me,https://www.atsresify.me,http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:3000}")
         private String[] allowedOrigins;
 
         @Bean

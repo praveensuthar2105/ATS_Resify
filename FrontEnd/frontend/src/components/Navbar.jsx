@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import { API_ROOT_URL } from '../services/api';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -38,8 +39,7 @@ const Navbar = () => {
   }, [location.pathname]);
 
   const handleLogin = () => {
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
-    window.location.href = `${backendUrl}/oauth2/authorization/google`;
+    window.location.href = `${API_ROOT_URL}/oauth2/authorization/google`;
   };
 
   const handleLogout = () => {
