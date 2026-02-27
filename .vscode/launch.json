@@ -1,14 +1,15 @@
 {
+    "version": "0.2.0",
     "configurations": [
         {
             "type": "java",
-            "name": "Spring Boot-AiResumeBuilderBackendApplication<AI_Resume_Builder_Backend>",
+            "name": "Spring Boot-AiResumeBuilderBackendApplication (Safe Env Launch)",
             "request": "launch",
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/Backend",
             "mainClass": "com.Backend.AI_Resume_Builder_Backend.AiResumeBuilderBackendApplication",
             "projectName": "AI_Resume_Builder_Backend",
             "args": "",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/Backend/.env"
         }
     ]
 }

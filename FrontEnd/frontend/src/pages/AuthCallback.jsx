@@ -23,6 +23,7 @@ const AuthCallback = () => {
     fetch(`${API_ROOT_URL}/auth/exchange`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ code }),
     })
       .then(res => {
