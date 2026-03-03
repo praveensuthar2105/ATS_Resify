@@ -1,8 +1,17 @@
 package com.Backend.AI_Resume_Builder_Backend.Service;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 public class ResumeRequest {
+    @NotBlank(message = "userResumeDescription must not be blank")
+    @Size(max = 50000, message = "userResumeDescription cannot exceed 50000 characters")
     private String userResumeDescription;
+
+    @Pattern(regexp = "modern|classic|minimal|professional", message = "templateType must be one of: modern, classic, minimal, professional")
     private String templateType;
+
     private String message;
 
     // No-arg constructor required by Jackson for deserialization
