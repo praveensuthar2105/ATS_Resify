@@ -22,15 +22,14 @@ public class UserController {
     private JwtUtil jwtUtil;
 
     @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Map<String, Object>> getCurrentUser() {
         try {
-            String token = authHeader.replace("Bearer ", "");
-
-            if (!jwtUtil.validateToken(token)) {
+            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
 
-            String email = jwtUtil.getEmailFromToken(token);
+            String email = authentication.getName();
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 

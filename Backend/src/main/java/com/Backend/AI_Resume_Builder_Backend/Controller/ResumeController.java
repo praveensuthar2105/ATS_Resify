@@ -1,5 +1,8 @@
 package com.Backend.AI_Resume_Builder_Backend.Controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +31,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/resume")
-public class resumeController {
+public class ResumeController {
+    private static final Logger log = LoggerFactory.getLogger(ResumeController.class);
+
 	@Autowired
 	private ResumeService resumeService;
 
@@ -46,18 +51,8 @@ public class resumeController {
 
 	@PostMapping("/generate")
 	public ResponseEntity<Map<String, Object>> getResumeData(
-			@RequestBody ResumeRequest resumeRequest,
-			@RequestHeader(value = "Authorization", required = false) String authHeader) {
+			@jakarta.validation.Valid @RequestBody ResumeRequest resumeRequest) {
 		try {
-			// Validate input
-			if (resumeRequest == null || resumeRequest.getUserResumeDescription() == null ||
-					resumeRequest.getUserResumeDescription().trim().isEmpty()) {
-				Map<String, Object> errorResponse = new HashMap<>();
-				errorResponse.put("error", "Invalid input");
-				errorResponse.put("message", "User resume description is required");
-				return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-			}
-
 			// Get template type from request, default to "modern" if not provided
 			String templateType = resumeRequest.getTemplateType();
 			if (templateType == null || templateType.trim().isEmpty()) {
@@ -65,15 +60,13 @@ public class resumeController {
 			}
 
 			// Save resume generation record if user is authenticated
-			if (authHeader != null && authHeader.startsWith("Bearer ")) {
-				String token = authHeader.substring(7);
-				if (jwtUtil.validateToken(token)) {
-					String email = jwtUtil.getEmailFromToken(token);
-					Optional<User> userOpt = userRepository.findByEmail(email);
-					if (userOpt.isPresent()) {
-						Resume resume = new Resume(userOpt.get(), templateType);
-						resumeRepository.save(resume);
-					}
+			org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+			if (authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser")) {
+				String email = authentication.getName();
+				Optional<User> userOpt = userRepository.findByEmail(email);
+				if (userOpt.isPresent()) {
+					Resume resume = new Resume(userOpt.get(), templateType);
+					resumeRepository.save(resume);
 				}
 			}
 
@@ -84,7 +77,7 @@ public class resumeController {
 			Map<String, Object> errorResponse = new HashMap<>();
 			errorResponse.put("error", "Failed to load prompt template");
 			errorResponse.put("message", e.getMessage());
-			e.printStackTrace(); // Add logging for debugging
+			log.error("Exception occurred", e); // Add logging for debugging
 			return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
 			Map<String, Object> errorResponse = new HashMap<>();
@@ -113,7 +106,7 @@ public class resumeController {
 			Map<String, Object> errorResponse = new HashMap<>();
 			errorResponse.put("error", "Internal server error");
 			errorResponse.put("message", e.getMessage());
-			e.printStackTrace();
+			log.error("Exception occurred", e);
 			return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
