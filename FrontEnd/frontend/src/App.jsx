@@ -20,6 +20,7 @@ import Contact from './pages/Contact';
 import Feedback from './pages/Feedback';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
 // 404 Not Found Component
@@ -77,9 +78,21 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/generate" element={<GenerateResume />} />
-          <Route path="/edit-resume" element={<EditResume />} />
-          <Route path="/ats-checker" element={<AtsChecker />} />
+          <Route path="/generate" element={
+            <ProtectedRoute>
+              <GenerateResume />
+            </ProtectedRoute>
+          } />
+          <Route path="/edit-resume" element={
+            <ProtectedRoute>
+              <EditResume />
+            </ProtectedRoute>
+          } />
+          <Route path="/ats-checker" element={
+            <ProtectedRoute>
+              <AtsChecker />
+            </ProtectedRoute>
+          } />
           <Route path="/features" element={<Features />} />
           <Route path="/about" element={<About />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
@@ -106,9 +119,11 @@ function App() {
     <AuthProvider>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Router>
-          <AppContent />
-        </Router>
+        <ErrorBoundary>
+          <Router>
+            <AppContent />
+          </Router>
+        </ErrorBoundary>
       </ThemeProvider>
     </AuthProvider>
   );
