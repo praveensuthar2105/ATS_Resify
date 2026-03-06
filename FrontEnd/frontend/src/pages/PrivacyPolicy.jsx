@@ -86,13 +86,15 @@ const PrivacyPolicy = () => {
                 </section>
 
                 <section className="legal-section">
-                    <h2>8. Cookies</h2>
-                    <p>We use minimal cookies and browser storage:</p>
+                    <h2>8. Cookies & Display Advertising</h2>
+                    <p>We use cookies and browser storage for authentication and UI settings. Additionally, we use third-party advertising companies to serve ads when you visit our website:</p>
                     <ul>
                         <li><strong>Authentication token:</strong> Stored in localStorage to keep you signed in</li>
                         <li><strong>User preferences:</strong> Stored locally for UI settings</li>
+                        <li><strong>Google AdSense:</strong> Third party vendors, including Google, use cookies to serve ads based on a user's prior visits to your website or other websites.</li>
+                        <li>Google's use of advertising cookies enables it and its partners to serve ads to our users based on their visit to our site and/or other sites on the Internet.</li>
+                        <li>You may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Ads Settings</a>.</li>
                     </ul>
-                    <p>We do not use third-party tracking cookies or analytics cookies.</p>
                 </section>
 
                 <section className="legal-section">

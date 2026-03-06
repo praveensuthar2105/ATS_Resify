@@ -21,6 +21,7 @@ import Feedback from './pages/Feedback';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
+import CookieConsent from './components/CookieConsent';
 import './App.css';
 
 // 404 Not Found Component
@@ -102,6 +103,7 @@ function AppContent() {
         </Routes>
       </Box>
       <Footer />
+      <CookieConsent />
     </Box>
   );
 }
