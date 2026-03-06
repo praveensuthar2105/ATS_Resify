@@ -1,0 +1,507 @@
+.import-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.import-modal {
+    background: #ffffff;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 640px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+.import-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.import-modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.import-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.import-close-btn:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+/* Tabs */
+.import-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 12px 24px;
+    background: #f9fafb;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.import-tab {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b7280;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.import-tab:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.import-tab.active {
+    background: #6366f1;
+    color: white;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.import-tab-icon {
+    font-size: 1.2rem;
+}
+
+/* Tab Content */
+.import-tab-content {
+    padding: 24px;
+}
+
+/* Drop Zone */
+.import-drop-zone {
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fafbfc;
+}
+
+.import-drop-zone:hover,
+.import-drop-zone.drag-active {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.04);
+}
+
+.import-drop-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+}
+
+.import-drop-text {
+    font-size: 0.95rem;
+    color: #374151;
+    margin: 0 0 4px;
+    font-weight: 500;
+}
+
+.import-drop-hint {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin: 0;
+}
+
+.import-selected-file {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
+.import-selected-name {
+    font-size: 0.85rem;
+    color: #0369a1;
+    font-weight: 500;
+}
+
+.import-remove-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.import-remove-btn:hover {
+    background: #fef2f2;
+}
+
+/* LinkedIn instructions */
+.import-instructions {
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.import-instructions h4 {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.import-instructions ol {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.import-instructions li {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-bottom: 6px;
+    line-height: 1.5;
+}
+
+/* Text area for paste */
+.import-textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    resize: vertical;
+    color: #374151;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.import-textarea:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.import-textarea-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+/* Action button */
+.import-action-btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.import-action-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.import-action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ── Parsed Data Review ── */
+.review-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.review-header h3 {
+    margin: 0 0 4px;
+    font-size: 1.1rem;
+    color: #059669;
+}
+
+.review-confidence {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.review-confidence strong {
+    color: #6366f1;
+}
+
+.review-section {
+    margin-bottom: 16px;
+}
+
+.review-section-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #374151;
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.review-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: #f9fafb;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+}
+
+.review-field-label {
+    color: #9ca3af;
+    min-width: 60px;
+    font-weight: 500;
+}
+
+.review-field-value {
+    color: #374151;
+    flex: 1;
+}
+
+.review-list-item {
+    padding: 8px 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+}
+
+.review-list-title {
+    font-weight: 600;
+    color: #374151;
+}
+
+.review-list-subtitle {
+    color: #6b7280;
+    font-size: 0.8rem;
+}
+
+.review-skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.review-skill-tag {
+    padding: 4px 10px;
+    background: #ede9fe;
+    color: #6366f1;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+.review-warnings {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+}
+
+.review-warnings p {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #b45309;
+    margin-bottom: 6px;
+}
+
+.review-warnings li {
+    font-size: 0.8rem;
+    color: #92400e;
+    margin-bottom: 2px;
+}
+
+.review-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.review-back-btn {
+    flex: 1;
+    padding: 12px;
+    background: #f3f4f6;
+    color: #374151;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.review-back-btn:hover {
+    background: #e5e7eb;
+}
+
+.review-continue-btn {
+    flex: 2;
+    padding: 12px;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.review-continue-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+}
+
+/* Loading spinner */
+.import-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+    gap: 12px;
+}
+
+.import-loading p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.import-loading span {
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+/* Import trigger on GenerateResume page */
+.import-trigger-section {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%);
+    border: 1px dashed #c7d2fe;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.import-trigger-text {
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.import-trigger-text strong {
+    color: #6366f1;
+}
+
+.import-trigger-btn {
+    padding: 8px 20px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.import-trigger-btn:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+@media (max-width: 640px) {
+    .import-modal {
+        width: 95%;
+        max-height: 90vh;
+    }
+
+    .import-tabs {
+        flex-wrap: wrap;
+    }
+
+    .import-trigger-section {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+}

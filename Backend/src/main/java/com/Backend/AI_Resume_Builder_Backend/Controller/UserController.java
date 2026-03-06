@@ -22,14 +22,35 @@ public class UserController {
     private JwtUtil jwtUtil;
 
     @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> getCurrentUser() {
+    public ResponseEntity<Map<String, Object>> getCurrentUser(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
-            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            String email = null;
+
+            // Try to extract email from JWT in Authorization header
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                if (jwtUtil.validateToken(token)) {
+                    email = jwtUtil.getEmailFromToken(token);
+                } else {
+                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+                }
+            }
+
+            // Fallback: try SecurityContext (if JwtAuthFilter is configured)
+            if (email == null) {
+                org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder
+                        .getContext().getAuthentication();
+                if (authentication != null && authentication.isAuthenticated()
+                        && !authentication.getName().equals("anonymousUser")) {
+                    email = authentication.getName();
+                }
+            }
+
+            if (email == null) {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
 
-            String email = authentication.getName();
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 

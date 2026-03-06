@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography, Alert } from '@mui/material';
 import { API_BASE_URL, API_ROOT_URL } from '../services/api';
@@ -10,8 +10,13 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const { login } = useAuth();
+  const isProcessing = useRef(false); // Prevent StrictMode double-execution
 
   useEffect(() => {
+    // Guard against StrictMode double-render consuming the one-time code twice
+    if (isProcessing.current) return;
+    isProcessing.current = true;
+
     const code = searchParams.get('code');
 
     if (!code) {
@@ -35,11 +40,14 @@ const AuthCallback = () => {
       .then(data => {
         const { token, name, email } = data;
 
-        // Fetch user details to get role
+        // Fetch user details to get role — pass JWT in Authorization header
         return fetch(`${API_BASE_URL}/user/me`, {
           headers: { 'Authorization': `Bearer ${token}` },
         })
-          .then(res => res.json())
+          .then(res => {
+            if (!res.ok) throw new Error('Failed to fetch user details');
+            return res.json();
+          })
           .then(userData => {
             login({
               token,
@@ -58,13 +66,15 @@ const AuthCallback = () => {
             }, 500);
           })
           .catch(err => {
-            console.error('Error fetching user details:', err);
+            console.warn('Could not fetch user role, defaulting to USER:', err.message);
             login({
               token,
               name,
               email,
               role: 'USER'
             });
+
+            console.log('✅ Login successful!');
 
             const redirectTo = localStorage.getItem('redirectAfterAuth') || '/';
             localStorage.removeItem('redirectAfterAuth');

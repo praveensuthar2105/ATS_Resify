@@ -2,7 +2,7 @@
 
 .about-page {
   min-height: 100vh;
-  background: #fafbfc;
+  background: transparent;
 }
 
 /* Hero Section */
@@ -52,12 +52,14 @@
 }
 
 .info-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 24px;
   display: flex;
   gap: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
 }
 
@@ -147,11 +149,13 @@
 }
 
 .feature-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 24px 20px;
   text-align: center;
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
 }
 
@@ -269,10 +273,12 @@
 }
 
 .timeline-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 12px;
   padding: 20px 24px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-left: 4px solid;
   transition: all 0.3s ease;
 }
@@ -337,7 +343,7 @@
 
 /* How It Works Section */
 .how-it-works {
-  background: #f8fafc;
+  background: transparent;
   padding: 48px 24px;
   margin-top: 48px;
 }

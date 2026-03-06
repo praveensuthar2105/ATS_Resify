@@ -78,21 +78,13 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/generate" element={
-            <ProtectedRoute>
-              <GenerateResume />
-            </ProtectedRoute>
-          } />
+          <Route path="/generate" element={<GenerateResume />} />
           <Route path="/edit-resume" element={
             <ProtectedRoute>
               <EditResume />
             </ProtectedRoute>
           } />
-          <Route path="/ats-checker" element={
-            <ProtectedRoute>
-              <AtsChecker />
-            </ProtectedRoute>
-          } />
+          <Route path="/ats-checker" element={<AtsChecker />} />
           <Route path="/features" element={<Features />} />
           <Route path="/about" element={<About />} />
           <Route path="/auth/callback" element={<AuthCallback />} />

@@ -1,0 +1,20 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+  build:
+    commands:
+      - echo "Building Spring Boot Application..."
+      - cd Backend
+      - mvn clean package -DskipTests
+  post_build:
+    commands:
+      - echo "Build completed successfully."
+
+artifacts:
+  files:
+    - Backend/target/*.jar
+    - Backend/.ebextensions/**/*
+  discard-paths: yes

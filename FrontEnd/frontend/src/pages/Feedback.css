@@ -1,6 +1,6 @@
 .feedback-page {
     min-height: 80vh;
-    background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+    background: transparent;
 }
 
 .feedback-hero {
@@ -50,11 +50,13 @@
 }
 
 .feedback-form-wrapper {
-    background: white;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 16px;
     padding: 40px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .feedback-form-wrapper h2 {

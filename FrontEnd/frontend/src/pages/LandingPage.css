@@ -35,7 +35,6 @@ html {
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    background: var(--bg-light);
     color: var(--text-dark);
     overflow-x: hidden;
 }
@@ -178,7 +177,7 @@ body {
 .hero-section {
     padding: 80px 24px 60px;
     text-align: center;
-    background: linear-gradient(180deg, #ffffff 0%, var(--bg-light) 100%);
+    background: transparent;
 }
 
 .hero-badge {
@@ -320,7 +319,7 @@ body {
 /* Features Section */
 .features-section {
     padding: 100px 24px;
-    background: var(--bg-white);
+    background: transparent;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -362,10 +361,12 @@ body {
 }
 
 .feature-card {
-    background: var(--bg-white);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 32px 24px;
     border-radius: var(--radius);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     transition: all 0.3s ease;
     min-width: 0;
     overflow: hidden;
@@ -408,7 +409,7 @@ body {
 /* How It Works Section */
 .how-it-works {
     padding: 100px 24px;
-    background: var(--bg-light);
+    background: transparent;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -428,9 +429,11 @@ body {
     max-width: 320px;
     text-align: center;
     padding: 32px 24px 28px;
-    background: var(--bg-white);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-radius: 20px;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
     position: relative;
     transition: all 0.3s ease;
@@ -549,7 +552,7 @@ body {
 /* Testimonials Section */
 .testimonials-section {
     padding: 100px 24px;
-    background: var(--bg-white);
+    background: transparent;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -564,10 +567,12 @@ body {
 }
 
 .testimonial-card {
-    background: var(--bg-white);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 28px;
     border-radius: var(--radius);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     transition: all 0.3s ease;
 }
 

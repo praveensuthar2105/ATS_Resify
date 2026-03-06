@@ -43,7 +43,7 @@ const Home = () => {
   ];
 
   return (
-    <Box sx={{ width: '100%', bgcolor: '#FFFFFF' }}>
+    <Box sx={{ width: '100%', bgcolor: 'transparent' }}>
       {/* Hero Section */}
       <Box
         component="section"
@@ -265,7 +265,7 @@ const Home = () => {
       </Container>
 
       {/* How It Works Section */}
-      <Box sx={{ bgcolor: '#F9FAFB', py: { xs: 8, md: 12 } }}>
+      <Box sx={{ bgcolor: 'transparent', py: { xs: 8, md: 12 } }}>
         <Container maxWidth="lg">
           <Typography
             variant="h2"

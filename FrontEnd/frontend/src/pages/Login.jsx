@@ -9,7 +9,8 @@ const Login = () => {
 
     const handleGoogleLogin = () => {
         // Store the 'from' path to redirect back after OAuth callback
-        // Directly connect to the native HTTPS AWS backend
+        localStorage.setItem('redirectAfterAuth', from);
+        // Directly connect to the backend for Google OAuth
         window.location.href = `${API_ROOT_URL}/oauth2/authorization/google`;
     };
 

@@ -71,7 +71,7 @@ export const resumeAPI = {
       formData.append('jobDescription', jobDescription.trim());
     }
 
-    const response = await axios.post(`${API_BASE_URL}/resume/ats-score`, formData, {
+    const response = await apiClient.post('/resume/ats-score', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -86,6 +86,22 @@ export const resumeAPI = {
       }
     }
     return data;
+  },
+
+  importFromPdf: async (file, source = 'general') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('source', source);
+
+    const response = await apiClient.post('/resume/import/pdf', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response?.data;
+  },
+
+  importFromText: async (text) => {
+    const response = await apiClient.post('/resume/import/text', { text });
+    return response?.data;
   },
 };
 

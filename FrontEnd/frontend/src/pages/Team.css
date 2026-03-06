@@ -54,8 +54,10 @@
     display: flex;
     gap: 32px;
     align-items: flex-start;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 16px;
     padding: 40px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
@@ -163,8 +165,10 @@
 }
 
 .tech-card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 12px;
     padding: 24px;
     transition: transform 0.2s, box-shadow 0.2s;
@@ -223,7 +227,10 @@
 /* CTA */
 .team-cta {
     text-align: center;
-    background: linear-gradient(135deg, #f0f4ff, #e8e0f7);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 16px;
     padding: 48px 32px;
 }

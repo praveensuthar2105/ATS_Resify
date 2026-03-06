@@ -3,6 +3,7 @@ import { CircularProgress, Snackbar, Alert } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { resumeAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import AgentChat from '../components/AgentChat';
 import './AtsChecker.css';
 
 const AtsChecker = () => {
@@ -14,6 +15,7 @@ const AtsChecker = () => {
   const [snack, setSnack] = useState({ open: false, type: 'success', text: '' });
   const [rawResponse, setRawResponse] = useState(null);
   const [showRaw, setShowRaw] = useState(false);
+  const [expandedMetric, setExpandedMetric] = useState(null);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -97,11 +99,23 @@ const AtsChecker = () => {
 
   const parseScore = (val) => {
     if (!val) return null;
-    if (typeof val === 'number') return { num: val, den: 10 };
-    const match = String(val).match(/(\d+)\s*\/\s*(\d+)/);
-    if (match) return { num: parseInt(match[1], 10), den: parseInt(match[2], 10) || 10 };
-    const numOnly = parseInt(String(val).replace(/[^\d]/g, ''), 10);
-    return isNaN(numOnly) ? null : { num: numOnly, den: 10 };
+
+    // Check if it's the new nested object format { score: "8/10", explanation: "...", suggestion: "..." }
+    let scoreStr = val;
+    let details = {};
+    if (typeof val === 'object' && val !== null) {
+      scoreStr = val.score || val.value;
+      details = {
+        explanation: val.explanation || '',
+        suggestion: val.suggestion || ''
+      };
+    }
+
+    if (typeof scoreStr === 'number') return { num: scoreStr, den: 10, ...details };
+    const match = String(scoreStr).match(/(\d+)\s*\/\s*(\d+)/);
+    if (match) return { num: parseInt(match[1], 10), den: parseInt(match[2], 10) || 10, ...details };
+    const numOnly = parseInt(String(scoreStr).replace(/[^\d]/g, ''), 10);
+    return isNaN(numOnly) ? null : { num: numOnly, den: 10, ...details };
   };
 
   const normalizeAtsResponse = (res) => {
@@ -130,6 +144,8 @@ const AtsChecker = () => {
         keywordMatch: parseScore(breakdown.keywordMatch ?? breakdown.keywords),
         formatting: parseScore(breakdown.formatting ?? breakdown.format),
         sectionCompleteness: parseScore(breakdown.sectionCompleteness ?? breakdown.sections),
+        impactScore: parseScore(breakdown.impactScore ?? breakdown.impact),
+        brevity: parseScore(breakdown.brevity ?? breakdown.readability),
       },
       strengths,
       weaknesses,
@@ -140,6 +156,7 @@ const AtsChecker = () => {
       feedback: core?.feedback,
       error: core?.error || res?.error,
       hasContent,
+      resumeText: core?.resumeText || '',
     };
   };
 
@@ -156,6 +173,13 @@ const AtsChecker = () => {
     if (score >= 70) return 'Top 25%';
     if (score >= 50) return 'Top 50%';
     return 'Below Average';
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 80) return { start: '#22c55e', end: '#4ade80', label: 'score-green' };
+    if (score >= 60) return { start: '#f59e0b', end: '#fbbf24', label: 'score-amber' };
+    if (score >= 40) return { start: '#f97316', end: '#fb923c', label: 'score-orange' };
+    return { start: '#ef4444', end: '#f87171', label: 'score-red' };
   };
 
   // SVG circular progress
@@ -181,6 +205,8 @@ const AtsChecker = () => {
     { key: 'keywordMatch', label: 'Keyword Match', icon: 'key', bgClass: 'bd-amber' },
     { key: 'formatting', label: 'Formatting', icon: 'view_column', bgClass: 'bd-blue' },
     { key: 'sectionCompleteness', label: 'Section Completeness', icon: 'contact_page', bgClass: 'bd-teal' },
+    { key: 'impactScore', label: 'Impact & Metrics', icon: 'trending_up', bgClass: 'bd-purple' },
+    { key: 'brevity', label: 'Brevity & Readability', icon: 'short_text', bgClass: 'bd-indigo' },
   ];
 
   return (
@@ -328,7 +354,7 @@ const AtsChecker = () => {
           </div>
         )}
 
-        {/* ══════════ RESULTS (Glassmorphic Design) ══════════ */}
+        {/* ══════════ RESULTS (Redesigned Premium) ══════════ */}
         {atsResult && (
           <>
             {/* Score + Breakdown Row */}
@@ -341,8 +367,8 @@ const AtsChecker = () => {
                     <svg className="score-svg" viewBox="0 0 100 100">
                       <defs>
                         <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#14b8a6" />
-                          <stop offset="100%" stopColor="#3b82f6" />
+                          <stop offset="0%" stopColor={getScoreColor(atsResult.score ?? 0).start} />
+                          <stop offset="100%" stopColor={getScoreColor(atsResult.score ?? 0).end} />
                         </linearGradient>
                       </defs>
                       <circle className="score-bg-ring" cx="50" cy="50" r={circleRadius} strokeWidth="10" />
@@ -357,7 +383,9 @@ const AtsChecker = () => {
                     <div className="score-center-text">
                       <span className="score-big-num">{atsResult.score ?? 0}</span>
                       <span className="score-percent">%</span>
-                      <span className="score-label-text">Overall Score</span>
+                      <span className={`score-label-badge ${getScoreColor(atsResult.score ?? 0).label}`}>
+                        {getScoreLabel(atsResult.score ?? 0)}
+                      </span>
                     </div>
                   </div>
 
@@ -375,20 +403,56 @@ const AtsChecker = () => {
                       {breakdownConfig.map(({ key, label, icon, bgClass }) => {
                         const s = atsResult.breakdown?.[key];
                         const pct = s ? Math.round((s.num / s.den) * 100) : 0;
+                        const isExpanded = expandedMetric === key;
+                        const hasDetails = s?.explanation || s?.suggestion;
+
                         return (
-                          <div key={key} className="bd-item">
+                          <div
+                            key={key}
+                            className={`bd-item ${isExpanded ? 'expanded' : ''} ${hasDetails ? 'interactive' : ''}`}
+                            onClick={() => hasDetails && setExpandedMetric(isExpanded ? null : key)}
+                          >
                             <div className="bd-item-top">
                               <div className="bd-icon-label">
                                 <div className={`bd-icon-box ${bgClass}`}>
                                   <span className="material-symbols-outlined">{icon}</span>
                                 </div>
                                 <span className="bd-label">{label}</span>
+                                {hasDetails && (
+                                  <span className="material-symbols-outlined expand-icon">
+                                    {isExpanded ? 'expand_less' : 'expand_more'}
+                                  </span>
+                                )}
                               </div>
                               <span className={`bd-pct ${bgClass}`}>{pct}%</span>
                             </div>
                             <div className="bd-bar-track">
                               <div className={`bd-bar-fill ${bgClass}`} style={{ width: `${pct}%` }}></div>
                             </div>
+
+                            {/* Expandable Details Panel */}
+                            {isExpanded && hasDetails && (
+                              <div className="bd-details-panel">
+                                {s.explanation && (
+                                  <div className="bd-detail-block summary">
+                                    <div className="bd-detail-label">
+                                      <span className="material-symbols-outlined">analytics</span>
+                                      Analysis
+                                    </div>
+                                    <p className="bd-detail-text">{s.explanation}</p>
+                                  </div>
+                                )}
+                                {s.suggestion && (
+                                  <div className="bd-detail-block action">
+                                    <div className="bd-detail-label">
+                                      <span className="material-symbols-outlined">lightbulb</span>
+                                      Suggestion
+                                    </div>
+                                    <p className="bd-detail-text">{s.suggestion}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -404,12 +468,14 @@ const AtsChecker = () => {
                     <span className="material-symbols-outlined">query_stats</span>
                   </div>
                   <div>
-                    <h4 className="summary-title">AI Summary</h4>
+                    <h4 className="summary-title">AI Verdict</h4>
                     <p className="summary-text">
                       Your resume shows <strong>{getScoreLabel(atsResult.score ?? 0).toLowerCase()} compatibility</strong> with ATS systems.
                       {atsResult.score >= 75
                         ? ' Fine-tuning keywords and formatting could push you into the elite bracket.'
-                        : ' Focus on the improvements below to significantly boost your score.'}
+                        : atsResult.score >= 50
+                          ? ' Address the weaknesses below to significantly improve your chances.'
+                          : ' Your resume needs major improvements. Focus on the critical issues below.'}
                     </p>
                   </div>
                   <div className="parser-status">
@@ -419,6 +485,15 @@ const AtsChecker = () => {
                     <div>
                       <p className="parser-label">Parser Status</p>
                       <p className="parser-value">100% Compatible</p>
+                    </div>
+                  </div>
+                  <div className="parser-status">
+                    <div className="parser-icon">
+                      <span className="material-symbols-outlined">analytics</span>
+                    </div>
+                    <div>
+                      <p className="parser-label">Metrics Evaluated</p>
+                      <p className="parser-value">5 Categories</p>
                     </div>
                   </div>
                 </div>
@@ -508,18 +583,6 @@ const AtsChecker = () => {
               </div>
             )}
 
-            {/* Raw Backend Response Toggle */}
-            {rawResponse && (
-              <div className="glass-card raw-response-card">
-                <button className="raw-toggle-btn" onClick={() => setShowRaw(!showRaw)}>
-                  <span className="material-symbols-outlined">{showRaw ? 'visibility_off' : 'data_object'}</span>
-                  {showRaw ? 'Hide Backend Response' : 'Show Backend Response'}
-                </button>
-                {showRaw && (
-                  <pre className="raw-json-block">{JSON.stringify(rawResponse, null, 2)}</pre>
-                )}
-              </div>
-            )}
 
             {/* CTA - Mesh gradient */}
             <section className="results-cta-mesh">
@@ -542,6 +605,12 @@ const AtsChecker = () => {
           </>
         )}
       </main>
+
+      {/* Embedded Agent Chat */}
+      <AgentChat
+        resumeContext={atsResult?.resumeText ? `File: ${selectedFile?.name || 'Unknown'}\nJob Description: ${jobDescription || 'None'}\n\nResume Text:\n${atsResult.resumeText}\n\nOverall ATS Score: ${atsResult.score}%` : ''}
+        userId={isAuthenticated ? 'user' : 'anonymous'}
+      />
 
       <Snackbar
         open={snack.open}
