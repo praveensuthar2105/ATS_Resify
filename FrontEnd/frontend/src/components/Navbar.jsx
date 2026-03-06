@@ -76,7 +76,7 @@ const Navbar = () => {
         {/* Logo - clicks to home */}
         <RouterLink to="/" className="navbar-logo" onClick={() => setMobileNavOpen(false)}>
           <div className="logo-icon">
-            <img src="/logo.png?v=3" alt="ATS Resify Logo" width="44" height="44" style={{ background: 'transparent', objectFit: 'contain' }} />
+            <img src="/logo.png" alt="ATS Resify Logo" width="40" height="40" style={{ background: 'transparent', objectFit: 'contain' }} />
           </div>
           <span className="logo-text">ATS Resify</span>
         </RouterLink>
