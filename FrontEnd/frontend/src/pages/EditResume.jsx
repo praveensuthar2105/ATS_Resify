@@ -5,9 +5,11 @@ import AgentChat from '../components/AgentChat';
 import { decodeToken, getAuthToken } from '../utils/auth';
 import { API_BASE_URL } from '../services/api';
 import { parseLatexToResumeData } from '../utils/latexParser';
+import SEO from '../components/SEO';
 import './EditResume.css';
 
 const EditResume = () => {
+
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -867,6 +869,11 @@ ${sections}
 
   return (
     <div className="edit-resume-page">
+      <SEO
+        title="Live Resume Editor"
+        description="Edit your resume with real-time LaTeX compilation to PDF and AI assistance. Customize your experience, education, and skills instantly."
+        type="article"
+      />
       <div className="edit-resume-container">
         {/* Left Panel - Form or LaTeX Editor */}
         <div className="form-panel">

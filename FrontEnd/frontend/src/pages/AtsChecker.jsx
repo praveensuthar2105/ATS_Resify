@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { resumeAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import AgentChat from '../components/AgentChat';
+import SEO from '../components/SEO';
 import './AtsChecker.css';
 
 const AtsChecker = () => {
@@ -211,6 +212,10 @@ const AtsChecker = () => {
 
   return (
     <div className="ats-page">
+      <SEO
+        title="Check ATS Score Online"
+        description="Upload your resume and get an instant AI-powered ATS score with keyword analysis, formatting checks, and actionable AI recommendations."
+      />
       {/* ══════════ HERO ══════════ */}
       <section className="ats-hero">
         <div className="ats-hero-badge">

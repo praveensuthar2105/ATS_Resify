@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { resumeAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 import './GenerateResume.css';
 
 const GenerateResume = () => {
@@ -170,6 +171,10 @@ const GenerateResume = () => {
 
   return (
     <div className="generate-page">
+      <SEO
+        title="AI Resume Generator"
+        description="Share your professional journey or upload your LinkedIn profile, and our AI will craft an ATS-optimized resume tailored to your target role in seconds."
+      />
       {/* Hero Section */}
       <section className="gen-hero">
         <div className="gen-hero-badge">

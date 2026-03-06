@@ -1,4 +1,5 @@
 import React from 'react';
+import SEO from '../components/SEO';
 import './About.css';
 
 const About = () => {
@@ -82,6 +83,10 @@ const About = () => {
 
   return (
     <div className="about-page">
+      <SEO
+        title="About Us"
+        description="Learn about the development journey of ATS Resify, a modern full-stack application built to simplify ATS-friendly resume generation."
+      />
       {/* Hero Section */}
       <section className="about-hero">
         <h1 className="about-title">About ATS Resify</h1>

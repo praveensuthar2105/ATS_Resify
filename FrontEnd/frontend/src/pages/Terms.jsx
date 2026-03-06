@@ -1,9 +1,14 @@
 import React from 'react';
+import SEO from '../components/SEO';
 import './Legal.css';
 
 const Terms = () => {
     return (
         <div className="legal-page">
+            <SEO
+                title="Terms & Conditions"
+                description="Read the Terms and Conditions for using ATS Resify. We cover user accounts, generated content, and acceptable use of our resume builder."
+            />
             <div className="legal-container">
                 <span className="legal-badge">LEGAL</span>
                 <h1 className="legal-title">Terms & Conditions</h1>

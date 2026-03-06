@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { API_BASE_URL } from '../services/api';
+import SEO from '../components/SEO';
 import './Feedback.css';
 
 const Feedback = () => {
@@ -66,6 +67,10 @@ const Feedback = () => {
 
     return (
         <div className="feedback-page">
+            <SEO
+                title="Share Your Feedback"
+                description="Help us improve ATS Resify by sharing your experience. We value your opinion to build better AI resume tools."
+            />
             <section className="feedback-hero">
                 <span className="feedback-badge">WE VALUE YOUR OPINION</span>
                 <h1 className="feedback-title">Share Your <span className="gradient-text">Feedback</span></h1>

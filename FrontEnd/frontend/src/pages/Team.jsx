@@ -1,4 +1,5 @@
 import React from 'react';
+import SEO from '../components/SEO';
 import './Team.css';
 
 const Team = () => {
@@ -24,6 +25,10 @@ const Team = () => {
 
     return (
         <div className="team-page">
+            <SEO
+                title="Our Team"
+                description="Meet the builders behind ATS Resify. Discover the full stack developers and the technology stack powering our AI-driven resume tools."
+            />
             {/* Hero */}
             <section className="team-hero">
                 <span className="team-badge">OUR TEAM</span>

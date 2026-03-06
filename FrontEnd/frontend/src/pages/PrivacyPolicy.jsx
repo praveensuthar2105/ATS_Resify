@@ -1,9 +1,14 @@
 import React from 'react';
+import SEO from '../components/SEO';
 import './Legal.css';
 
 const PrivacyPolicy = () => {
     return (
         <div className="legal-page">
+            <SEO
+                title="Privacy Policy"
+                description="Read the ATS Resify Privacy Policy to understand how we collect, use, and protect your personal information and resume data."
+            />
             <div className="legal-container">
                 <span className="legal-badge">PRIVACY</span>
                 <h1 className="legal-title">Privacy Policy</h1>

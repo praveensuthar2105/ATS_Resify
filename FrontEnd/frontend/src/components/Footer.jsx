@@ -31,19 +31,21 @@ const Footer = () => {
         <Grid container spacing={6} sx={{ mb: 6 }}>
           {/* Brand Section */}
           <Grid size={{ xs: 12, md: 4 }}>
-            <Typography
-              variant="h4"
-              sx={{
-                mb: 3,
-                fontWeight: 800,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              ATS Resify
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+              <img src="/logo.png?v=3" alt="ATS Resify Logo" width="38" height="38" style={{ background: 'transparent', objectFit: 'contain' }} />
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 800,
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                ATS Resify
+              </Typography>
+            </Box>
             <Typography variant="body1" sx={{ color: '#9CA3AF', lineHeight: 1.8, mb: 4, fontSize: '0.95rem' }}>
               Create professional, ATS-friendly resumes powered by cutting-edge AI technology.
               Stand out from the crowd and land your dream job faster.

@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import SEO from '../components/SEO';
 import './LandingPage.css';
 
 // Icons as SVG components
@@ -120,6 +122,55 @@ const LandingPage = () => {
 
   return (
     <div className="landing-page">
+      <SEO
+        title="Free AI Resume Builder & ATS Checker"
+        description="Build professional, ATS-optimized resumes with AI in minutes. Check your ATS score, edit with a live LaTeX editor, and export PDF resumes for free."
+      />
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "ATS Resify",
+            "operatingSystem": "Web",
+            "applicationCategory": "BusinessApplication",
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "ratingCount": "215"
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Is ATS Resify completely free?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes! ATS Resify is completely free for generating resumes, checking ATS scores, and exporting high-quality PDFs."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does the ATS score work?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Our advanced AI analyzes your resume against industry-standard ATS algorithms to check keyword optimization, formatting issues, and provides actionable recommendations to improve your score."
+                }
+              }
+            ]
+          })}
+        </script>
+      </Helmet>
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-badge">

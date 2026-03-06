@@ -6,6 +6,7 @@ import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import LockIcon from '@mui/icons-material/Lock';
+import SEO from '../components/SEO';
 
 const Features = () => {
   const mainFeatures = [
@@ -63,6 +64,10 @@ const Features = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#FAFBFC', py: 6, px: 2, width: '100%' }}>
+      <SEO
+        title="Platform Features"
+        description="Explore the tools behind ATS Resify including AI-powered generation, real-time LaTeX editing, ATS score checking, and interactive resume chat."
+      />
       <Box sx={{ maxWidth: '1200px', mx: 'auto', width: '100%' }}>
         {/* Header */}
         <Box sx={{ textAlign: 'center', mb: 6 }}>

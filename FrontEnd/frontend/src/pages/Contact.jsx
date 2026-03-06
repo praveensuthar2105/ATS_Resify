@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { API_BASE_URL } from '../services/api';
+import SEO from '../components/SEO';
 import './Contact.css';
 
 const Contact = () => {
@@ -77,6 +78,10 @@ const Contact = () => {
 
     return (
         <div className="contact-page">
+            <SEO
+                title="Contact Us"
+                description="Get in touch with the ATS Resify team. Have a question, suggestion, or want to report a bug? We'd love to hear from you."
+            />
             {/* Hero */}
             <section className="contact-hero">
                 <span className="contact-badge">GET IN TOUCH</span>

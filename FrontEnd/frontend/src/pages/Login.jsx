@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { API_BASE_URL, API_ROOT_URL } from '../services/api';
+import SEO from '../components/SEO';
 import './Login.css';
 
 const Login = () => {
@@ -16,6 +17,10 @@ const Login = () => {
 
     return (
         <div className="login-page">
+            <SEO
+                title="Login"
+                description="Sign in to ATS Resify to build, analyze, and optimize your professional resume with AI."
+            />
             <div className="login-circles">
                 <div className="login-circle blob-1"></div>
                 <div className="login-circle blob-2"></div>
