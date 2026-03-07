@@ -37,11 +37,14 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(
                                                                 "/api/public/**",
+                                                                "/api/latex/**",
                                                                 "/oauth2/**",
                                                                 "/login/**",
                                                                 "/auth/**",
                                                                 "/api/health/**",
-                                                                "/actuator/**")
+                                                                "/actuator/**",
+                                                                "/",
+                                                                "/health")
                                                 .permitAll()
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                                 .anyRequest().authenticated())

@@ -1,0 +1,38 @@
+name: Backend CI/CD to AWS Elastic Beanstalk (Docker)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Backend/**'
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      # Generates a Deployment Zip containing ONLY the Dockerfile
+      # AWS Elastic Beanstalk (Docker Platform) expects either a Dockerfile or a docker-compose.yml 
+      # in a ZIP to build and run automatically on the server.
+      - name: Generate Deployment Package
+        run: |
+          cd Backend
+          zip -r deploy.zip . -x "*.git*" "*target*" "*src/test*"
+          
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: ${{ secrets.AWS_REGION }}
+          application_name: ${{ secrets.EB_APPLICATION_NAME }}
+          environment_name: ${{ secrets.EB_ENVIRONMENT_NAME }}
+          version_label: "backend-deploy-${{ github.sha }}"
+          deployment_package: Backend/deploy.zip
+          wait_for_deployment: true
+          wait_for_environment_recovery: 600

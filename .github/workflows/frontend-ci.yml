@@ -1,0 +1,40 @@
+name: Frontend CI - Quality Checks
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'FrontEnd/**'
+  pull_request:
+    paths:
+      - 'FrontEnd/**'
+  workflow_dispatch:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './FrontEnd/frontend/package-lock.json'
+          
+      - name: Install Dependencies
+        working-directory: ./FrontEnd/frontend
+        run: npm ci --legacy-peer-deps
+        
+      # If you prefer to strictly block deployments on lint errors, uncomment this:
+      # - name: Run Linter
+      #   working-directory: ./FrontEnd/frontend
+      #   run: npm run lint
+      
+      - name: Test Build (Verifies Vercel won't crash)
+        working-directory: ./FrontEnd/frontend
+        run: npm run build
