@@ -37,12 +37,12 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(
                                                                 "/api/public/**",
-                                                                "/api/latex/**",
                                                                 "/oauth2/**",
                                                                 "/login/**",
                                                                 "/auth/**",
                                                                 "/api/health/**",
-                                                                "/actuator/**",
+                                                                "/actuator/health",
+                                                                "/actuator/info",
                                                                 "/",
                                                                 "/health")
                                                 .permitAll()
