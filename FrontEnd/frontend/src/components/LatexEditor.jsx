@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { API_BASE_URL } from '../services/api';
+import { getAuthToken } from '../utils/auth';
 import './LatexEditor.css';
 
 export default function LatexEditor({ open, onClose, resumeData, templateType = 'professional', onSyncBack }) {
@@ -711,7 +712,10 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
     try {
       const resp = await fetch(`${API_BASE_URL}/latex/compile`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`
+        },
         credentials: 'include',
         signal: controller.signal,
         body: JSON.stringify({ latexCode })

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
 import { API_BASE_URL, API_ROOT_URL } from '../services/api';
+import { getAuthToken } from '../utils/auth';
 
 const ResumeSyncEditor = () => {
     const [resumeData, setResumeData] = useState(null);
@@ -46,15 +47,18 @@ const ResumeSyncEditor = () => {
 
     const fetchResumeData = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/resume-sync/data`);
+            const token = getAuthToken();
+            const headers = { 'Authorization': `Bearer ${token}` };
+
+            const response = await fetch(`${API_BASE_URL}/resume-sync/data`, { headers });
             const data = await response.json();
             setResumeData(data);
 
-            const jsonResponse = await fetch(`${API_BASE_URL}/resume-sync/json`);
+            const jsonResponse = await fetch(`${API_BASE_URL}/resume-sync/json`, { headers });
             const jsonResult = await jsonResponse.json();
             setJsonData(jsonResult.json);
 
-            const latexResponse = await fetch(`${API_BASE_URL}/resume-sync/latex`);
+            const latexResponse = await fetch(`${API_BASE_URL}/resume-sync/latex`, { headers });
             const latexResult = await latexResponse.json();
             setLatexData(latexResult.latex);
         } catch (error) {
@@ -66,7 +70,10 @@ const ResumeSyncEditor = () => {
         try {
             const response = await fetch(`${API_BASE_URL}/resume-sync/update-from-json`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getAuthToken()}`
+                },
                 body: JSON.stringify({ json: jsonData })
             });
             const result = await response.json();
@@ -82,7 +89,10 @@ const ResumeSyncEditor = () => {
         try {
             const response = await fetch(`${API_BASE_URL}/resume-sync/update-from-latex`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getAuthToken()}`
+                },
                 body: JSON.stringify({ latex: latexData })
             });
             const result = await response.json();
@@ -98,7 +108,10 @@ const ResumeSyncEditor = () => {
         try {
             const response = await fetch(`${API_BASE_URL}/resume-sync/update-data`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getAuthToken()}`
+                },
                 body: JSON.stringify(resumeData)
             });
             const result = await response.json();

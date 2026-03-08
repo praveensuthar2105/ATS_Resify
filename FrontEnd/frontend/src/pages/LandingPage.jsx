@@ -114,34 +114,29 @@ const LandingPage = () => {
             </div>
           </div>
 
-          {/* Right Side — Wireframe Cube */}
+          {/* Right Side — Resume Preview */}
           <div className="lg:col-span-5 p-12 bg-brutal-black flex items-center justify-center relative">
-            <div className="w-full aspect-square brutal-border p-4 relative overflow-hidden bg-black/5">
-              <div className="wireframe-cube">
-                <div className="absolute inset-0 flex flex-col p-4">
-                  <div className="flex justify-between border-b border-brutal-white/30 pb-2 mb-4">
-                    <span className="text-[10px] text-brutal-white">MODULE_ID: 8A3AAA</span>
-                    <span className="text-[10px] text-brutal-white">v.2.0.48</span>
-                  </div>
-                  <div className="flex-1 grid grid-cols-8 gap-1">
-                    <div className="col-span-8 h-4 bg-brutal-white/20"></div>
-                    <div className="col-span-3 h-32 border border-brutal-white/40"></div>
-                    <div className="col-span-5 h-32 border border-brutal-white/40 flex flex-col gap-2 p-2">
-                      <div className="h-1 bg-brutal-white w-full"></div>
-                      <div className="h-1 bg-brutal-white w-2/3"></div>
-                      <div className="h-1 bg-brutal-white w-1/2"></div>
-                    </div>
-                    <div className="col-span-8 flex-1 border-t border-brutal-white/30 pt-4">
-                      <div className="w-full h-full border border-dashed border-brutal-white/20 flex items-center justify-center">
-                        <span className="text-[8px] opacity-40">DATA_VISUALIZATION_LAYER</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <div className="w-full aspect-[3/4] brutal-border bg-black/40 relative overflow-hidden group shadow-2xl">
+              {/* Main Resume Image */}
+              <img
+                src="/resume-preview.png"
+                alt="Resume Preview"
+                className="w-full h-full object-cover object-top opacity-80 group-hover:opacity-100 transition-all duration-700 scale-[1.05] group-hover:scale-100"
+              />
+
+              {/* Premium Subtle Accents */}
+              <div className="absolute inset-0 border-4 border-brutal-white/5 pointer-events-none group-hover:border-neon-green/10 transition-colors duration-500"></div>
+              <div className="absolute top-4 left-4 flex gap-1 pointer-events-none">
+                <div className="w-1 h-1 bg-neon-green animate-pulse"></div>
+                <div className="w-1 h-1 bg-neon-green/40"></div>
+                <div className="w-1 h-1 bg-neon-green/20"></div>
               </div>
-            </div>
-            <div className="absolute bottom-4 right-4 text-[10px] text-brutal-white font-mono">
-              RENDER_MODE: WIREFRAME
+
+              {/* HUD Labels */}
+              <div className="absolute bottom-4 right-4 text-[10px] text-brutal-white font-mono flex flex-col items-end opacity-40 group-hover:opacity-80 transition-opacity">
+                <span>PREVIEW_MODE: HIGH_RES</span>
+                <span>ID: 8A3-CV-PRV</span>
+              </div>
             </div>
           </div>
         </div>

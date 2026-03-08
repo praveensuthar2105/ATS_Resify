@@ -486,7 +486,10 @@ ${sections}
     try {
       const resp = await fetch(`${API_BASE_URL}/latex/compile`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`
+        },
         credentials: 'include',
         signal: controller.signal,
         body: JSON.stringify({ latexCode: latex })

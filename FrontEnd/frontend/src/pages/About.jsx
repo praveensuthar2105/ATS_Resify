@@ -150,9 +150,10 @@ const About = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {keyFeatures.map((feature, index) => (
               <div key={index} className="border border-black bg-[#f8f8f8] p-6 shadow-[2px_2px_0px_0px_#000000] hover:translate-y-[-2px] transition-transform">
-                <div className="w-12 h-12 bg-white border border-black flex items-center justify-center mb-4 text-[#39ff14] bg-black">
+                <div className="w-12 h-12 border border-black flex items-center justify-center mb-4 text-[#39ff14] bg-black">
                   <span className="material-symbols-outlined">{feature.icon}</span>
                 </div>
+
                 <h4 className="font-bold uppercase text-lg mb-2">{feature.title}</h4>
                 <p className="text-sm font-bold text-gray-700">{feature.description}</p>
               </div>

@@ -29,6 +29,46 @@ const EditResume = () => {
   const [useOnlineCompiler, setUseOnlineCompiler] = useState(false);
   const autoCompileTimer = useRef(null);
 
+  // Resizer state
+  const [leftWidth, setLeftWidth] = useState(50);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizerRef = useRef(null);
+
+  const startResizing = useCallback(() => {
+    setIsResizing(true);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(true);
+    setIsResizing(false);
+    document.body.style.cursor = 'default';
+    document.body.style.userSelect = 'auto';
+  }, []);
+
+  const resize = useCallback((e) => {
+    if (!isResizing) return;
+    const newWidth = (e.clientX / window.innerWidth) * 100;
+    if (newWidth > 20 && newWidth < 80) {
+      setLeftWidth(newWidth);
+    }
+  }, [isResizing]);
+
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', resize);
+      window.addEventListener('mouseup', stopResizing);
+    } else {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    }
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
+  }, [isResizing, resize, stopResizing]);
+
   const [formData, setFormData] = useState({
     fullName: '', email: '', phoneNumber: '', location: '', linkedIn: '', gitHub: '', portfolio: '', summary: '',
     skills: [], experience: [], education: [], projects: [], certifications: [], achievements: [], languages: [], interests: [],
@@ -235,7 +275,10 @@ ${sections}
     try {
       const resp = await fetch(`${API_BASE_URL}/latex/compile`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`
+        },
         credentials: 'include',
         signal: controller.signal,
         body: JSON.stringify({ latexCode: latex })
@@ -678,7 +721,10 @@ ${sections}
       </Helmet>
 
       {/* LEFT PANEL: Form Editor */}
-      <div className="w-full lg:w-1/2 h-full overflow-y-auto border-r-4 border-black bg-white relative pb-24 lg:pb-0">
+      <div
+        className="h-full overflow-y-auto border-r-4 border-black bg-white relative pb-24 lg:pb-0"
+        style={{ width: `calc(${leftWidth}%)` }}
+      >
         <div className="sticky top-0 z-10 bg-white border-b-4 border-black p-4 flex items-center justify-between shadow-[0px_4px_0px_0px_#000000]">
           <div>
             <div className="flex items-center gap-2">
@@ -830,8 +876,19 @@ ${sections}
         </div>
       </div>
 
+      {/* DRAGGABLE RESIZER */}
+      <div
+        onMouseDown={startResizing}
+        className={`hidden lg:flex w-1 hover:w-2 bg-black/10 hover:bg-[#39ff14] transition-all cursor-col-resize z-50 h-full items-center justify-center group ${isResizing ? 'bg-[#39ff14] w-2' : ''}`}
+      >
+        <div className="w-[1px] h-12 bg-black/20 group-hover:bg-black/50"></div>
+      </div>
+
       {/* RIGHT PANEL: PDF Preview */}
-      <div className="hidden lg:flex flex-col w-1/2 h-full bg-[#f0f0f0] border-black pb-0 relative">
+      <div
+        className="hidden lg:flex flex-col h-full bg-[#f0f0f0] border-black pb-0 relative"
+        style={{ width: `calc(${100 - leftWidth}%)` }}
+      >
         <div className="bg-black text-[#39ff14] p-3 flex items-center justify-between border-b-4 border-black shadow-[0px_4px_0px_0px_#39ff14] z-10 shrink-0">
           <div className="flex items-center gap-3">
             <span className={`w-3 h-3 ${compiling ? 'bg-yellow-500 animate-pulse' : pdfUrl ? 'bg-[#39ff14]' : 'bg-red-500'} inline-block`}></span>

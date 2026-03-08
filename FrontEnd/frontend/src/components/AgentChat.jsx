@@ -328,11 +328,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
               className="agent-quick-btn"
               onClick={() => handleQuickAction(action)}
             >
-              <span className="qb-icon" style={{
-                background: i === 0 ? 'rgba(99,102,241,0.1)' :
-                  i === 1 ? 'rgba(168,85,247,0.1)' :
-                    'rgba(34,197,94,0.1)'
-              }}>
+              <span className="qb-icon">
                 {action.icon}
               </span>
               <span className="qb-text">
@@ -502,8 +498,8 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
       <div className="agent-settings-panel">
         <div className="settings-header">
           <h3>
-            <span className="settings-icon">⚙️</span>
-            Agent Preferences
+            <span className="settings-icon">🛠️</span>
+            AGENT_PREFS
           </h3>
           <p>Customize how the AI assists you.</p>
         </div>
