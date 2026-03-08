@@ -75,7 +75,7 @@ function AppContent() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
-      <Box component="main" sx={{ width: '100%', flex: 1, mt: '70px' }}>
+      <Box component="main" sx={{ width: '100%', flex: 1, mt: '64px' }}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />

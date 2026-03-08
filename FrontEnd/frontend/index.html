@@ -44,6 +44,66 @@
     rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&display=swap"
+    rel="stylesheet" />
+
+  <!-- ===== TAILWIND CDN ===== -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'brutal-black': '#ffffff',
+            'brutal-white': '#000000',
+            'neon-green': '#39ff14',
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          borderWidth: {
+            3: '3px',
+          },
+        },
+      },
+    };
+  </script>
+  <style type="text/tailwindcss">
+    .brutal-border {
+      border: 2px solid #000000;
+    }
+    .brutal-shadow {
+      box-shadow: 6px 6px 0px 0px #39ff14;
+    }
+    .brutal-shadow-white {
+      box-shadow: 4px 4px 0px 0px #000000;
+    }
+    .grid-bg {
+      background-image: radial-gradient(#00000022 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    .scanline {
+      width: 100%;
+      height: 2px;
+      background: rgba(0, 0, 0, 0.05);
+      position: fixed;
+      z-index: 100;
+      pointer-events: none;
+      animation: scan 8s linear infinite;
+    }
+    @keyframes scan {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+    .wireframe-cube {
+      width: 100%;
+      height: 100%;
+      border: 1px solid #39ff14;
+      position: relative;
+      background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(57, 255, 20, 0.05) 10px, rgba(57, 255, 20, 0.05) 11px);
+    }
+  </style>
 
   <!-- ===== GOOGLE ADSENSE ===== -->
   <meta name="google-adsense-account" content="ca-pub-3213050293695562">

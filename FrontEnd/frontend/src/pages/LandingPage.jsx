@@ -1,127 +1,35 @@
+// ═══════════════════════════════════════════
+// FILE: LandingPage.jsx
+// REDESIGNED TO MATCH: Google Stitch Design
+// ═══════════════════════════════════════════
+// SECTIONS INCLUDED:
+// - Scanline overlay
+// - Hero (12-col grid: heading + wireframe cube)
+// - Features (3-col brutalist grid)
+// - Stats bar (horizontal scroll)
+// - CTA (centered box with corner accents)
+//
+// LOGIC PRESERVED:
+// - useNavigate (react-router-dom)
+// - SEO component + Helmet structured data
+// - All navigation handlers
+//
+// COLORS USED:
+// - Background: #ffffff (brutal-black)
+// - Text: #000000 (brutal-white)
+// - Accent: #39ff14 (neon-green)
+// - Muted: slate-700
+// ═══════════════════════════════════════════
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import SEO from '../components/SEO';
-import './LandingPage.css';
-
-// Icons as SVG components
-const SparkleIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 3v18M3 12h18M5.636 5.636l12.728 12.728M18.364 5.636L5.636 18.364" />
-  </svg>
-);
-
-const BrainIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M9.5 2A5.5 5.5 0 0 0 4 7.5c0 1.58.67 3 1.73 4.01L12 22l6.27-10.49A5.49 5.49 0 0 0 20 7.5 5.5 5.5 0 0 0 14.5 2h-5z" />
-  </svg>
-);
-
-const CodeIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="16 18 22 12 16 6" />
-    <polyline points="8 6 2 12 8 18" />
-  </svg>
-);
-
-const CheckCircleIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-    <polyline points="22 4 12 14.01 9 11.01" />
-  </svg>
-);
-
-const SyncIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M23 4v6h-6M1 20v-6h6" />
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-  </svg>
-);
-
-const ChatIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-  </svg>
-);
-
-const ExportIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="7 10 12 15 17 10" />
-    <line x1="12" y1="15" x2="12" y2="3" />
-  </svg>
-);
-
 const LandingPage = () => {
   const navigate = useNavigate();
 
-  const features = [
-    {
-      icon: <SparkleIcon />,
-      title: 'AI-Powered Content',
-      description: 'Advanced AI generates professional summaries, experience bullets, and project descriptions tailored to your target role.',
-      color: '#a855f7'
-    },
-    {
-      icon: <CodeIcon />,
-      title: 'Live LaTeX Editor',
-      description: 'Full-featured Monaco-based LaTeX editor with instant server-side PDF compilation. Edit code and see your resume rendered in real time.',
-      color: '#6366f1'
-    },
-    {
-      icon: <CheckCircleIcon />,
-      title: 'ATS Score Checker',
-      description: 'Upload your resume and get an instant ATS score with keyword analysis, formatting checks, and actionable AI recommendations.',
-      color: '#22c55e'
-    },
-    {
-      icon: <SyncIcon />,
-      title: 'Real-time Sync',
-      description: 'WebSocket-powered live synchronization between form editor, JSON view, and LaTeX code. Edit in any mode — all stay in sync.',
-      color: '#f97316'
-    },
-    {
-      icon: <ChatIcon />,
-      title: 'AI Resume Agent',
-      description: 'Interactive AI chat agent for bullet improvement, job matching, keyword gap analysis, and content tailoring to specific job descriptions.',
-      color: '#ec4899'
-    },
-    {
-      icon: <ExportIcon />,
-      title: 'One-Click PDF Export',
-      description: 'Server-side LaTeX compilation generates pixel-perfect PDF resumes instantly. Download and apply with confidence.',
-      color: '#06b6d4'
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: 'Sarah Johnson',
-      role: 'Software Engineer',
-      text: 'The AI agent helped me tailor my resume for each job posting. I landed 3 interviews in a week!',
-      avatar: 'SJ',
-      color: '#6366f1'
-    },
-    {
-      name: 'Michael Chen',
-      role: 'Product Manager',
-      text: 'The LaTeX editor with real-time preview is incredible. My resume looks professionally typeset without any effort.',
-      avatar: 'MC',
-      color: '#f97316'
-    },
-    {
-      name: 'Emma Davis',
-      role: 'Marketing Manager',
-      text: 'The ATS checker scored my resume at 92% after just a few AI-suggested tweaks. Highly recommended!',
-      avatar: 'ED',
-      color: '#22c55e'
-    }
-  ];
-
-
-
   return (
-    <div className="landing-page">
+    <div className="landing-page grid-bg font-mono uppercase bg-brutal-black text-brutal-white">
       <SEO
         title="Free AI Resume Builder & ATS Checker"
         description="Build professional, ATS-optimized resumes with AI in minutes. Check your ATS score, edit with a live LaTeX editor, and export PDF resumes for free."
@@ -171,178 +79,169 @@ const LandingPage = () => {
           })}
         </script>
       </Helmet>
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-badge">
-          <SparkleIcon />
-          <span>ATS RESIFY</span>
-        </div>
 
-        <h1 className="hero-title">
-          Build ATS-Ready Resumes<br />
-          <span className="gradient-text">with AI</span>
-        </h1>
+      {/* Scanline Overlay */}
+      <div className="scanline"></div>
 
-        <p className="hero-subtitle">
-          Generate professional resumes using advanced AI, edit in a live LaTeX editor,
-          check your ATS score, and export pixel-perfect PDFs — all in one platform.
-        </p>
-
-        <div className="hero-buttons">
-          <button className="btn-primary" onClick={() => navigate('/generate')}>
-            <span className="btn-icon">✨</span>
-            Start Building Now
-          </button>
-          <button className="btn-secondary" onClick={() => navigate('/ats-checker')}>
-            Check ATS Score
-          </button>
-        </div>
-
-        <div className="hero-stats">
-          <div className="stat">
-            <span className="stat-number">Smart AI</span>
-            <span className="stat-label">Content Generation</span>
-          </div>
-          <div className="stat">
-            <span className="stat-number">LaTeX</span>
-            <span className="stat-label">Professional Typesetting</span>
-          </div>
-          <div className="stat">
-            <span className="stat-number">Real-time</span>
-            <span className="stat-label">Live Preview & Sync</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="features-section">
-        <div className="section-header">
-          <h2>Everything You Need to Land the Job</h2>
-          <p>From AI-generated content to LaTeX typesetting and ATS optimization — our platform covers every step of resume building.</p>
-        </div>
-
-        <div className="features-grid">
-          {features.map((feature, index) => (
-            <div key={index} className="feature-card">
-              <div className="feature-icon" style={{ backgroundColor: `${feature.color}15`, color: feature.color }}>
-                {feature.icon}
-              </div>
-              <h3>{feature.title}</h3>
-              <p>{feature.description}</p>
+      {/* ═══ HERO SECTION ═══ */}
+      <section className="min-h-[80vh] flex items-center border-b-2 border-brutal-white">
+        <div className="max-w-[1400px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-0">
+          {/* Left Side */}
+          <div className="lg:col-span-7 p-8 lg:p-16 border-r-0 lg:border-r-2 border-brutal-white flex flex-col justify-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-neon-green text-black mb-8 w-fit text-xs font-black">
+              [ SYSTEM STATUS: READY ] AI-POWERED RESUME BUILDER
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="how-it-works">
-        <div className="section-header">
-          <h2>How It Works</h2>
-          <p>Three simple steps to a job-winning resume.</p>
-        </div>
-
-        <div className="steps-container">
-          <div className="step-card">
-            <div className="step-badge">Step 1</div>
-            <div className="step-icon-circle" style={{ background: 'linear-gradient(135deg, #6366f1, #818cf8)' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
+            <h1 className="text-4xl md:text-7xl font-black leading-none mb-10 tracking-tight">
+              BUILD A RESUME<br />
+              THAT <span className="text-neon-green underline">BEATS THE BOTS.</span>
+            </h1>
+            <p className="text-base md:text-lg text-slate-700 mb-12 max-w-2xl lowercase leading-tight">
+              &gt; OPTIMIZE YOUR CAREER PATH WITH AI-DRIVEN ATS ANALYSIS AND PROFESSIONAL TEMPLATES DESIGNED FOR MODERN RECRUITMENT CYCLES.
+            </p>
+            <div className="flex flex-col sm:flex-row items-stretch gap-6">
+              <button
+                onClick={() => navigate('/generate')}
+                className="px-8 py-5 bg-brutal-white text-brutal-black font-black text-lg brutal-shadow hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all"
+              >
+                CREATE YOUR RESUME
+              </button>
+              <button
+                onClick={() => navigate('/ats-checker')}
+                className="px-8 py-5 border-2 border-brutal-white text-brutal-white font-black text-lg hover:bg-neon-green hover:text-black transition-all"
+              >
+                CHECK ATS SCORE
+              </button>
             </div>
-            <h3>Enter Your Details</h3>
-            <p>Fill in your experience, education, and skills using our guided form — or paste existing content for AI enhancement.</p>
-            <span className="step-tag">Form Editor + JSON</span>
           </div>
 
-          <div className="step-connector" aria-hidden="true">
-            <svg width="48" height="24" viewBox="0 0 48 24">
-              <path d="M0 12h38" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
-              <path d="M34 6l8 6-8 6" stroke="#6366f1" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-
-          <div className="step-card">
-            <div className="step-badge">Step 2</div>
-            <div className="step-icon-circle" style={{ background: 'linear-gradient(135deg, #a855f7, #c084fc)' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-              </svg>
-            </div>
-            <h3>AI Generates &amp; Optimizes</h3>
-            <p>Our AI transforms your input into impactful bullet points, generates professional summaries, and optimizes for ATS keywords.</p>
-            <span className="step-tag">AI Agent + ATS Check</span>
-          </div>
-
-          <div className="step-connector" aria-hidden="true">
-            <svg width="48" height="24" viewBox="0 0 48 24">
-              <path d="M0 12h38" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
-              <path d="M34 6l8 6-8 6" stroke="#a855f7" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-
-          <div className="step-card">
-            <div className="step-badge">Step 3</div>
-            <div className="step-icon-circle" style={{ background: 'linear-gradient(135deg, #22c55e, #4ade80)' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
-            </div>
-            <h3>Export Perfect PDF</h3>
-            <p>Fine-tune in the LaTeX editor, check your ATS score, and download a beautifully typeset PDF ready to submit.</p>
-            <span className="step-tag">LaTeX → PDF</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="testimonials-section">
-        <div className="section-header">
-          <h2>What Our Users Say</h2>
-          <p>Join job seekers who have leveled up their resumes with AI.</p>
-        </div>
-
-        <div className="testimonials-grid">
-          {testimonials.map((testimonial, index) => (
-            <div key={index} className="testimonial-card">
-              <div className="stars">★★★★★</div>
-              <p className="testimonial-text">"{testimonial.text}"</p>
-              <div className="testimonial-author">
-                <div className="author-avatar" style={{ backgroundColor: testimonial.color }}>
-                  {testimonial.avatar}
-                </div>
-                <div className="author-info">
-                  <p className="author-name">{testimonial.name}</p>
-                  <p className="author-role">{testimonial.role}</p>
+          {/* Right Side — Wireframe Cube */}
+          <div className="lg:col-span-5 p-12 bg-brutal-black flex items-center justify-center relative">
+            <div className="w-full aspect-square brutal-border p-4 relative overflow-hidden bg-black/5">
+              <div className="wireframe-cube">
+                <div className="absolute inset-0 flex flex-col p-4">
+                  <div className="flex justify-between border-b border-brutal-white/30 pb-2 mb-4">
+                    <span className="text-[10px] text-brutal-white">MODULE_ID: 8A3AAA</span>
+                    <span className="text-[10px] text-brutal-white">v.2.0.48</span>
+                  </div>
+                  <div className="flex-1 grid grid-cols-8 gap-1">
+                    <div className="col-span-8 h-4 bg-brutal-white/20"></div>
+                    <div className="col-span-3 h-32 border border-brutal-white/40"></div>
+                    <div className="col-span-5 h-32 border border-brutal-white/40 flex flex-col gap-2 p-2">
+                      <div className="h-1 bg-brutal-white w-full"></div>
+                      <div className="h-1 bg-brutal-white w-2/3"></div>
+                      <div className="h-1 bg-brutal-white w-1/2"></div>
+                    </div>
+                    <div className="col-span-8 flex-1 border-t border-brutal-white/30 pt-4">
+                      <div className="w-full h-full border border-dashed border-brutal-white/20 flex items-center justify-center">
+                        <span className="text-[8px] opacity-40">DATA_VISUALIZATION_LAYER</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          ))}
+            <div className="absolute bottom-4 right-4 text-[10px] text-brutal-white font-mono">
+              RENDER_MODE: WIREFRAME
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="cta-content">
-          <h2>Ready to Build Your Resume?</h2>
-          <p>
-            Start generating AI-powered, ATS-optimized resumes today.<br />
-            No credit card needed. Free to get started.
+      {/* ═══ FEATURES SECTION ═══ */}
+      <section className="border-b-2 border-brutal-white">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {/* Header Card */}
+          <div className="p-8 lg:p-12 border-b-2 border-r-0 md:border-r-2 border-brutal-white bg-brutal-white text-brutal-black flex flex-col">
+            <h2 className="text-3xl font-black mb-4 text-brutal-black">ENGINEERED FOR SUCCESS</h2>
+            <p className="text-sm font-bold lowercase leading-tight text-brutal-black">
+              POWERFUL TOOLS DESIGNED TO GET YOUR RESUME IN FRONT OF REAL HIRING MANAGERS.
+            </p>
+          </div>
+
+          {/* Feature: AI Optimization */}
+          <div className="p-8 lg:p-12 border-b-2 border-r-0 lg:border-r-2 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors">
+            <div className="w-12 h-12 brutal-border flex items-center justify-center mb-8 border-brutal-white">
+              <span className="material-symbols-outlined text-brutal-white group-hover:text-black">auto_awesome</span>
+            </div>
+            <h3 className="text-xl font-black mb-4">AI OPTIMIZATION</h3>
+            <p className="text-xs lowercase leading-relaxed opacity-80 text-slate-700">
+              LEVERAGE CUTTING-EDGE AI TO TAILOR YOUR RESUME FOR ANY JOB DESCRIPTION INSTANTLY, MATCHING KEYWORDS AND PHRASING PRECISELY.
+            </p>
+          </div>
+
+          {/* Feature: Smart Analysis */}
+          <div className="p-8 lg:p-12 border-b-2 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors">
+            <div className="w-12 h-12 brutal-border flex items-center justify-center mb-8 border-brutal-white">
+              <span className="material-symbols-outlined text-brutal-white group-hover:text-black">query_stats</span>
+            </div>
+            <h3 className="text-xl font-black mb-4">SMART ANALYSIS</h3>
+            <p className="text-xs lowercase leading-relaxed opacity-80 text-slate-700">
+              GET DETAILED FEEDBACK ON HOW YOUR RESUME PERFORMS AGAINST ATS ALGORITHMS BEFORE YOU HIT SEND ON YOUR APPLICATION.
+            </p>
+          </div>
+
+          {/* Feature: Premium Templates (full-width) */}
+          <div className="p-8 lg:p-12 md:col-span-2 lg:col-span-3 border-r-0 flex flex-col md:flex-row md:items-center gap-8 group hover:bg-neon-green transition-colors">
+            <div className="w-16 h-16 brutal-border flex items-center justify-center shrink-0 border-brutal-white">
+              <span className="material-symbols-outlined text-3xl text-brutal-white group-hover:text-black">description</span>
+            </div>
+            <div>
+              <h3 className="text-2xl font-black mb-2">PREMIUM TEMPLATES</h3>
+              <p className="text-sm lowercase max-w-3xl opacity-80 text-slate-700">
+                CHOOSE FROM A COLLECTION OF PROFESSIONALLY DESIGNED, RECRUITER-APPROVED TEMPLATES THAT LOOK GREAT AND SCAN PERFECTLY.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ STATS SECTION ═══ */}
+      <section className="bg-brutal-black border-b-2 border-brutal-white overflow-x-hidden">
+        <div className="flex divide-x-2 divide-brutal-white whitespace-nowrap overflow-x-auto py-12">
+          <div className="px-16 text-center flex-shrink-0">
+            <p className="text-6xl font-black text-neon-green mb-2">500K+</p>
+            <p className="text-[10px] font-black tracking-[0.2em]">RESUMES CREATED</p>
+          </div>
+          <div className="px-16 text-center flex-shrink-0">
+            <p className="text-6xl font-black text-neon-green mb-2">92%</p>
+            <p className="text-[10px] font-black tracking-[0.2em]">INTERVIEW RATE</p>
+          </div>
+          <div className="px-16 text-center flex-shrink-0">
+            <p className="text-6xl font-black text-neon-green mb-2">4.9/5</p>
+            <p className="text-[10px] font-black tracking-[0.2em]">USER RATING</p>
+          </div>
+          <div className="px-16 text-center flex-shrink-0">
+            <p className="text-6xl font-black text-neon-green mb-2">200+</p>
+            <p className="text-[10px] font-black tracking-[0.2em]">ATS SYSTEMS</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ CTA SECTION ═══ */}
+      <section className="py-24 px-6 bg-brutal-black">
+        <div className="max-w-4xl mx-auto brutal-border p-12 md:p-16 text-center bg-brutal-black relative">
+          <div className="absolute -top-4 -left-4 w-8 h-8 bg-neon-green border-2 border-brutal-white"></div>
+          <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-neon-green border-2 border-brutal-white"></div>
+          <h2 className="text-4xl md:text-5xl font-black mb-8 leading-none">
+            READY TO LAND YOUR<br />
+            <span className="bg-neon-green text-black px-2">DREAM JOB?</span>
+          </h2>
+          <p className="text-slate-700 text-sm mb-12 max-w-xl mx-auto lowercase">
+            JOIN THOUSANDS OF JOB SEEKERS WHO BYPASSED THE BOTS AND SECURED THEIR SPOT IN THE INTERVIEW ROOM.
           </p>
-          <button className="btn-cta" onClick={() => navigate('/generate')}>
-            Get Started — It's Free
+          <button
+            onClick={() => navigate('/generate')}
+            className="w-full sm:w-auto bg-neon-green text-black font-black px-12 py-6 text-xl brutal-shadow-white hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all border-2 border-brutal-white mb-8"
+          >
+            GET STARTED NOW — IT'S FREE
           </button>
-          <span className="cta-note">Powered by Advanced AI</span>
+          <p className="text-brutal-white text-[10px] font-bold tracking-widest">
+            NO CREDIT CARD REQUIRED. CANCEL ANYTIME.
+          </p>
         </div>
       </section>
-
-
     </div>
   );
 };
 
 export default LandingPage;
-

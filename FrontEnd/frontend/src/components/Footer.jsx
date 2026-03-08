@@ -1,191 +1,131 @@
 import React from 'react';
-import { Box, Container, Grid, Stack, Typography, Link as MLink, Divider } from '@mui/material';
-import { HeartFilled, GithubOutlined, LinkedinOutlined, TwitterOutlined, MailOutlined } from '@ant-design/icons';
 import { Link as RouterLink } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <Box
-      component="footer"
-      sx={{
-        bgcolor: '#111827',
-        color: '#F9FAFB',
-        mt: 0,
-        pt: 12,
-        pb: 6,
-        width: '100%',
-        position: 'relative',
-        overflow: 'hidden',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '1px',
-          background: 'linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.5), transparent)',
-        }
-      }}
-    >
-      <Container maxWidth="lg">
-        <Grid container spacing={6} sx={{ mb: 6 }}>
-          {/* Brand Section */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-              <img src="/logo.png" alt="ATS Resify Logo" width="38" height="38" style={{ background: 'transparent', objectFit: 'contain' }} />
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 800,
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
+    <footer className="bg-brutal-black border-t-2 border-brutal-white p-8 md:p-16 font-mono uppercase text-brutal-white">
+      <div className="max-w-[1400px] mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
+          {/* Brand */}
+          <div className="col-span-1">
+            <div className="mb-8">
+              <RouterLink to="/" className="flex items-center gap-3 no-underline">
+                <img src="/logo.png" alt="Logo" className="h-12 w-auto object-contain" />
+                <span className="text-2xl font-black text-brutal-white tracking-tighter">RESIFY</span>
+              </RouterLink>
+            </div>
+            <p className="text-xs leading-relaxed lowercase mb-8 text-slate-500">
+              THE WORLD'S MOST ADVANCED AI-POWERED RESUME BUILDER HELPING PROFESSIONALS GET HIRED FASTER.
+            </p>
+            <div className="flex gap-4">
+              <a
+                href="#"
+                className="w-10 h-10 border border-brutal-white flex items-center justify-center hover:bg-neon-green hover:text-black transition-colors text-brutal-white no-underline"
+                aria-label="Share"
               >
-                ATS Resify
-              </Typography>
-            </Box>
-            <Typography variant="body1" sx={{ color: '#9CA3AF', lineHeight: 1.8, mb: 4, fontSize: '0.95rem' }}>
-              Create professional, ATS-friendly resumes powered by cutting-edge AI technology.
-              Stand out from the crowd and land your dream job faster.
-            </Typography>
-            <Stack direction="row" spacing={2}>
-              {[
-                { icon: <GithubOutlined />, href: '#', label: 'GitHub' },
-                { icon: <LinkedinOutlined />, href: '#', label: 'LinkedIn' },
-                { icon: <TwitterOutlined />, href: '#', label: 'Twitter' },
-                { icon: <MailOutlined />, href: 'mailto:contact@atsresify.me', label: 'Email' },
-              ].map((social, idx) => (
-                <MLink
-                  key={idx}
-                  href={social.href}
-                  aria-label={social.label}
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(255,255,255,0.05)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#9CA3AF',
-                    fontSize: '20px',
-                    transition: 'all 0.3s',
-                    '&:hover': {
-                      bgcolor: '#667eea',
-                      color: 'white',
-                      transform: 'translateY(-3px)',
-                    }
-                  }}
-                >
-                  {social.icon}
-                </MLink>
-              ))}
-            </Stack>
-          </Grid>
+                <span className="material-symbols-outlined text-sm">share</span>
+              </a>
+              <a
+                href="mailto:contact@atsresify.me"
+                className="w-10 h-10 border border-brutal-white flex items-center justify-center hover:bg-neon-green hover:text-black transition-colors text-brutal-white no-underline"
+                aria-label="Email"
+              >
+                <span className="material-symbols-outlined text-sm">alternate_email</span>
+              </a>
+            </div>
+          </div>
 
           {/* Product Links */}
-          <Grid size={{ xs: 6, md: 2 }}>
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, color: 'white', fontSize: '1rem' }}>
-              Product
-            </Typography>
-            <Stack spacing={2.5}>
-              {[
-                { to: '/generate', label: 'Create Resume' },
-                { to: '/ats-checker', label: 'ATS Checker' },
-                { to: '/features', label: 'Features' },
-                { to: '/about', label: 'About Us' },
-                { to: '/team', label: 'Our Team' },
-              ].map((link, idx) => (
-                <MLink
-                  key={idx}
-                  component={RouterLink}
-                  to={link.to}
-                  underline="none"
-                  sx={{
-                    color: '#9CA3AF',
-                    fontSize: '0.9rem',
-                    transition: 'all 0.2s',
-                    display: 'block',
-                    '&:hover': {
-                      color: 'white',
-                      paddingLeft: '4px',
-                    }
-                  }}
-                >
-                  {link.label}
-                </MLink>
-              ))}
-            </Stack>
-          </Grid>
-          {/* Legal & Support Links */}
-          <Grid size={{ xs: 6, md: 2 }}>
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, color: 'white', fontSize: '1rem' }}>
-              Legal & Support
-            </Typography>
-            <Stack spacing={2.5}>
-              {[
-                { to: '/privacy', label: 'Privacy Policy' },
-                { to: '/terms', label: 'Terms of Service' },
-                { to: '/contact', label: 'Contact Us' },
-                { to: '/feedback', label: 'Feedback' },
-              ].map((link, idx) => (
-                <MLink
-                  key={idx}
-                  component={RouterLink}
-                  to={link.to}
-                  underline="none"
-                  sx={{
-                    color: '#9CA3AF',
-                    fontSize: '0.9rem',
-                    transition: 'all 0.2s',
-                    display: 'block',
-                    '&:hover': {
-                      color: 'white',
-                      paddingLeft: '4px',
-                    }
-                  }}
-                >
-                  {link.label}
-                </MLink>
-              ))}
-            </Stack>
-          </Grid>
-        </Grid>
+          <div>
+            <h4 className="text-brutal-white font-black mb-8 text-sm">[ PRODUCT ]</h4>
+            <ul className="space-y-4 text-[11px] font-bold list-none p-0 m-0">
+              <li>
+                <RouterLink to="/features" className="text-brutal-white no-underline hover:underline transition-all">
+                  FEATURES
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/ats-checker" className="text-brutal-white no-underline hover:underline transition-all">
+                  ATS CHECKER
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/generate" className="text-brutal-white no-underline hover:underline transition-all">
+                  TEMPLATES
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/about" className="text-brutal-white no-underline hover:underline transition-all">
+                  ABOUT
+                </RouterLink>
+              </li>
+            </ul>
+          </div>
 
-        <Divider sx={{ bgcolor: 'rgba(255,255,255,0.1)', mb: 4 }} />
+          {/* Resources Links */}
+          <div>
+            <h4 className="text-brutal-white font-black mb-8 text-sm">[ RESOURCES ]</h4>
+            <ul className="space-y-4 text-[11px] font-bold list-none p-0 m-0">
+              <li>
+                <RouterLink to="/team" className="text-brutal-white no-underline hover:underline transition-all">
+                  TEAM
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/feedback" className="text-brutal-white no-underline hover:underline transition-all">
+                  FEEDBACK
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/contact" className="text-brutal-white no-underline hover:underline transition-all">
+                  SUPPORT
+                </RouterLink>
+              </li>
+              <li>
+                <a href="#" className="text-brutal-white no-underline hover:underline transition-all">API</a>
+              </li>
+            </ul>
+          </div>
 
-        {/* Bottom Section */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 2,
-          }}
-        >
-          <Typography variant="body2" sx={{ color: '#9CA3AF', fontSize: '0.875rem' }}>
-            © {new Date().getFullYear()} ATS Resify. All rights reserved.
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              color: '#9CA3AF',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              fontSize: '0.875rem',
-            }}
-          >
-            Made with <HeartFilled style={{ color: '#EF4444', fontSize: '14px' }} /> by students
-          </Typography>
-        </Box>
-      </Container>
-    </Box>
+          {/* Company Links */}
+          <div>
+            <h4 className="text-brutal-white font-black mb-8 text-sm">[ COMPANY ]</h4>
+            <ul className="space-y-4 text-[11px] font-bold list-none p-0 m-0">
+              <li>
+                <RouterLink to="/about" className="text-brutal-white no-underline hover:underline transition-all">
+                  ABOUT US
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/privacy" className="text-brutal-white no-underline hover:underline transition-all">
+                  PRIVACY POLICY
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/terms" className="text-brutal-white no-underline hover:underline transition-all">
+                  TERMS OF SERVICE
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/contact" className="text-brutal-white no-underline hover:underline transition-all">
+                  CONTACT
+                </RouterLink>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="pt-8 border-t border-brutal-white flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-bold opacity-60">
+          <p className="m-0">© {new Date().getFullYear()} ATS RESIFY. ALL RIGHTS RESERVED.</p>
+          <div className="flex gap-8">
+            <span>LOC: ENGLISH (US)</span>
+            <span>SYSTEM: OPERATIONAL</span>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 };
 
 export default Footer;
-

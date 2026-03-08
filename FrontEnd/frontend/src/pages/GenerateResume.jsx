@@ -1,14 +1,4 @@
 ﻿import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  CircularProgress,
-  Snackbar,
-  Alert,
-  LinearProgress
-} from '@mui/material';
 import { resumeAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
@@ -19,6 +9,8 @@ const GenerateResume = () => {
   const [selectedTemplate] = useState('ats'); // ATS-optimized template only
   const [loading, setLoading] = useState(false);
   const [charCount, setCharCount] = useState(0);
+
+  // Custom brutalist snackbar instead of MUI
   const [snack, setSnack] = useState({ open: false, type: 'success', text: '' });
 
   // Import states
@@ -47,13 +39,20 @@ const GenerateResume = () => {
     }
   ];
 
+  const showToast = (text, type = 'success') => {
+    setSnack({ open: true, text, type });
+    setTimeout(() => {
+      setSnack(s => ({ ...s, open: false }));
+    }, 4000);
+  };
+
   const handleGenerateResume = async (e) => {
     e.preventDefault();
 
     // PDF Mode Logic
     if (inputMode === 'pdf' || inputMode === 'linkedin') {
       if (!selectedFile) {
-        setSnack({ open: true, type: 'error', text: 'Please select a PDF file first.' });
+        showToast('PLEASE SELECT A PDF FILE FIRST.', 'error');
         return;
       }
       setLoading(true);
@@ -68,16 +67,14 @@ const GenerateResume = () => {
             selectedTemplate: selectedTemplate
           };
           localStorage.setItem('generatedResume', JSON.stringify(resumeWithTemplate));
-          setSnack({ open: true, type: 'success', text: `Resume extracted successfully!` });
+          showToast('RESUME EXTRACTED SUCCESSFULLY!', 'success');
 
-          setTimeout(() => {
-            navigate('/edit-resume');
-          }, 1000);
+          setTimeout(() => navigate('/edit-resume'), 1000);
         } else {
-          setSnack({ open: true, type: 'error', text: result.error || 'Failed to parse resume PDF' });
+          showToast(result.error || 'FAILED TO PARSE RESUME PDF.', 'error');
         }
       } catch (error) {
-        setSnack({ open: true, type: 'error', text: error.response?.data?.error || error.message || 'Error occurred during extraction.' });
+        showToast(error.response?.data?.error || error.message || 'ERROR OCCURRED DURING EXTRACTION.', 'error');
       } finally {
         setLoading(false);
         setParsingPdf(false);
@@ -86,60 +83,52 @@ const GenerateResume = () => {
     }
 
     if (!description || description.length < 50) {
-      setSnack({ open: true, type: 'error', text: 'Please provide at least 50 characters for better results' });
+      showToast('PROVIDE AT LEAST 50 CHARS FOR BETTER RESULTS.', 'error');
       return;
     }
 
     setLoading(true);
     try {
       const response = await resumeAPI.generateResume(description, selectedTemplate);
-      console.log('Backend response:', response);
-
       const resumeWithTemplate = {
         ...response,
         selectedTemplate: selectedTemplate
       };
       localStorage.setItem('generatedResume', JSON.stringify(resumeWithTemplate));
-      setSnack({ open: true, type: 'success', text: 'Resume generated successfully!' });
+      showToast('RESUME GENERATED SUCCESSFULLY!', 'success');
 
-      setTimeout(() => {
-        navigate('/edit-resume');
-      }, 1000);
+      setTimeout(() => navigate('/edit-resume'), 1000);
     } catch (error) {
       console.error('Error generating resume:', error);
-      setSnack({
-        open: true,
-        type: 'error',
-        text: error.response?.data?.message || 'Failed to generate resume. Please try again.'
-      });
+      showToast(error.response?.data?.message || 'FAILED TO GENERATE RESUME.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  // Shared thresholds for progress value and label
   const PROGRESS_THRESHOLDS = { minimal: 100, basic: 300, good: 600 };
 
-  const getProgressValue = () => {
-    if (charCount < PROGRESS_THRESHOLDS.minimal) return 20;
-    if (charCount < PROGRESS_THRESHOLDS.basic) return 40;
-    if (charCount < PROGRESS_THRESHOLDS.good) return 60;
-    if (charCount < 1000) return 80;
-    return 100;
+  const getProgressPercentage = () => {
+    let pct = 0;
+    if (charCount < PROGRESS_THRESHOLDS.minimal) pct = 20;
+    else if (charCount < PROGRESS_THRESHOLDS.basic) pct = 40;
+    else if (charCount < PROGRESS_THRESHOLDS.good) pct = 60;
+    else if (charCount < 1000) pct = 80;
+    else pct = 100;
+    return pct;
   };
 
   const getProgressLabel = () => {
-    if (charCount < PROGRESS_THRESHOLDS.basic) return 'Needs More';
-    if (charCount < PROGRESS_THRESHOLDS.good) return 'Getting There';
-    return 'Good';
+    if (charCount < PROGRESS_THRESHOLDS.basic) return 'NEEDS MORE';
+    if (charCount < PROGRESS_THRESHOLDS.good) return 'GETTING THERE';
+    return 'READY';
   };
 
   const getReadTime = () => {
     const words = description.split(/\s+/).filter(w => w.length > 0).length;
     const minutes = Math.max(1, Math.ceil(words / 200));
-    return `${minutes} mins read`;
+    return `${minutes} MIN READ`;
   };
-
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -155,7 +144,7 @@ const GenerateResume = () => {
     if (e.dataTransfer?.files?.[0]) {
       const file = e.dataTransfer.files[0];
       if (file.type === 'application/pdf') setSelectedFile(file);
-      else setSnack({ open: true, type: 'error', text: 'Only PDF files are supported' });
+      else showToast('ONLY PDF FILES SUPPORTED.', 'error');
     }
   };
 
@@ -164,265 +153,248 @@ const GenerateResume = () => {
       if (e.target.files[0].type === 'application/pdf') {
         setSelectedFile(e.target.files[0]);
       } else {
-        setSnack({ open: true, type: 'error', text: 'Only standard PDF files are supported' });
+        showToast('ONLY STD PDF FILES SUPPORTED.', 'error');
       }
     }
   };
 
   return (
-    <div className="generate-page">
+    <div className="min-h-screen bg-brutal-black text-brutal-white font-mono uppercase grid-bg relative selection:bg-neon-green selection:text-black">
       <SEO
         title="AI Resume Generator"
         description="Share your professional journey or upload your LinkedIn profile, and our AI will craft an ATS-optimized resume tailored to your target role in seconds."
       />
-      {/* Hero Section */}
-      <section className="gen-hero">
-        <div className="gen-hero-badge">
-          <span>✨ AI-POWERED GENERATOR</span>
+      <div className="scanline"></div>
+
+      {/* ═══ HERO SECTION ═══ */}
+      <section className="text-center pt-24 pb-12 px-6 border-b-2 border-brutal-white">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-neon-green text-black mb-8 w-fit text-xs font-black">
+            [ SYSTEM STATUS: READY ] AI-POWERED ENGINE
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black leading-none mb-6 tracking-tight">
+            INITIALIZE <span className="text-neon-green underline">YOUR RESUME.</span>
+          </h1>
+          <p className="text-sm md:text-base text-slate-700 max-w-2xl mx-auto lowercase leading-relaxed">
+            &gt; IMPORT DATA VIA LINKEDIN PDF OR RAW TEXT.
+            OUR ENGINE WILL COMPILE AN ATS-OPTIMIZED DOCUMENT MEASURED FOR SUCCESS.
+          </p>
         </div>
-        <h1 className="gen-hero-title">Create Your Perfect Resume</h1>
-        <p className="gen-hero-subtitle">
-          Share your professional journey and our AI will craft an ATS-optimized resume<br />
-          tailored to your target role in seconds.
-        </p>
       </section>
 
-      {/* Main Content */}
-      <main className="gen-main">
-        <div className="gen-container">
-          {/* Left Sidebar - Tips */}
-          <aside className="gen-sidebar-left">
-            <div className="tips-card">
-              <div className="tips-header">
-                <span className="tips-icon">💡</span>
-                <span className="tips-title">Writing Tips</span>
+      {/* ═══ MAIN CONTENT GRID ═══ */}
+      <main className="py-16 px-6">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
+
+          {/* LEFT SIDEBAR - TIPS & EXAMPLES */}
+          <aside className="lg:col-span-4 flex flex-col gap-8">
+            {/* Writing Tips */}
+            <div className="brutal-border bg-brutal-black p-6 relative">
+              <div className="absolute -top-3 -left-3 bg-neon-green border-2 border-brutal-white px-2 text-xs font-black text-black">
+                /TIPS
               </div>
-              <ul className="tips-list">
+              <ul className="flex flex-col gap-6 mt-4">
                 {writingTips.map((tip) => (
-                  <li key={tip.num} className="tip-item">
-                    <span className="tip-num">{tip.num}</span>
-                    <span className="tip-text">{tip.text}</span>
+                  <li key={tip.num} className="flex gap-4 items-start group">
+                    <span className="w-8 h-8 shrink-0 flex items-center justify-center brutal-border bg-transparent group-hover:bg-neon-green group-hover:text-black transition-colors text-sm font-black">
+                      {tip.num}
+                    </span>
+                    <span className="text-xs lowercase text-slate-700 leading-relaxed mt-1">{tip.text}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="examples-card">
-              <div className="examples-header">
-                <span className="examples-icon">⚡</span>
-                <span className="examples-title">Quick Examples</span>
+            {/* Quick Examples */}
+            <div className="brutal-border bg-brutal-black p-6 relative">
+              <div className="absolute -top-3 -left-3 bg-neon-green border-2 border-brutal-white px-2 text-xs font-black text-black">
+                /EXAMPLES
               </div>
-              {quickExamples.map((example, idx) => (
-                <div
-                  key={idx}
-                  className="example-item"
-                  tabIndex={0}
-                  role="button"
-                  onClick={() => {
-                    setDescription(example.text.replace(/"/g, ''));
-                    setCharCount(example.text.replace(/"/g, '').length);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
+              <div className="flex flex-col mt-4">
+                {quickExamples.map((example, idx) => (
+                  <div
+                    key={idx}
+                    role="button"
+                    tabIndex={0}
+                    className="p-4 border-b-2 border-dashed border-brutal-white last:border-0 hover:bg-neon-green hover:text-black transition-colors cursor-pointer group"
+                    onClick={() => {
                       setDescription(example.text.replace(/"/g, ''));
                       setCharCount(example.text.replace(/"/g, '').length);
-                    }
-                  }}
-                >
-                  <div className="example-title">{example.title}</div>
-                  <div className="example-text">{example.text}</div>
-                </div>
-              ))}
+                      setInputMode('text');
+                    }}
+                  >
+                    <div className="text-xs font-black mb-2 flex items-center justify-between">
+                      {example.title}
+                      <span className="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100">arrow_forward</span>
+                    </div>
+                    <div className="text-[11px] lowercase opacity-80 leading-relaxed">{example.text}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </aside>
 
-          {/* Center - Main Form */}
-          <div className="gen-form-section">
-            {/* ATS Template Badge */}
-            <div className="form-step">
-              <div className="step-header">
-                <span className="step-icon">✅</span>
-                <span className="step-title">ATS-Optimized Template Selected</span>
-              </div>
+          {/* RIGHT SIDE - FORM */}
+          <div className="lg:col-span-8 flex flex-col gap-8">
 
-              <div className="ats-template-badge">
-                <div className="ats-badge-icon">📋</div>
-                <div className="ats-badge-content">
-                  <div className="ats-badge-title">ATS-Optimized Resume</div>
-                  <div className="ats-badge-subtitle">Designed to pass Applicant Tracking Systems with 95%+ success rate</div>
-                </div>
-                <div className="ats-badge-check">✓</div>
+            {/* Template Selected Banner */}
+            <div className="brutal-border bg-brutal-black p-6 flex flex-col sm:flex-row items-center gap-6">
+              <div className="w-16 h-16 shrink-0 brutal-border bg-neon-green flex items-center justify-center font-black text-black text-2xl">
+                ✓
+              </div>
+              <div>
+                <h3 className="text-lg font-black mb-1">ATS-OPTIMIZED TEMPLATE ACTIVE</h3>
+                <p className="text-xs lowercase text-slate-700">configured to bypass applicant tracking algorithms natively.</p>
               </div>
             </div>
 
-            {/* Tell Us About Yourself */}
-            <div className="form-step">
-              <div className="step-header-row">
-                <div className="step-header">
-                  <span className="step-icon">📝</span>
-                  <span className="step-title">Provide Your Details</span>
-                </div>
-                {inputMode === 'text' && (
-                  <div className="progress-indicator">
-                    <span className="progress-label">Progress:</span>
-                    <div className="progress-bar-container">
-                      <LinearProgress
-                        variant="determinate"
-                        value={getProgressValue()}
-                        sx={{
-                          height: 8,
-                          borderRadius: 4,
-                          width: 80,
-                          bgcolor: '#e2e8f0',
-                          '& .MuiLinearProgress-bar': {
-                            bgcolor: getProgressValue() >= 80 ? '#22c55e' : '#6366f1',
-                            borderRadius: 4
-                          }
-                        }}
-                      />
-                    </div>
-                    <span className={`progress-status ${getProgressValue() >= 80 ? 'good' : ''}`}>
-                      {getProgressLabel()}
-                    </span>
-                  </div>
-                )}
+            {/* Form Container */}
+            <div className="brutal-border bg-brutal-black p-6 relative">
+              <div className="absolute -top-3 -left-3 bg-neon-green border-2 border-brutal-white px-2 text-xs font-black text-black">
+                /INPUT_DATA
               </div>
 
-              <div className="input-mode-tabs-container">
-                <div className="input-mode-tabs">
-                  <button
-                    className={`mode-tab ${inputMode === 'text' ? 'active' : ''}`}
-                    onClick={() => { setInputMode('text'); }}
-                  >
-                    <span className="mode-icon">⌨️</span>
-                    <span>Paste Text</span>
-                  </button>
-                  <button
-                    className={`mode-tab ${inputMode === 'pdf' ? 'active' : ''}`}
-                    onClick={() => { setInputMode('pdf'); }}
-                  >
-                    <span className="mode-icon">📄</span>
-                    <span>Upload PDF</span>
-                  </button>
-                  <button
-                    className={`mode-tab ${inputMode === 'linkedin' ? 'active' : ''}`}
-                    onClick={() => { setInputMode('linkedin'); }}
-                  >
-                    <span className="mode-icon">🔗</span>
-                    <span>LinkedIn PDF</span>
-                  </button>
-                </div>
-              </div>
+              {/* Progress Indicator (only for text mode) */}
               {inputMode === 'text' && (
-                <>
-                  <div className="textarea-container">
-                    <textarea
-                      className="gen-textarea"
-                      placeholder="Example: I am a senior software engineer with 8 years of experience in full-stack development. I led a team of 4 to migrate legacy infrastructure to AWS, reducing costs by 30%. I'm proficient in React, Go, and PostgreSQL..."
-                      value={description}
-                      onChange={(e) => {
-                        setDescription(e.target.value);
-                        setCharCount(e.target.value.length);
-                      }}
-                      rows={10}
-                    />
-                    <div className="textarea-actions">
-                    </div>
+                <div className="flex items-center gap-4 mb-6 mt-2 justify-end">
+                  <span className="text-[10px] font-bold">VOL:</span>
+                  <div className="flex-1 max-w-[150px] h-3 border-2 border-brutal-white bg-transparent p-[1px]">
+                    <div
+                      className={`h-full transition-all duration-300 ${getProgressPercentage() >= 80 ? 'bg-neon-green' : 'bg-brutal-white'}`}
+                      style={{ width: `${getProgressPercentage()}%` }}
+                    ></div>
                   </div>
-
-                  <div className="textarea-footer">
-                    <span className="char-count">📝 {charCount.toLocaleString()} Characters</span>
-                    <span className="read-time">⏱️ {getReadTime()}</span>
-                  </div>
-                </>
+                  <span className={`text-[10px] font-bold px-2 py-1 border-2 border-brutal-white ${getProgressPercentage() >= 80 ? 'bg-neon-green text-black' : ''}`}>
+                    {getProgressLabel()}
+                  </span>
+                </div>
               )}
 
+              {/* Input Mode Tabs */}
+              <div className="flex flex-wrap gap-4 mb-8 mt-4">
+                {[
+                  { id: 'text', icon: 'keyboard', label: 'RAW TEXT' },
+                  { id: 'pdf', icon: 'upload_file', label: 'STD PDF' },
+                  { id: 'linkedin', icon: 'link', label: 'LINKEDIN PDF' }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setInputMode(tab.id)}
+                    className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 px-4 border-2 border-brutal-white font-bold text-xs transition-colors cursor-pointer ${inputMode === tab.id ? 'bg-neon-green text-black' : 'bg-transparent text-brutal-white hover:bg-white/10'
+                      }`}
+                  >
+                    <span className="material-symbols-outlined text-sm">{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Text Area */}
+              {inputMode === 'text' && (
+                <div className="flex flex-col gap-2">
+                  <textarea
+                    className="w-full bg-transparent border-2 border-brutal-white p-4 font-mono text-sm brutal-scrollbar text-brutal-white focus:outline-none focus:border-neon-green transition-colors resize-y min-h-[250px]"
+                    placeholder="> ENTER YOUR EXPERIENCES, SKILLS, AND ACHIEVEMENTS HERE..."
+                    value={description}
+                    onChange={(e) => {
+                      setDescription(e.target.value);
+                      setCharCount(e.target.value.length);
+                    }}
+                  />
+                  <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold px-1">
+                    <span>CHARS: {charCount.toLocaleString()}</span>
+                    <span>{getReadTime()}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* File Dropzone */}
               {inputMode !== 'text' && (
-                <div className="upload-wrapper">
+                <div className="flex flex-col gap-4">
                   {inputMode === 'linkedin' && (
-                    <div className="mode-hint">
-                      Tip: Download your profile PDF from your LinkedIn 'More...' menu.
+                    <div className="text-xs text-neon-green font-bold bg-neon-green/10 border border-neon-green p-3">
+                      [INFO]: DOWNLOAD PROFILE AS PDF FROM LINKEDIN "MORE..." MENU.
                     </div>
                   )}
                   <div
-                    className={`drop-zone ${dragActive ? 'active' : ''} ${selectedFile ? 'has-file' : ''}`}
+                    className={`border-2 border-dashed p-12 text-center transition-colors cursor-pointer group ${dragActive ? 'border-neon-green bg-neon-green/5' : 'border-slate-600 hover:border-brutal-white hover:bg-white/5'
+                      } ${selectedFile ? 'border-neon-green bg-neon-green/5' : ''}`}
                     onDragEnter={handleDrag}
                     onDragOver={handleDrag}
                     onDragLeave={handleDrag}
                     onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <div className="drop-icon-circle">
-                      {selectedFile ? '✔️' : (inputMode === 'linkedin' ? '🔗' : '📤')}
+                    <div className={`w-16 h-16 mx-auto mb-4 border-2 flex items-center justify-center text-2xl group-hover:bg-brutal-white group-hover:text-black transition-colors ${selectedFile ? 'bg-neon-green border-brutal-white text-black' : 'border-brutal-white'
+                      }`}>
+                      <span className="material-symbols-outlined text-3xl">
+                        {selectedFile ? 'check' : (inputMode === 'linkedin' ? 'link' : 'upload_file')}
+                      </span>
                     </div>
-                    <p className="drop-main-text">
-                      {selectedFile ? selectedFile.name : `Drop your ${inputMode === 'linkedin' ? 'LinkedIn' : ''} PDF here`}
+                    <p className="text-sm font-bold mb-2">
+                      {selectedFile ? selectedFile.name : `DROP ${inputMode.toUpperCase()} FILE HERE`}
                     </p>
-                    <p className="drop-sub-text">
-                      {selectedFile ? 'Click to replace' : 'or click to browse files'}
+                    <p className="text-xs text-slate-500">
+                      {selectedFile ? '[CLICK TO REPLACE]' : '[OR CLICK TO BROWSE]'}
                     </p>
                     <input
                       ref={fileInputRef}
                       type="file"
                       accept=".pdf"
                       onChange={handleFileSelect}
-                      style={{ display: 'none' }}
+                      className="hidden"
                     />
                   </div>
                 </div>
               )}
 
-              <button
-                className="generate-btn"
-                onClick={handleGenerateResume}
-                disabled={loading || (inputMode === 'text' && charCount < 50) || (inputMode !== 'text' && !selectedFile)}
-              >
-                {loading ? (
-                  <>
-                    <CircularProgress size={20} sx={{ color: 'white', mr: 1 }} />
-                    {parsingPdf ? 'Parsing PDF...' : 'Generating...'}
-                  </>
-                ) : (
-                  <>
-                    <span className="btn-sparkle">✨</span>
-                    {inputMode === 'text' ? 'Generate My Resume' : 'Continue to Editor'}
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Bottom Cards */}
-            <div className="bottom-cards">
-              <div className="ats-card">
-                <div className="ats-icon">🛡️</div>
-                <div className="ats-content">
-                  <div className="ats-title">ATS-Optimized Output</div>
-                  <div className="ats-text">Your resume will be formatted to pass Applicant Tracking Systems with high compatibility.</div>
-                </div>
-                <div className="ats-chart">📊</div>
+              {/* Generate Button Context Area */}
+              <div className="mt-8 pt-8 border-t-2 border-dashed border-brutal-white font-mono uppercase text-brutal-white bg-brutal-black">
+                <button
+                  onClick={handleGenerateResume}
+                  disabled={loading || (inputMode === 'text' && charCount < 50) || (inputMode !== 'text' && !selectedFile)}
+                  className="w-full bg-neon-green text-black font-black px-8 py-5 text-xl brutal-shadow-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all border-2 border-brutal-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-3 relative overflow-hidden group"
+                >
+                  {loading ? (
+                    <>
+                      <span className="material-symbols-outlined spin-slow">progress_activity</span>
+                      {parsingPdf ? 'EXTRACTING...' : 'COMPILING...'}
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined relative z-10 transition-transform group-hover:translate-x-1">terminal</span>
+                      <span className="relative z-10">ENGAGE PROTOCOL</span>
+                    </>
+                  )}
+                </button>
               </div>
+
             </div>
           </div>
         </div>
       </main>
 
+      {/* Brutalist Custom Toast/Snackbar */}
+      {snack.open && (
+        <div className="fixed bottom-6 right-6 z-[9999] toast-slide-in">
+          <div className={`p-4 border-2 brutal-shadow-white flex items-center gap-3 bg-brutal-black ${snack.type === 'error' ? 'border-red-500 text-red-500' : 'border-neon-green text-neon-green'
+            }`}>
+            <span className="material-symbols-outlined flex-shrink-0">
+              {snack.type === 'error' ? 'error' : 'check_circle'}
+            </span>
+            <span className="text-xs font-black truncate max-w-[280px]">
+              {snack.text}
+            </span>
+            <button
+              onClick={() => setSnack(s => ({ ...s, open: false }))}
+              className="ml-4 bg-transparent border-none text-current cursor-pointer hover:opacity-75"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
-
-      <Snackbar
-        open={snack.open}
-        autoHideDuration={4000}
-        onClose={() => setSnack(s => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          severity={snack.type}
-          onClose={() => setSnack(s => ({ ...s, open: false }))}
-          sx={{ width: '100%', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-        >
-          {snack.text}
-        </Alert>
-      </Snackbar>
     </div>
   );
 };

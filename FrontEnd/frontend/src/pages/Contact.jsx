@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { API_BASE_URL } from '../services/api';
 import SEO from '../components/SEO';
+import { Helmet } from 'react-helmet-async';
 import './Contact.css';
 
 const Contact = () => {
@@ -38,135 +39,181 @@ const Contact = () => {
         }
     };
 
-    const contactInfo = [
-        {
-            icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                    <polyline points="22,6 12,13 2,6" />
-                </svg>
-            ),
-            label: 'Email',
-            value: 'contact@atsresify.com',
-            href: 'mailto:contact@atsresify.com',
-            color: '#6366f1',
-        },
-        {
-            icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
-                </svg>
-            ),
-            label: 'GitHub',
-            value: 'Report Issues & Contribute',
-            href: 'https://github.com/praveensuthar2105/AI_Powered_Resume_Builder',
-            color: '#333',
-        },
-        {
-            icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                    <circle cx="12" cy="10" r="3" />
-                </svg>
-            ),
-            label: 'Location',
-            value: 'India',
-            href: null,
-            color: '#22c55e',
-        },
-    ];
-
     return (
-        <div className="contact-page">
+        <div className="bg-[#ffffff] text-black min-h-screen flex flex-col font-mono selection:bg-[#39ff14] selection:text-black" style={{ fontFamily: "'Space Mono', monospace" }}>
             <SEO
-                title="Contact Us"
+                title="Contact Us - ATS Resify"
                 description="Get in touch with the ATS Resify team. Have a question, suggestion, or want to report a bug? We'd love to hear from you."
             />
-            {/* Hero */}
-            <section className="contact-hero">
-                <span className="contact-badge">GET IN TOUCH</span>
-                <h1 className="contact-title">Contact <span className="gradient-text">Us</span></h1>
-                <p className="contact-subtitle">
-                    Have a question, suggestion, or want to report a bug? We'd love to hear from you.
-                </p>
-            </section>
+            <Helmet>
+                <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
 
-            <div className="contact-layout">
-                {/* Contact Form */}
-                <div className="contact-form-wrapper">
-                    <h2>Send us a message</h2>
-                    {submitted && (
-                        <div className="success-message">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
-                            Message sent successfully! We'll get back to you soon.
-                        </div>
-                    )}
-                    {error && <div className="error-message" style={{ padding: '14px 18px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px', color: '#991b1b', marginBottom: '16px' }}>{error}</div>}
-                    <form onSubmit={handleSubmit} className="contact-form">
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label htmlFor="name">Name</label>
-                                <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Your name" required />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="email">Email</label>
-                                <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.com" required />
-                            </div>
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="subject">Subject</label>
-                            <input type="text" id="subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="What's this about?" required />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="message">Message</label>
-                            <textarea id="message" name="message" rows="5" value={formData.message} onChange={handleChange} placeholder="Tell us more..." required />
-                        </div>
-                        <button type="submit" className="submit-btn">
-                            Send Message
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
-                        </button>
-                    </form>
+            </Helmet>
+
+            <main className="flex-grow pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+                {/* HERO SECTION */}
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <div className="inline-block border-2 border-black bg-[#39ff14] text-black px-4 py-1 text-xs font-bold uppercase tracking-widest mb-6 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                        GET IN TOUCH
+                    </div>
+                    <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tighter uppercase relative inline-block">
+                        Contact <span className="text-[#39ff14]" style={{ textShadow: "2px 2px 0px #000" }}>Us</span>
+                        <div className="absolute -bottom-2 left-0 w-full h-1 bg-[#39ff14]"></div>
+                    </h1>
+                    <p className="mt-8 text-gray-700 text-lg max-w-2xl mx-auto font-bold">
+                        &gt; System prompt: Awaiting input. Have a question, suggestion, or want to report a bug? Execute communication protocol below. _
+                    </p>
                 </div>
 
-                {/* Contact Info Cards */}
-                <div className="contact-info-wrapper">
-                    <h2>Other ways to reach us</h2>
-                    <div className="contact-info-cards">
-                        {contactInfo.map((info, index) => (
-                            <div key={index} className="contact-info-card">
-                                <div className="info-icon" style={{ background: `${info.color}10`, color: info.color }}>
-                                    {info.icon}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                    {/* FORM AREA */}
+                    <div className="lg:col-span-7">
+                        <div className="bg-gray-50 border-2 border-black p-8 relative group transition-colors duration-500 shadow-[4px_4px_0px_0px_#000000]">
+                            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#39ff14]"></div>
+                            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#39ff14]"></div>
+                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#39ff14]"></div>
+                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#39ff14]"></div>
+                            <h2 className="text-2xl font-bold mb-8 uppercase tracking-wide border-b-2 border-black pb-4">
+                                <span className="text-[#39ff14] mr-2">/</span>Send us a message
+                            </h2>
+
+                            {/* Status Messages */}
+                            {submitted && (
+                                <div className="mb-6 p-4 border-2 border-black bg-[#39ff14] text-black font-bold uppercase text-sm shadow-[2px_2px_0px_0px_#000000] flex items-center gap-2">
+                                    <span className="material-symbols-outlined">check_circle</span>
+                                    MESSAGE TRANSMITTED SUCCESSFULLY. AWAITING RESPONSE.
                                 </div>
-                                <div className="info-details">
-                                    <span className="info-label">{info.label}</span>
-                                    {info.href ? (
-                                        <a href={info.href} target="_blank" rel="noopener noreferrer" className="info-value">{info.value}</a>
-                                    ) : (
-                                        <span className="info-value">{info.value}</span>
-                                    )}
+                            )}
+                            {error && (
+                                <div className="mb-6 p-4 border-2 border-red-500 bg-red-100 text-red-600 font-bold uppercase text-sm shadow-[2px_2px_0px_0px_#000000] flex items-center gap-2">
+                                    <span className="material-symbols-outlined">error</span>
+                                    ERROR: {error}
                                 </div>
-                            </div>
-                        ))}
+                            )}
+
+                            <form className="space-y-6" onSubmit={handleSubmit}>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-bold text-black mb-2 uppercase" htmlFor="name">Name</label>
+                                        <input
+                                            className="w-full bg-white border-2 border-black focus:border-[#39ff14] focus:ring-2 focus:ring-[#39ff14] text-black placeholder-gray-400 px-4 py-3 transition-colors outline-none"
+                                            id="name" name="name" placeholder="YOUR NAME" type="text"
+                                            value={formData.name} onChange={handleChange} required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-black mb-2 uppercase" htmlFor="email">Email</label>
+                                        <input
+                                            className="w-full bg-white border-2 border-black focus:border-[#39ff14] focus:ring-2 focus:ring-[#39ff14] text-black placeholder-gray-400 px-4 py-3 transition-colors outline-none"
+                                            id="email" name="email" placeholder="YOU@EXAMPLE.COM" type="email"
+                                            value={formData.email} onChange={handleChange} required
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-black mb-2 uppercase" htmlFor="subject">Subject</label>
+                                    <input
+                                        className="w-full bg-white border-2 border-black focus:border-[#39ff14] focus:ring-2 focus:ring-[#39ff14] text-black placeholder-gray-400 px-4 py-3 transition-colors outline-none"
+                                        id="subject" name="subject" placeholder="WHAT'S THIS ABOUT?" type="text"
+                                        value={formData.subject} onChange={handleChange} required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-black mb-2 uppercase" htmlFor="message">Message</label>
+                                    <textarea
+                                        className="brutal-scrollbar w-full bg-white border-2 border-black focus:border-[#39ff14] focus:ring-2 focus:ring-[#39ff14] text-black placeholder-gray-400 px-4 py-3 transition-colors outline-none resize-none"
+                                        id="message" name="message" placeholder="TELL US MORE..." rows="5"
+                                        value={formData.message} onChange={handleChange} required
+                                    ></textarea>
+                                </div>
+                                <button
+                                    className={`w-full bg-[#39ff14] text-black font-bold text-lg uppercase py-4 border-2 border-black hover:bg-black hover:text-[#39ff14] shadow-[4px_4px_0px_0px_#000000] active:shadow-none transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    type="submit"
+                                    disabled={submitting}
+                                >
+                                    {submitting ? 'TRANSMITTING...' : 'SEND MESSAGE'}
+                                    {!submitting && <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>}
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
-                    {/* FAQ Teaser */}
-                    <div className="faq-teaser">
-                        <h3>Frequently Asked Questions</h3>
-                        <div className="faq-item">
-                            <strong>Is ATS Resify free to use?</strong>
-                            <p>Yes! ATS Resify is free to use for generating resumes, checking ATS scores, and exporting PDFs.</p>
+                    {/* SIDEBAR AREA */}
+                    <div className="lg:col-span-5 space-y-8">
+                        <div>
+                            <h3 className="text-xl font-bold mb-6 uppercase tracking-wide flex items-center gap-2">
+                                <span className="w-2 h-2 bg-[#39ff14] border-2 border-black inline-block"></span>
+                                Other ways to reach us
+                            </h3>
+                            <div className="space-y-4">
+
+                                <a href="mailto:contact@atsresify.com" className="bg-gray-100 border-2 border-black p-4 flex items-center gap-4 hover:border-[#39ff14] hover:bg-white transition-colors group cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] no-underline flex-1 block">
+                                    <div className="w-12 h-12 bg-white border-2 border-black flex items-center justify-center text-black group-hover:bg-[#39ff14] transition-colors shrink-0">
+                                        <span className="material-symbols-outlined">email</span>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-600 uppercase font-bold mb-1">Email</div>
+                                        <div className="text-black font-bold group-hover:text-[#39ff14] transition-colors break-all text-sm sm:text-base">contact@atsresify.com</div>
+                                    </div>
+                                </a>
+
+                                <a href="https://github.com/praveensuthar2105/AI_Powered_Resume_Builder" target="_blank" rel="noopener noreferrer" className="bg-gray-100 border-2 border-black p-4 flex items-center gap-4 hover:border-[#39ff14] hover:bg-white transition-colors group cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] no-underline flex-1 block">
+                                    <div className="w-12 h-12 bg-white border-2 border-black flex items-center justify-center text-black group-hover:bg-[#39ff14] transition-colors shrink-0">
+                                        <span className="material-symbols-outlined">code</span>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-600 uppercase font-bold mb-1">Github</div>
+                                        <div className="text-black font-bold group-hover:text-[#39ff14] transition-colors text-sm sm:text-base">Report Issues &amp; Contribute</div>
+                                    </div>
+                                </a>
+
+                                <div className="bg-gray-100 border-2 border-black p-4 flex items-center gap-4 hover:border-[#39ff14] hover:bg-white transition-colors group shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex-1 block">
+                                    <div className="w-12 h-12 bg-white border-2 border-black flex items-center justify-center text-black group-hover:bg-[#39ff14] transition-colors shrink-0">
+                                        <span className="material-symbols-outlined">place</span>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-600 uppercase font-bold mb-1">Location</div>
+                                        <div className="text-black font-bold text-sm sm:text-base">Global Network // HQ: India</div>
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
-                        <div className="faq-item">
-                            <strong>Is my data safe?</strong>
-                            <p>Absolutely. We use OAuth 2.0, JWT tokens, and encrypted database connections. Read our <a href="/privacy">Privacy Policy</a> for details.</p>
-                        </div>
-                        <div className="faq-item">
-                            <strong>Can I contribute to the project?</strong>
-                            <p>Yes! Check out our <a href="https://github.com/praveensuthar2105/AI_Powered_Resume_Builder" target="_blank" rel="noopener noreferrer">GitHub repository</a> for contribution guidelines.</p>
+
+                        <div className="bg-gray-100 border-2 border-black p-6 mt-8 shadow-[4px_4px_0px_0px_#000000]">
+                            <h3 className="text-xl font-bold mb-6 uppercase tracking-wide flex items-center gap-2 border-b-2 border-black pb-4">
+                                <span className="text-[#39ff14]" style={{ textShadow: "1px 1px 0px #000" }}>&gt;</span> FAQ
+                            </h3>
+                            <div className="space-y-6">
+                                <div>
+                                    <h4 className="font-bold text-black mb-2 flex items-start gap-2 text-sm sm:text-base">
+                                        <span className="text-[#39ff14]" style={{ textShadow: "1px 1px 0px #000" }}>Q:</span> Is ATS Resify free to use?
+                                    </h4>
+                                    <p className="text-gray-700 text-xs sm:text-sm leading-relaxed pl-6 border-l-2 border-black ml-2 font-bold">
+                                        Yes! ATS Resify is free to use for generating resumes, checking ATS scores, and exporting PDFs.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-black mb-2 flex items-start gap-2 text-sm sm:text-base">
+                                        <span className="text-[#39ff14]" style={{ textShadow: "1px 1px 0px #000" }}>Q:</span> Is my data secure?
+                                    </h4>
+                                    <p className="text-gray-700 text-xs sm:text-sm leading-relaxed pl-6 border-l-2 border-black ml-2 font-bold">
+                                        Absolutely. We use industry-standard encryption protocols. Read our <span className="text-black font-bold underline decoration-[#39ff14] decoration-2 cursor-pointer">Privacy Policy</span> for complete details.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-black mb-2 flex items-start gap-2 text-sm sm:text-base">
+                                        <span className="text-[#39ff14]" style={{ textShadow: "1px 1px 0px #000" }}>Q:</span> Can I contribute to the project?
+                                    </h4>
+                                    <p className="text-gray-700 text-xs sm:text-sm leading-relaxed pl-6 border-l-2 border-black ml-2 font-bold">
+                                        Yes! Check out our <a href="https://github.com/praveensuthar2105/AI_Powered_Resume_Builder" className="text-black font-bold underline decoration-[#39ff14] decoration-2">GitHub repository</a> for contribution guidelines.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     );
 };

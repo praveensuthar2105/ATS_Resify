@@ -14,7 +14,7 @@ import CertificationsForm from './forms/CertificationsForm';
 import AchievementsForm from './forms/AchievementsForm';
 import LatexCodeEditor from './LatexCodeEditor';
 import ResumePreview from './ResumePreview';
-import '../../pages/EditResume.css';
+import SectionHeader from '../SectionHeader';
 
 const EditResumeContent = () => {
   const navigate = useNavigate();

@@ -1,253 +1,133 @@
 import React from 'react';
-import { Box, Card, CardContent, Typography, Chip, Stack } from '@mui/material';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import CodeIcon from '@mui/icons-material/Code';
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import SyncAltIcon from '@mui/icons-material/SyncAlt';
-import LockIcon from '@mui/icons-material/Lock';
 import SEO from '../components/SEO';
+import { Helmet } from 'react-helmet-async';
 
 const Features = () => {
-  const mainFeatures = [
-    {
-      icon: <AutoAwesomeIcon sx={{ fontSize: 32, color: 'white' }} />,
-      title: 'AI-Powered Generation',
-      description: 'Advanced AI generates professional summaries, experience bullets, project descriptions, and skill recommendations tailored to your target role.',
-      color: '#3B82F6',
-      accent: '#0ea5e9',
-    },
-    {
-      icon: <CodeIcon sx={{ fontSize: 32, color: 'white' }} />,
-      title: 'Live LaTeX Editor',
-      description: 'Full-featured Monaco-based LaTeX editor with syntax highlighting, auto-completion, and instant server-side PDF compilation using pdflatex.',
-      color: '#8B5CF6',
-      accent: '#a855f7',
-    },
-    {
-      icon: <VerifiedUserIcon sx={{ fontSize: 32, color: 'white' }} />,
-      title: 'ATS Score Checker',
-      description: 'Upload your resume to get an AI-powered ATS score with keyword analysis, formatting checks, strengths, weaknesses, and actionable recommendations.',
-      color: '#10B981',
-      accent: '#22c55e',
-    },
-    {
-      icon: <SmartToyIcon sx={{ fontSize: 32, color: 'white' }} />,
-      title: 'AI Resume Agent',
-      description: 'Interactive chat agent that improves bullet points, analyzes job matches, identifies keyword gaps, and tailors content to specific job descriptions.',
-      color: '#F59E0B',
-      accent: '#f97316',
-    },
-    {
-      icon: <SyncAltIcon sx={{ fontSize: 32, color: 'white' }} />,
-      title: 'Real-time Sync',
-      description: 'WebSocket-powered live synchronization between form editor, JSON editor, and LaTeX code. Edit in any mode — all views stay perfectly in sync.',
-      color: '#06B6D4',
-      accent: '#22d3ee',
-    },
-    {
-      icon: <LockIcon sx={{ fontSize: 32, color: 'white' }} />,
-      title: 'Secure Authentication',
-      description: 'OAuth 2.0 login with JWT-based authentication and secure one-time authorization code exchange. Your data stays protected.',
-      color: '#EF4444',
-      accent: '#f87171',
-    }
-  ];
-
-  const microHighlights = [
-    { label: 'Advanced AI Engine' },
-    { label: 'Live LaTeX → PDF' },
-    { label: 'WebSocket Sync' },
-    { label: 'ATS Keyword Analysis' },
-    { label: 'Job Description Matching' },
-  ];
-
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#FAFBFC', py: 6, px: 2, width: '100%' }}>
+    <div className="bg-[#FFFFFF] text-[#000000] flex flex-col min-h-screen" style={{ fontFamily: "'Space Mono', monospace" }}>
       <SEO
-        title="Platform Features"
+        title="ATS Resify - Features"
         description="Explore the tools behind ATS Resify including AI-powered generation, real-time LaTeX editing, ATS score checking, and interactive resume chat."
       />
-      <Box sx={{ maxWidth: '1200px', mx: 'auto', width: '100%' }}>
-        {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Chip label="PLATFORM FEATURES" color="primary" variant="outlined" sx={{ mb: 2, fontWeight: 700 }} />
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 800,
-              mb: 2,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}
-          >
-            Built for Job-Winning Resumes
-          </Typography>
-          <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 400, maxWidth: '760px', mx: 'auto' }}>
+      <Helmet>
+        <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+
+        <style>{`
+          .number-outline {
+            -webkit-text-stroke: 2px #39FF14;
+            color: transparent;
+          }
+        `}</style>
+      </Helmet>
+
+      <main className="flex-grow">
+        <section className="py-20 px-6 max-w-7xl mx-auto text-center">
+          <div className="inline-block border-2 border-[#39FF14] text-[#000000] bg-[#39FF14] px-4 py-1 text-sm font-bold uppercase mb-8 tracking-widest">
+            Platform Features
+          </div>
+          <h1 className="text-4xl md:text-6xl font-bold uppercase mb-6 leading-tight text-[#000000]">
+            Built for <br /> Job-Winning Resumes
+          </h1>
+          <p className="text-[#333333] text-lg md:text-xl max-w-3xl mx-auto mb-10">
             AI-powered content generation, professional LaTeX typesetting, ATS optimization, and real-time collaboration — everything in one platform.
-          </Typography>
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 mb-16">
+            <span className="border-2 border-[#000000] text-[#000000] font-bold px-4 py-2 text-sm uppercase">Advanced AI Engine</span>
+            <span className="border-2 border-[#000000] text-[#000000] font-bold px-4 py-2 text-sm uppercase">Live LaTeX → PDF</span>
+            <span className="border-2 border-[#000000] text-[#000000] font-bold px-4 py-2 text-sm uppercase">WebSocket Sync</span>
+            <span className="border-2 border-[#000000] text-[#000000] font-bold px-4 py-2 text-sm uppercase">ATS Keyword Analysis</span>
+            <span className="border-2 border-[#000000] text-[#000000] font-bold px-4 py-2 text-sm uppercase">Job Description Matching</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+            <div className="border-2 border-[#39FF14] bg-[#F8F8F8] p-8 group hover:bg-white transition-colors">
+              <div className="w-16 h-16 bg-white border-2 border-[#39FF14] flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-[#39FF14] text-3xl">auto_awesome</span>
+              </div>
+              <h3 className="text-xl font-bold uppercase mb-4 text-[#000000]">AI-Powered Generation</h3>
+              <p className="text-[#333333] text-sm leading-relaxed">
+                Advanced AI generates professional summaries, experience bullets, project descriptions, and skill recommendations tailored to your target role.
+              </p>
+            </div>
+            <div className="border-2 border-[#39FF14] bg-[#F8F8F8] p-8 group hover:bg-white transition-colors">
+              <div className="w-16 h-16 bg-white border-2 border-[#39FF14] flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-[#39FF14] text-3xl">code</span>
+              </div>
+              <h3 className="text-xl font-bold uppercase mb-4 text-[#000000]">Live LaTeX Editor</h3>
+              <p className="text-[#333333] text-sm leading-relaxed">
+                Full-featured Monaco-based LaTeX editor with syntax highlighting, auto-completion, and instant server-side PDF compilation using pdflatex.
+              </p>
+            </div>
+            <div className="border-2 border-[#39FF14] bg-[#F8F8F8] p-8 group hover:bg-white transition-colors">
+              <div className="w-16 h-16 bg-white border-2 border-[#39FF14] flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-[#39FF14] text-3xl">verified</span>
+              </div>
+              <h3 className="text-xl font-bold uppercase mb-4 text-[#000000]">ATS Score Checker</h3>
+              <p className="text-[#333333] text-sm leading-relaxed">
+                Upload your resume to get an AI-powered ATS score with keyword analysis, formatting checks, strengths, weaknesses, and actionable recommendations.
+              </p>
+            </div>
+            <div className="border-2 border-[#39FF14] bg-[#F8F8F8] p-8 group hover:bg-white transition-colors">
+              <div className="w-16 h-16 bg-white border-2 border-[#39FF14] flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-[#39FF14] text-3xl">smart_toy</span>
+              </div>
+              <h3 className="text-xl font-bold uppercase mb-4 text-[#000000]">AI Resume Agent</h3>
+              <p className="text-[#333333] text-sm leading-relaxed">
+                Interactive chat agent that improves bullet points, analyzes job matches, identifies keyword gaps, and tailors content to specific job descriptions.
+              </p>
+            </div>
+            <div className="border-2 border-[#39FF14] bg-[#F8F8F8] p-8 group hover:bg-white transition-colors">
+              <div className="w-16 h-16 bg-white border-2 border-[#39FF14] flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-[#39FF14] text-3xl">sync</span>
+              </div>
+              <h3 className="text-xl font-bold uppercase mb-4 text-[#000000]">Real-time Sync</h3>
+              <p className="text-[#333333] text-sm leading-relaxed">
+                WebSocket-powered live synchronization between form editor, JSON editor, and LaTeX code. Edit in any mode — all views stay perfectly in sync.
+              </p>
+            </div>
+            <div className="border-2 border-[#39FF14] bg-[#F8F8F8] p-8 group hover:bg-white transition-colors">
+              <div className="w-16 h-16 bg-white border-2 border-[#39FF14] flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-[#39FF14] text-3xl">lock</span>
+              </div>
+              <h3 className="text-xl font-bold uppercase mb-4 text-[#000000]">Secure Authentication</h3>
+              <p className="text-[#333333] text-sm leading-relaxed">
+                OAuth 2.0 login with JWT-based authentication and secure one-time authorization code exchange. Your data stays protected.
+              </p>
+            </div>
+          </div>
+        </section>
 
-          <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" sx={{ mt: 3 }}>
-            {microHighlights.map((item, idx) => (
-              <Chip key={idx} label={item.label} variant="outlined" sx={{ borderRadius: 999, fontWeight: 600 }} />
-            ))}
-          </Stack>
-        </Box>
-
-        {/* Main Features Grid */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              sm: 'repeat(2, 1fr)',
-              md: 'repeat(3, 1fr)',
-            },
-            gap: 3,
-            mb: 6,
-          }}
-        >
-          {mainFeatures.map((feature, index) => (
-            <Card
-              key={index}
-              sx={{
-                height: '100%',
-                borderRadius: 3,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                border: '1px solid',
-                borderColor: 'divider',
-                display: 'flex',
-                flexDirection: 'column',
-                '&:hover': {
-                  transform: 'translateY(-8px)',
-                  boxShadow: `0 12px 24px ${feature.color}30`,
-                  borderColor: feature.color,
-                }
-              }}
-            >
-              <CardContent sx={{ p: 3, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center', mb: 2.5 }}>
-                  <Box
-                    sx={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: '50%',
-                      background: `radial-gradient(circle at 30% 30%, ${feature.accent || feature.color}44, transparent 60%), linear-gradient(135deg, ${feature.color} 0%, ${(feature.accent || feature.color)}dd 100%)`,
-                      boxShadow: `0 10px 28px ${feature.color}40`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        inset: 8,
-                        borderRadius: '50%',
-                        border: `1px solid ${(feature.accent || feature.color)}33`,
-                        opacity: 0.9,
-                      }}
-                    />
-                    <Box sx={{ fontSize: '34px', zIndex: 1 }}>{feature.icon}</Box>
-                  </Box>
-                </Box>
-
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 700,
-                    mb: 1.5,
-                    color: 'text.primary',
-                    textAlign: 'center',
-                    fontSize: '1.1rem',
-                  }}
-                >
-                  {feature.title}
-                </Typography>
-
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: 'text.secondary',
-                    lineHeight: 1.7,
-                    textAlign: 'center',
-                    flexGrow: 1,
-                  }}
-                >
-                  {feature.description}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
-
-        {/* How It Works */}
-        <Card
-          sx={{
-            borderRadius: 3,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-            border: '1px solid',
-            borderColor: 'divider'
-          }}
-        >
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h4" sx={{ textAlign: 'center', fontWeight: 700, mb: 4, color: 'text.primary' }}>
-              How It Works
-            </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  md: 'repeat(3, 1fr)',
-                },
-                gap: 4,
-              }}
-            >
-              {[
-                { num: 1, title: 'Enter Your Details', desc: 'Fill in your experience, education, skills, and projects using our guided form editor — or let the AI generate content from scratch.', color: '#667eea' },
-                { num: 2, title: 'AI Generates & Optimizes', desc: 'Our AI creates impactful bullet points, professional summaries, and optimizes your content for ATS keyword matching.', color: '#10B981' },
-                { num: 3, title: 'Edit & Export PDF', desc: 'Fine-tune in the LaTeX editor, check your ATS score, and download a beautifully typeset PDF — ready to submit.', color: '#f093fb' }
-              ].map((step, idx) => (
-                <Box key={idx} sx={{ textAlign: 'center' }}>
-                  <Box sx={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: '50%',
-                    background: `linear-gradient(135deg, ${step.color} 0%, ${step.color}dd 100%)`,
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '32px',
-                    fontWeight: 800,
-                    mx: 'auto',
-                    mb: 2,
-                    boxShadow: `0 8px 16px ${step.color}40`
-                  }}>
-                    {step.num}
-                  </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1.5, color: 'text.primary' }}>
-                    {step.title}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-                    {step.desc}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
-    </Box>
+        <section className="py-20 border-t-2 border-[#39FF14] bg-[#F8F8F8]">
+          <div className="max-w-7xl mx-auto px-6 text-center">
+            <h2 className="text-4xl font-bold uppercase mb-16 border-b-4 border-[#39FF14] inline-block pb-2 text-[#000000]">How It Works</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center relative">
+              <div className="hidden md:block absolute top-16 left-[10%] right-[10%] h-1 bg-[#39FF14] opacity-20 z-0"></div>
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="text-8xl font-bold number-outline mb-6 bg-[#F8F8F8] px-4">1</div>
+                <h3 className="text-xl font-bold uppercase text-[#000000] mb-4">Enter Your Details</h3>
+                <p className="text-[#333333] text-sm leading-relaxed max-w-xs">
+                  Fill in your experience, education, skills, and projects using our guided form editor — or let the AI generate content from scratch.
+                </p>
+              </div>
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="text-8xl font-bold number-outline mb-6 bg-[#F8F8F8] px-4">2</div>
+                <h3 className="text-xl font-bold uppercase text-[#000000] mb-4">AI Generates &amp; Optimizes</h3>
+                <p className="text-[#333333] text-sm leading-relaxed max-w-xs">
+                  Our AI creates impactful bullet points, professional summaries, and optimizes your content for ATS keyword matching.
+                </p>
+              </div>
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="text-8xl font-bold number-outline mb-6 bg-[#F8F8F8] px-4">3</div>
+                <h3 className="text-xl font-bold uppercase text-[#000000] mb-4">Edit &amp; Export PDF</h3>
+                <p className="text-[#333333] text-sm leading-relaxed max-w-xs">
+                  Fine-tune in the LaTeX editor, check your ATS score, and download a beautifully typeset PDF — ready to submit.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 };
 
 export default Features;
-

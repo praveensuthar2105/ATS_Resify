@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { API_BASE_URL } from '../services/api';
-import SEO from '../components/SEO';
-import './Feedback.css';
+import { Helmet } from 'react-helmet-async';
 
 const Feedback = () => {
     const [formData, setFormData] = useState({ name: '', email: '', rating: 0, message: '' });
@@ -42,81 +41,124 @@ const Feedback = () => {
         }
     };
 
-    const StarRating = () => (
-        <div className="star-rating">
-            {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                    key={star}
-                    type="button"
-                    className={`star-btn ${star <= (hoverRating || formData.rating) ? 'active' : ''}`}
-                    onClick={() => setFormData({ ...formData, rating: star })}
-                    onMouseEnter={() => setHoverRating(star)}
-                    onMouseLeave={() => setHoverRating(0)}
-                    aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
-                >
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill={star <= (hoverRating || formData.rating) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                    </svg>
-                </button>
-            ))}
-            <span className="rating-label">
-                {formData.rating > 0 ? ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][formData.rating] : 'Select rating'}
-            </span>
-        </div>
-    );
+    const getRatingLabel = () => {
+        const value = hoverRating || formData.rating;
+        return value > 0 ? ['', 'poor', 'fair', 'good', 'very good', 'excellent'][value] : 'select rating';
+    };
 
     return (
-        <div className="feedback-page">
+        <div className="bg-[#ffffff] text-black min-h-screen flex flex-col font-mono uppercase selection:bg-[#39ff14] selection:text-black" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
             <SEO
-                title="Share Your Feedback"
+                title="CareerAI - Feedback"
                 description="Help us improve ATS Resify by sharing your experience. We value your opinion to build better AI resume tools."
             />
-            <section className="feedback-hero">
-                <span className="feedback-badge">WE VALUE YOUR OPINION</span>
-                <h1 className="feedback-title">Share Your <span className="gradient-text">Feedback</span></h1>
-                <p className="feedback-subtitle">
-                    Help us improve ATS Resify by sharing your experience. Your feedback directly shapes our product.
-                </p>
-            </section>
+            <Helmet>
+                <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+            </Helmet>
 
-            <div className="feedback-container">
-                <div className="feedback-form-wrapper">
-                    <h2>How was your experience?</h2>
+            <main className="flex-grow py-24 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+                <div className="text-center mb-16">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 border-2 border-black text-black mb-8 w-fit text-xs font-black uppercase shadow-[2px_2px_0px_0px_#000000]">
+                        WE VALUE YOUR OPINION
+                    </div>
+                    <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight uppercase text-black">
+                        SHARE YOUR <span className="bg-[#39ff14] text-black px-2 border-2 border-black shadow-[4px_4px_0px_0px_#000000]">FEEDBACK</span>
+                    </h1>
+                    <p className="text-sm text-[#333333] max-w-2xl mx-auto lowercase leading-relaxed font-bold">
+                        help us improve ats resify by sharing your experience. your feedback directly shapes our product.
+                    </p>
+                </div>
+
+                <div className="w-full max-w-3xl bg-white border-2 border-black p-8 md:p-12 relative shadow-[6px_6px_0px_0px_#39ff14]">
+                    {/* Corner Accents */}
+                    <div className="absolute -top-3 -left-3 w-6 h-6 bg-[#39ff14] border-2 border-black"></div>
+                    <div className="absolute -bottom-3 -right-3 w-6 h-6 bg-[#39ff14] border-2 border-black"></div>
+
+                    <h2 className="text-2xl font-black mb-8 uppercase text-black border-b-2 border-black pb-4">HOW WAS YOUR EXPERIENCE?</h2>
+
                     {submitted && (
-                        <div className="success-message">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
-                            Thank you for your feedback! We appreciate your time.
+                        <div className="mb-8 p-4 border-2 border-black bg-[#39ff14] text-black font-bold uppercase text-sm shadow-[2px_2px_0px_0px_#000000] flex items-center gap-2">
+                            <span className="material-symbols-outlined">check_circle</span>
+                            FEEDBACK TRANSMITTED SUCCESSFULLY. THANK YOU!
                         </div>
                     )}
-                    {error && <div className="error-message">{error}</div>}
-                    <form onSubmit={handleSubmit} className="feedback-form">
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label htmlFor="fb-name">Name</label>
-                                <input type="text" id="fb-name" name="name" value={formData.name} onChange={handleChange} placeholder="Your name" required />
+                    {error && (
+                        <div className="mb-8 p-4 border-2 border-red-500 bg-red-100 text-red-600 font-bold uppercase text-sm shadow-[2px_2px_0px_0px_#000000] flex items-center gap-2">
+                            <span className="material-symbols-outlined">error</span>
+                            ERROR: {error}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <label className="block text-xs font-bold mb-2 uppercase text-black" htmlFor="name">NAME</label>
+                                <input
+                                    className="w-full bg-white border-2 border-black focus:border-[#39ff14] focus:ring-2 focus:ring-[#39ff14] outline-none text-black px-4 py-3 text-sm placeholder:text-gray-400 font-mono transition-colors"
+                                    id="name" name="name" value={formData.name} onChange={handleChange}
+                                    placeholder="YOUR NAME" type="text" required
+                                />
                             </div>
-                            <div className="form-group">
-                                <label htmlFor="fb-email">Email</label>
-                                <input type="email" id="fb-email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.com" required />
+                            <div>
+                                <label className="block text-xs font-bold mb-2 uppercase text-black" htmlFor="email">EMAIL</label>
+                                <input
+                                    className="w-full bg-white border-2 border-black focus:border-[#39ff14] focus:ring-2 focus:ring-[#39ff14] outline-none text-black px-4 py-3 text-sm placeholder:text-gray-400 font-mono transition-colors"
+                                    id="email" name="email" value={formData.email} onChange={handleChange}
+                                    placeholder="YOU@EXAMPLE.COM" type="email" required
+                                />
                             </div>
                         </div>
-                        <div className="form-group">
-                            <label>Rating</label>
-                            <StarRating />
+
+                        <div>
+                            <label className="block text-xs font-bold mb-2 uppercase text-black">RATING</label>
+                            <div className="flex items-center gap-4">
+                                <div className="flex gap-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, rating: star })}
+                                            onMouseEnter={() => setHoverRating(star)}
+                                            onMouseLeave={() => setHoverRating(0)}
+                                            className="focus:outline-none focus:ring-2 focus:ring-[#39ff14] bg-transparent border-none p-0 cursor-pointer"
+                                            aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                                        >
+                                            <span
+                                                className={`material-symbols-outlined text-4xl transition-colors ${star <= (hoverRating || formData.rating)
+                                                    ? 'text-[#39ff14]'
+                                                    : 'text-gray-300'
+                                                    }`}
+                                                style={{ fontVariationSettings: "'FILL' 1" }}
+                                            >
+                                                star
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                                <span className="text-xs text-[#333333] lowercase font-bold">{getRatingLabel()}</span>
+                            </div>
                         </div>
-                        <div className="form-group">
-                            <label htmlFor="fb-message">Your Feedback</label>
-                            <textarea id="fb-message" name="message" rows="5" value={formData.message} onChange={handleChange} placeholder="Tell us what you liked, what could be improved..." />
+
+                        <div>
+                            <label className="block text-xs font-bold mb-2 uppercase text-black" htmlFor="message">YOUR FEEDBACK</label>
+                            <textarea
+                                className="w-full bg-white border-2 border-black focus:border-[#39ff14] focus:ring-2 focus:ring-[#39ff14] outline-none text-black px-4 py-3 text-sm placeholder:text-gray-400 font-mono transition-colors h-32 resize-none brutal-scrollbar"
+                                id="message" name="message" value={formData.message} onChange={handleChange}
+                                placeholder="TELL US WHAT YOU LIKED, WHAT COULD BE IMPROVED..."
+                            ></textarea>
                         </div>
-                        <button type="submit" className="submit-btn" disabled={submitting}>
-                            {submitting ? 'Submitting...' : 'Submit Feedback'}
-                            {!submitting && (
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
-                            )}
+
+                        <button
+                            className={`w-full bg-[#39ff14] text-black font-black text-lg py-4 border-2 border-black hover:bg-black hover:text-[#39ff14] shadow-[4px_4px_0px_0px_#000000] active:shadow-none transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            type="submit"
+                            disabled={submitting}
+                        >
+                            {submitting ? 'SUBMITTING...' : 'SUBMIT FEEDBACK'}
+                            {!submitting && <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">send</span>}
                         </button>
                     </form>
                 </div>
-            </div>
+            </main>
         </div>
     );
 };

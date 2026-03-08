@@ -1,70 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Button,
-  Chip,
-  Alert,
-  CircularProgress,
-  Avatar,
-  TextField,
-  InputAdornment,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Grid,
-  Card,
-  CardContent,
-  Tabs,
-  Tab,
-  TablePagination,
-  TableSortLabel,
-} from '@mui/material';
-import {
-  SafetyOutlined,
-  UserOutlined,
-  SearchOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-  TeamOutlined,
-  FilePdfOutlined,
-  CheckCircleOutlined,
-  FileTextOutlined,
-  DownloadOutlined,
-  DatabaseOutlined,
-  CloudServerOutlined,
-  UnorderedListOutlined,
-  StarOutlined,
-  MessageOutlined,
-  MailOutlined,
-} from '@ant-design/icons';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend as RechartsLegend, ResponsiveContainer,
+  PieChart, Pie, Cell,
 } from 'recharts';
 import { getAuthHeaders } from '../utils/auth';
 import { API_BASE_URL } from '../services/api';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+const COLORS = ['#39ff14', '#000000', '#333333', '#888888', '#f8f8f8'];
 
 const AdminPanel = () => {
   const [currentUserRole, setCurrentUserRole] = useState(null);
@@ -129,7 +71,7 @@ const AdminPanel = () => {
     const role = localStorage.getItem('userRole');
 
     if (!token || role !== 'ADMIN') {
-      setError('Access denied. Admin role required.');
+      setError('ACCESS DENIED. ADMIN ROLE REQUIRED.');
       setLoading(false);
       return;
     }
@@ -144,7 +86,7 @@ const AdminPanel = () => {
 
       if (userData.role !== 'ADMIN') {
         localStorage.setItem('userRole', userData.role);
-        setError('Access denied. Admin privileges have been revoked.');
+        setError('ACCESS DENIED. ADMIN PRIVILEGES HAVE BEEN REVOKED.');
         setLoading(false);
         return;
       }
@@ -152,7 +94,7 @@ const AdminPanel = () => {
       setCurrentUserRole('ADMIN');
       setLoading(false);
     } catch (err) {
-      setError('Failed to verify admin status');
+      setError('FAILED TO VERIFY ADMIN STATUS');
       setLoading(false);
     }
   };
@@ -261,7 +203,7 @@ const AdminPanel = () => {
   const deleteFeedback = async (id) => {
     try {
       await fetch(`${API_BASE_URL}/admin/feedback/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-      setSuccess('Feedback deleted');
+      setSuccess('FEEDBACK DELETED SUCCESSFULLY');
       fetchFeedbacks();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) { setError(err.message); }
@@ -270,11 +212,12 @@ const AdminPanel = () => {
   const deleteContact = async (id) => {
     try {
       await fetch(`${API_BASE_URL}/admin/contacts/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-      setSuccess('Contact message deleted');
+      setSuccess('CONTACT MESSAGE DELETED SUCCESSFULLY');
       fetchContacts();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) { setError(err.message); }
   };
+
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
@@ -305,7 +248,7 @@ const AdminPanel = () => {
         headers: getAuthHeaders(),
       });
       if (!response.ok) throw new Error('Failed to grant admin role');
-      setSuccess(`Admin role granted to ${userName}`);
+      setSuccess(`ADMIN STATUS GRANTED TO ${userName}`);
       fetchUsers();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -320,7 +263,7 @@ const AdminPanel = () => {
         headers: getAuthHeaders(),
       });
       if (!response.ok) throw new Error('Failed to revoke admin role');
-      setSuccess(`Admin role revoked from ${userName}`);
+      setSuccess(`ADMIN STATUS REVOKED FROM ${userName}`);
       fetchUsers();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -336,7 +279,7 @@ const AdminPanel = () => {
         headers: getAuthHeaders(),
       });
       if (!response.ok) throw new Error('Failed to delete user');
-      setSuccess(`User ${userToDelete.name} deleted successfully`);
+      setSuccess(`USER ${userToDelete.name.toUpperCase()} PURGED SUCCESSFULLY`);
       setDeleteDialogOpen(false);
       setUserToDelete(null);
       fetchUsers();
@@ -347,429 +290,512 @@ const AdminPanel = () => {
     }
   };
 
-  const StatCard = ({ title, value, icon, gradient }) => (
-    <Card sx={{ background: gradient, height: '100%' }}>
-      <CardContent>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box>
-            <Typography variant="h4" color="white" fontWeight={700}>
-              {value}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
-              {title}
-            </Typography>
-          </Box>
-          <Box sx={{ color: 'rgba(255,255,255,0.7)', fontSize: 40 }}>{icon}</Box>
-        </Box>
-      </CardContent>
-    </Card>
+  const MetricCard = ({ title, value, icon, colorClass = "bg-[#39ff14] text-black" }) => (
+    <div className={`border-2 border-black p-6 shadow-[4px_4px_0px_0px_#000000] flex items-center justify-between ${colorClass}`}>
+      <div>
+        <div className="text-4xl font-black">{value}</div>
+        <div className="text-sm font-bold uppercase tracking-wide opacity-80">{title}</div>
+      </div>
+      <div>
+        <span className="material-symbols-outlined text-5xl opacity-50">{icon}</span>
+      </div>
+    </div>
   );
 
-  const HealthIndicator = ({ label, status, details }) => (
-    <Box display="flex" alignItems="center" justifyContent="space-between" p={2} borderBottom="1px solid #eee">
-      <Box display="flex" alignItems="center" gap={2}>
-        {status === 'UP' || status === true ? (
-          <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 24 }} />
+  const StatusIndicator = ({ label, status, details }) => (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b-2 border-black gap-4 hover:bg-[#f8f8f8]">
+      <div className="flex items-center gap-3">
+        {(status === 'UP' || status === true) ? (
+          <span className="material-symbols-outlined text-[#39ff14] bg-black p-1">check_circle</span>
         ) : (
-          <CircularProgress size={24} color="error" variant={status === 'DOWN' ? 'determinate' : 'indeterminate'} value={100} />
+          <span className="material-symbols-outlined text-white bg-red-600 p-1">error</span>
         )}
-        <Box>
-          <Typography variant="subtitle1" fontWeight={600}>{label}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            {JSON.stringify(details).slice(0, 100)}
-          </Typography>
-        </Box>
-      </Box>
-      <Chip
-        label={status === 'UP' || status === true ? 'Healthy' : 'Issues'}
-        color={status === 'UP' || status === true ? 'success' : 'error'}
-        size="small"
-      />
-    </Box>
+        <div>
+          <div className="font-bold uppercase text-sm">{label}</div>
+          <div className="text-xs font-mono lowercase text-gray-500 max-w-lg truncate">
+            {details ? JSON.stringify(details).slice(0, 100) : 'no details available'}
+          </div>
+        </div>
+      </div>
+      <div className={`px-3 py-1 text-xs font-bold uppercase border-2 border-black ${status === 'UP' || status === true ? 'bg-[#39ff14] text-black' : 'bg-red-600 text-white'}`}>
+        {(status === 'UP' || status === true) ? 'OPERATIONAL' : 'SYSTEM FAULT'}
+      </div>
+    </div>
   );
+
+  const Pagination = ({ total, page, setPage, rowsPerPage, setRowsPerPage }) => {
+    const totalPages = Math.ceil(total / rowsPerPage);
+    return (
+      <div className="flex flex-col sm:flex-row justify-between items-center mt-4 p-4 border-t-2 border-black gap-4 border-2 shadow-[4px_4px_0px_0px_#000]">
+        <div className="text-sm font-bold uppercase">
+          Showing {page * rowsPerPage + 1} to {Math.min((page + 1) * rowsPerPage, total)} of {total}
+        </div>
+        <div className="flex items-center gap-4">
+          <select
+            value={rowsPerPage}
+            onChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+            className="border-2 border-black bg-white px-2 py-1 text-sm font-bold uppercase focus:outline-none focus:border-[#39ff14]"
+          >
+            <option value={10}>10 ROWS</option>
+            <option value={20}>20 ROWS</option>
+            <option value={50}>50 ROWS</option>
+          </select>
+          <div className="flex gap-2">
+            <button
+              disabled={page === 0}
+              onClick={() => setPage(page - 1)}
+              className="px-3 py-1 border-2 border-black bg-black text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#39ff14] hover:text-black transition-colors font-bold text-sm"
+            >
+              PREV
+            </button>
+            <div className="px-3 py-1 border-2 border-black bg-white font-bold text-sm">
+              {page + 1} / {totalPages || 1}
+            </div>
+            <button
+              disabled={page >= totalPages - 1 || totalPages === 0}
+              onClick={() => setPage(page + 1)}
+              className="px-3 py-1 border-2 border-black bg-black text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#39ff14] hover:text-black transition-colors font-bold text-sm"
+            >
+              NEXT
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const SortHeader = ({ label, property }) => {
+    const isActive = orderBy === property;
+    return (
+      <th
+        className="p-3 text-left font-bold border-b-2 border-black cursor-pointer hover:bg-[#39ff14] transition-colors whitespace-nowrap"
+        onClick={() => handleRequestSort(property)}
+      >
+        <div className="flex items-center gap-1">
+          {label}
+          {isActive && (
+            <span className="material-symbols-outlined text-[16px]">
+              {order === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+            </span>
+          )}
+        </div>
+      </th>
+    );
+  };
 
   if (currentUserRole !== 'ADMIN' && !loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 8 }}>
-        <Alert severity="error">Access denied. Admin privileges required.</Alert>
-      </Container>
+      <div className="min-h-[50vh] flex items-center justify-center font-mono selection:bg-[#39ff14] selection:text-black">
+        <div className="border-2 border-red-500 bg-red-100 text-red-700 p-8 shadow-[8px_8px_0px_0px_#000000] max-w-md w-full font-bold uppercase text-center">
+          <span className="material-symbols-outlined text-4xl mb-4">gpp_bad</span>
+          <p>ACCESS DENIED. ADMIN PRIVILEGES REQUIRED.</p>
+        </div>
+      </div>
     );
   }
 
+  const tabs = [
+    { title: 'USERS', icon: 'group' },
+    { title: 'ANALYTICS', icon: 'timeline' },
+    { title: 'SYSTEM HEALTH', icon: 'dns' },
+    { title: 'AUDIT LOG', icon: 'history' },
+    { title: 'FEEDBACK', icon: 'star' },
+    { title: 'MESSAGES', icon: 'mail', badge: unreadContacts }
+  ];
+
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h3"
-          sx={{
-            fontWeight: 800,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            mb: 1,
-          }}
-        >
-          <SafetyOutlined style={{ marginRight: 12 }} />
-          Admin Dashboard
-        </Typography>
-      </Box>
+    <div className="min-h-screen bg-[#ffffff] text-black font-mono selection:bg-[#39ff14] selection:text-black pb-20">
+      <div className="max-w-[1400px] mx-auto px-4 pt-12">
+        <div className="mb-8 border-b border-black pb-4 flex items-center gap-4">
+          <div className="w-12 h-12 bg-black text-[#39ff14] flex items-center justify-center shadow-[2px_2px_0px_0px_#39ff14]">
+            <span className="material-symbols-outlined text-3xl">admin_panel_settings</span>
+          </div>
+          <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter">
+            ADMIN <span className="text-[#39ff14]" style={{ textShadow: "1.5px 1.5px 0px #000" }}>CONSOLE</span>
+          </h1>
+        </div>
 
-      {success && <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>{success}</Alert>}
-      {error && <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>{error}</Alert>}
+        {success && (
+          <div className="mb-6 p-4 border-2 border-black bg-[#39ff14] text-black font-bold uppercase text-sm shadow-[4px_4px_0px_0px_#000000] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined">check_circle</span>
+              {success}
+            </div>
+            <button onClick={() => setSuccess(null)} className="hover:text-white"><span className="material-symbols-outlined text-lg">close</span></button>
+          </div>
+        )}
 
-      <Paper sx={{ mb: 3 }}>
-        <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} centered variant="fullWidth">
-          <Tab icon={<TeamOutlined />} label="Users" />
-          <Tab icon={<DatabaseOutlined />} label="Analytics" />
-          <Tab icon={<CloudServerOutlined />} label="System Health" />
-          <Tab icon={<UnorderedListOutlined />} label="Audit Log" />
-          <Tab icon={<StarOutlined />} label="Feedback" />
-          <Tab icon={<MailOutlined />} label={`Messages${unreadContacts > 0 ? ` (${unreadContacts})` : ''}`} />
-        </Tabs>
-      </Paper>
+        {error && (
+          <div className="mb-6 p-4 border-2 border-black bg-red-600 text-white font-bold uppercase text-sm shadow-[4px_4px_0px_0px_#000000] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined">error</span>
+              {error}
+            </div>
+            <button onClick={() => setError(null)} className="hover:text-black"><span className="material-symbols-outlined text-lg">close</span></button>
+          </div>
+        )}
 
-      {/* USERS TAB */}
-      {tabValue === 0 && (
-        <Box>
-          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between' }}>
-            <Box display="flex" gap={2}>
-              <TextField
-                placeholder="Search users..."
-                size="small"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{ startAdornment: <InputAdornment position="start"><SearchOutlined /></InputAdornment> }}
-              />
-              <Button startIcon={<ReloadOutlined />} onClick={fetchUsers}>Refresh</Button>
-            </Box>
-            <Button variant="contained" startIcon={<DownloadOutlined />} onClick={exportUsers}>
-              Export CSV
-            </Button>
-          </Box>
+        {/* TABS NAVIGATION */}
+        <div className="flex overflow-x-auto border border-black bg-white mb-8 shadow-[2px_2px_0px_0px_#000000] hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {tabs.map((tab, idx) => (
+            <button
+              key={idx}
+              onClick={() => setTabValue(idx)}
+              className={`whitespace-nowrap flex-1 min-w-[160px] px-6 py-4 flex items-center justify-center gap-3 font-black uppercase text-sm border-r border-black last:border-r-0 transition-colors ${tabValue === idx ? 'bg-[#39ff14] text-black shadow-[inset_0px_-2px_0px_0px_#000]' : 'bg-[#f8f8f8] hover:bg-black hover:text-[#39ff14]'}`}
+            >
+              <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
+              {tab.title}
+              {tab.badge > 0 && (
+                <span className="bg-red-600 text-white px-2 py-0.5 text-xs ml-1 border-2 border-black shadow-[2px_2px_0px_0px_#000] animate-pulse">{tab.badge}</span>
+              )}
+            </button>
+          ))}
+        </div>
 
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead sx={{ bgcolor: '#F9FAFB' }}>
-                <TableRow>
-                  <TableCell>
-                    <TableSortLabel active={orderBy === 'name'} direction={orderBy === 'name' ? order : 'asc'} onClick={() => handleRequestSort('name')}>
-                      User
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell>
-                    <TableSortLabel active={orderBy === 'email'} direction={orderBy === 'email' ? order : 'asc'} onClick={() => handleRequestSort('email')}>
-                      Email
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell>Role</TableCell>
-                  <TableCell>
-                    <TableSortLabel active={orderBy === 'createdAt'} direction={orderBy === 'createdAt' ? order : 'asc'} onClick={() => handleRequestSort('createdAt')}>
-                      Joined
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell align="center">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id} hover>
-                    <TableCell>
-                      <Box display="flex" alignItems="center" gap={2}>
-                        <Avatar src={user.picture} alt={user.name} />
-                        <Typography variant="body2">{user.name}</Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Chip
-                        icon={user.role === 'ADMIN' ? <SafetyOutlined /> : <UserOutlined />}
-                        label={user.role}
-                        color={user.role === 'ADMIN' ? 'secondary' : 'default'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell align="center">
-                      <Box display="flex" gap={1} justifyContent="center">
-                        {user.role === 'ADMIN' ? (
-                          <Button size="small" color="warning" onClick={() => revokeAdminRole(user.id, user.name)}>Revoke</Button>
-                        ) : (
-                          <Button size="small" onClick={() => grantAdminRole(user.id, user.name)}>Grant Admin</Button>
-                        )}
-                        <IconButton size="small" color="error" onClick={() => { setUserToDelete(user); setDeleteDialogOpen(true); }}>
-                          <DeleteOutlined />
-                        </IconButton>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePagination
-              component="div"
-              count={totalUsers}
-              page={page}
-              onPageChange={(e, newPage) => setPage(newPage)}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
-            />
-          </TableContainer>
-        </Box>
-      )}
+        {/* CONTENT AREA */}
+        <div className="min-h-[400px]">
+          {loading && (
+            <div className="w-full flex flex-col items-center justify-center p-12 overflow-hidden">
+              <div className="w-16 h-16 border-4 border-black border-t-[#39ff14] rounded-full animate-spin"></div>
+              <div className="mt-4 font-bold uppercase animate-pulse">PROCESSING_REQUEST...</div>
+            </div>
+          )}
 
-      {/* ANALYTICS TAB */}
-      {tabValue === 1 && analytics && (
-        <Box>
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard title="Total Resumes" value={analytics.totalResumes} icon={<FileTextOutlined />} gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard title="PDF Compilations" value={analytics.totalPdf} icon={<FilePdfOutlined />} gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard title="ATS Checks" value={analytics.totalAts} icon={<CheckCircleOutlined />} gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard title="Total Users" value={totalUsers} icon={<UserOutlined />} gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" />
-            </Grid>
-          </Grid>
+          {!loading && (
+            <>
+              {/* USERS TAB */}
+              {tabValue === 0 && (
+                <div>
+                  <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+                    <div className="flex gap-2">
+                      <div className="relative">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-[18px]">search</span>
+                        <input
+                          type="text"
+                          placeholder="SEARCH USERS..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-10 pr-4 py-2 border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] font-bold text-sm uppercase w-full sm:w-64"
+                        />
+                      </div>
+                      <button onClick={fetchUsers} className="px-4 py-2 border-2 border-black bg-black text-white hover:bg-[#39ff14] hover:text-black transition-colors flex items-center gap-2 font-bold text-sm shadow-[2px_2px_0px_0px_#39ff14]">
+                        <span className="material-symbols-outlined text-[18px]">refresh</span>
+                        <span className="hidden sm:inline">REFRESH</span>
+                      </button>
+                    </div>
+                    <button onClick={exportUsers} className="px-4 py-2 border-2 border-black bg-white hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2 font-bold text-sm shadow-[2px_2px_0px_0px_#000000]">
+                      <span className="material-symbols-outlined text-[18px]">download</span>
+                      EXPORT CSV
+                    </button>
+                  </div>
 
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" mb={2}>Daily Signups (Last 30 Days)</Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={analytics.dailySignups}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="count" stroke="#8884d8" activeDot={{ r: 8 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" mb={2}>Template Usage</Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={analytics.templateUsage}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label
-                    >
-                      {analytics.templateUsage.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grid>
-          </Grid>
-        </Box>
-      )}
-
-      {/* SYSTEM HEALTH TAB */}
-      {tabValue === 2 && health && (
-        <Box>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>System Status</Typography>
-            <HealthIndicator label="LaTeX Compiler" status={health.latex?.ready ? 'UP' : 'DOWN'} details={health.latex} />
-            <HealthIndicator label="Database" status={health.database?.status} details={health.database} />
-            <HealthIndicator label="Redis Cache" status={health.redis?.status} details={health.redis} />
-            <HealthIndicator label="Compilation Queue" status="UP" details={health.queue} />
-          </Paper>
-        </Box>
-      )}
-
-      {/* AUDIT LOG TAB */}
-      {tabValue === 3 && (
-        <Box>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Timestamp</TableCell>
-                  <TableCell>Admin</TableCell>
-                  <TableCell>Action</TableCell>
-                  <TableCell>Target User</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {auditLogs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
-                    <TableCell>{log.adminEmail}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={log.action}
-                        color={log.action === 'DELETE_USER' ? 'error' : log.action === 'GRANT_ADMIN' ? 'success' : 'warning'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{log.targetUserEmail}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePagination
-              component="div"
-              count={totalAuditLogs}
-              page={auditPage}
-              onPageChange={(e, p) => setAuditPage(p)}
-              rowsPerPage={auditRowsPerPage}
-              onRowsPerPageChange={(e) => { setAuditRowsPerPage(parseInt(e.target.value, 10)); setAuditPage(0); }}
-            />
-          </TableContainer>
-        </Box>
-      )}
-
-      {/* FEEDBACK TAB */}
-      {tabValue === 4 && (
-        <Box>
-          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">User Feedback ({totalFeedbacks})</Typography>
-            <Button startIcon={<ReloadOutlined />} onClick={fetchFeedbacks}>Refresh</Button>
-          </Box>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead sx={{ bgcolor: '#F9FAFB' }}>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Rating</TableCell>
-                  <TableCell sx={{ minWidth: 250 }}>Message</TableCell>
-                  <TableCell>Date</TableCell>
-                  <TableCell align="center">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {feedbacks.map((fb) => (
-                  <TableRow key={fb.id} hover>
-                    <TableCell>{fb.name}</TableCell>
-                    <TableCell>{fb.email}</TableCell>
-                    <TableCell>
-                      <Box display="flex" gap={0.25}>
-                        {[1, 2, 3, 4, 5].map(s => (
-                          <span key={s} style={{ color: s <= fb.rating ? '#f59e0b' : '#e5e7eb', fontSize: 18 }}>★</span>
+                  <div className="overflow-x-auto border border-black shadow-[2px_2px_0px_0px_#000000] bg-white">
+                    <table className="w-full text-sm">
+                      <thead className="bg-[#f0f0f0] border-b border-black">
+                        <tr>
+                          <SortHeader label="USER" property="name" />
+                          <SortHeader label="EMAIL" property="email" />
+                          <th className="p-3 text-left font-bold border-b border-black">ROLE</th>
+                          <SortHeader label="JOINED" property="createdAt" />
+                          <th className="p-3 text-center font-bold border-b border-black">ACTIONS</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.map(user => (
+                          <tr key={user.id} className="border-b border-gray-300 hover:bg-[#f8f8f8] transition-colors">
+                            <td className="p-3">
+                              <div className="flex items-center gap-3">
+                                {user.picture ? (
+                                  <img src={user.picture} alt="" className="w-8 h-8 rounded-full border border-black" />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full border border-black bg-[#39ff14] text-black flex items-center justify-center font-bold">{user.name.charAt(0)}</div>
+                                )}
+                                <span className="font-bold uppercase">{user.name}</span>
+                              </div>
+                            </td>
+                            <td className="p-3 lowercase">{user.email}</td>
+                            <td className="p-3">
+                              <span className={`px-2 py-1 text-xs font-bold border-2 border-black uppercase ${user.role === 'ADMIN' ? 'bg-[#39ff14] text-black' : 'bg-[#e5e7eb] text-black'}`}>
+                                {user.role}
+                              </span>
+                            </td>
+                            <td className="p-3 font-mono">{new Date(user.createdAt).toLocaleDateString()}</td>
+                            <td className="p-3">
+                              <div className="flex justify-center gap-2">
+                                {user.role === 'ADMIN' ? (
+                                  <button onClick={() => revokeAdminRole(user.id, user.name)} className="px-2 py-1 text-xs border border-black bg-black text-white hover:bg-red-500 font-bold uppercase">REVOKE</button>
+                                ) : (
+                                  <button onClick={() => grantAdminRole(user.id, user.name)} className="px-2 py-1 text-xs border border-black bg-white hover:bg-[#39ff14] hover:text-black font-bold uppercase">GRANT ADMIN</button>
+                                )}
+                                <button onClick={() => { setUserToDelete(user); setDeleteDialogOpen(true); }} className="px-1 py-1 text-red-600 hover:bg-red-100 border border-transparent hover:border-red-600 transition-colors">
+                                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
                         ))}
-                      </Box>
-                    </TableCell>
-                    <TableCell sx={{ maxWidth: 300, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.875rem' }}>{fb.message || '—'}</TableCell>
-                    <TableCell>{new Date(fb.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell align="center">
-                      <IconButton size="small" color="error" onClick={() => deleteFeedback(fb.id)}>
-                        <DeleteOutlined />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {feedbacks.length === 0 && (
-                  <TableRow><TableCell colSpan={6} align="center" sx={{ py: 4, color: '#9ca3af' }}>No feedback yet</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-            <TablePagination
-              component="div"
-              count={totalFeedbacks}
-              page={feedbackPage}
-              onPageChange={(e, p) => setFeedbackPage(p)}
-              rowsPerPage={feedbackRowsPerPage}
-              onRowsPerPageChange={(e) => { setFeedbackRowsPerPage(parseInt(e.target.value, 10)); setFeedbackPage(0); }}
-            />
-          </TableContainer>
-        </Box>
-      )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Pagination total={totalUsers} page={page} setPage={setPage} rowsPerPage={rowsPerPage} setRowsPerPage={setRowsPerPage} />
+                </div>
+              )}
 
-      {/* CONTACTS/MESSAGES TAB */}
-      {tabValue === 5 && (
-        <Box>
-          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">Contact Messages ({totalContacts}){unreadContacts > 0 && <Chip label={`${unreadContacts} unread`} color="warning" size="small" sx={{ ml: 1 }} />}</Typography>
-            <Button startIcon={<ReloadOutlined />} onClick={fetchContacts}>Refresh</Button>
-          </Box>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead sx={{ bgcolor: '#F9FAFB' }}>
-                <TableRow>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Subject</TableCell>
-                  <TableCell sx={{ minWidth: 250 }}>Message</TableCell>
-                  <TableCell>Date</TableCell>
-                  <TableCell align="center">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {contacts.map((msg) => (
-                  <TableRow key={msg.id} hover sx={{ bgcolor: msg.read ? 'inherit' : 'rgba(99, 102, 241, 0.04)' }}>
-                    <TableCell>
-                      <Chip
-                        label={msg.read ? 'Read' : 'New'}
-                        color={msg.read ? 'default' : 'primary'}
-                        size="small"
-                        variant={msg.read ? 'outlined' : 'filled'}
-                      />
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: msg.read ? 400 : 600 }}>{msg.name}</TableCell>
-                    <TableCell>{msg.email}</TableCell>
-                    <TableCell sx={{ fontWeight: msg.read ? 400 : 600 }}>{msg.subject}</TableCell>
-                    <TableCell sx={{ maxWidth: 300, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.875rem' }}>{msg.message}</TableCell>
-                    <TableCell>{new Date(msg.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell align="center">
-                      <Box display="flex" gap={1} justifyContent="center">
-                        {!msg.read && (
-                          <Button size="small" onClick={() => markAsRead(msg.id)}>Mark Read</Button>
+              {/* ANALYTICS TAB */}
+              {tabValue === 1 && analytics && (
+                <div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <MetricCard title="Total Resumes" value={analytics.totalResumes} icon="description" colorClass="bg-[#39ff14] text-black" />
+                    <MetricCard title="PDF Compiled" value={analytics.totalPdf} icon="picture_as_pdf" colorClass="bg-black text-[#39ff14]" />
+                    <MetricCard title="ATS Checks" value={analytics.totalAts} icon="check_circle" colorClass="bg-white text-black" />
+                    <MetricCard title="Total Users" value={totalUsers} icon="group" colorClass="bg-gray-200 text-black" />
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="col-span-1 lg:col-span-2 border-2 border-black p-6 bg-white shadow-[8px_8px_0px_0px_#000000]">
+                      <h3 className="font-bold text-lg uppercase mb-6 flex items-center gap-2 border-b-2 border-black pb-2">
+                        <span className="w-3 h-3 bg-[#39ff14] border-2 border-black inline-block"></span>
+                        30-DAY REGISTRY
+                      </h3>
+                      <div className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={analytics.dailySignups}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                            <XAxis dataKey="date" tick={{ fontFamily: 'monospace', fontSize: 12 }} />
+                            <YAxis tick={{ fontFamily: 'monospace', fontSize: 12 }} />
+                            <RechartsTooltip contentStyle={{ borderRadius: 0, border: '1px solid black', fontFamily: 'monospace', textTransform: 'uppercase' }} />
+                            <Line type="step" dataKey="count" stroke="#000000" strokeWidth={1.5} activeDot={{ r: 4, fill: '#39ff14', stroke: '#000', strokeWidth: 1 }} dot={false} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    <div className="border-2 border-black p-6 bg-white shadow-[8px_8px_0px_0px_#000000] flex flex-col">
+                      <h3 className="font-bold text-lg uppercase mb-6 flex items-center gap-2 border-b-2 border-black pb-2">
+                        <span className="w-3 h-3 bg-black border-2 border-[#39ff14] inline-block"></span>
+                        TEMPLATE DISTRIBUTION
+                      </h3>
+                      <div className="h-[250px] flex-grow flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={analytics.templateUsage}
+                              cx="50%" cy="50%" outerRadius={80}
+                              dataKey="value"
+                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                              labelLine={false}
+                              stroke="#000000"
+                              strokeWidth={2}
+                            >
+                              {analytics.templateUsage.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <RechartsTooltip contentStyle={{ borderRadius: 0, border: '2px solid black', fontFamily: 'monospace', textTransform: 'uppercase' }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* SYSTEM HEALTH TAB */}
+              {tabValue === 2 && health && (
+                <div className="border border-black bg-white shadow-[2px_2px_0px_0px_#000000]">
+                  <div className="p-6 border-b-2 border-black bg-[#f0f0f0]">
+                    <h2 className="text-xl font-bold uppercase flex items-center gap-2">
+                      <span className="material-symbols-outlined text-2xl">speed</span>
+                      DIAGNOSTICS & TELEMETRY
+                    </h2>
+                  </div>
+                  <div>
+                    <StatusIndicator label="LATEX COMPILATION SERVICE" status={health.latex?.ready ? 'UP' : 'DOWN'} details={health.latex} />
+                    <StatusIndicator label="CORE DATABASE (MYSQL)" status={health.database?.status} details={health.database} />
+                    <StatusIndicator label="IN-MEMORY CACHE (REDIS)" status={health.redis?.status} details={health.redis} />
+                    <StatusIndicator label="ASYNC TASK QUEUE" status="UP" details={health.queue} />
+                  </div>
+                </div>
+              )}
+
+              {/* AUDIT LOG TAB */}
+              {tabValue === 3 && (
+                <div>
+                  <div className="overflow-x-auto border border-black shadow-[2px_2px_0px_0px_#000000] bg-white">
+                    <table className="w-full text-sm">
+                      <thead className="bg-[#f0f0f0] border-b border-black">
+                        <tr>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">TIMESTAMP</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">ORIGIN (ADMIN)</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">EVENT_TYPE</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">TARGET_ENTITY</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {auditLogs.map((log) => (
+                          <tr key={log.id} className="border-b border-gray-300 font-mono hover:bg-[#f8f8f8]">
+                            <td className="p-3 text-xs">{new Date(log.timestamp).toLocaleString()}</td>
+                            <td className="p-3 lowercase font-bold">{log.adminEmail}</td>
+                            <td className="p-3">
+                              <span className={`px-2 py-1 border-2 border-black bg-white uppercase text-xs font-bold ${log.action.includes('DELETE') ? 'text-red-600' : log.action.includes('GRANT') ? 'text-[#39ff14] bg-black' : ''}`}>
+                                {log.action}
+                              </span>
+                            </td>
+                            <td className="p-3 lowercase">{log.targetUserEmail}</td>
+                          </tr>
+                        ))}
+                        {auditLogs.length === 0 && (
+                          <tr><td colSpan={4} className="p-8 text-center uppercase font-bold text-gray-400">NO AUDIT RECORDS FOUND</td></tr>
                         )}
-                        <IconButton size="small" color="error" onClick={() => deleteContact(msg.id)}>
-                          <DeleteOutlined />
-                        </IconButton>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {contacts.length === 0 && (
-                  <TableRow><TableCell colSpan={7} align="center" sx={{ py: 4, color: '#9ca3af' }}>No contact messages yet</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-            <TablePagination
-              component="div"
-              count={totalContacts}
-              page={contactPage}
-              onPageChange={(e, p) => setContactPage(p)}
-              rowsPerPage={contactRowsPerPage}
-              onRowsPerPageChange={(e) => { setContactRowsPerPage(parseInt(e.target.value, 10)); setContactPage(0); }}
-            />
-          </TableContainer>
-        </Box>
+                      </tbody>
+                    </table>
+                  </div>
+                  <Pagination total={totalAuditLogs} page={auditPage} setPage={setAuditPage} rowsPerPage={auditRowsPerPage} setRowsPerPage={setAuditRowsPerPage} />
+                </div>
+              )}
+
+              {/* FEEDBACK TAB */}
+              {tabValue === 4 && (
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold uppercase">USER FEEDBACK [{totalFeedbacks}]</h2>
+                    <button onClick={fetchFeedbacks} className="px-3 py-1 border-2 border-black bg-black text-[#39ff14] hover:bg-[#39ff14] hover:text-black transition-colors flex items-center gap-2 font-bold text-sm">
+                      <span className="material-symbols-outlined text-[16px]">refresh</span> SYNC
+                    </button>
+                  </div>
+                  <div className="overflow-x-auto border border-black shadow-[2px_2px_0px_0px_#000000] bg-white">
+                    <table className="w-full text-sm">
+                      <thead className="bg-[#f0f0f0] border-b border-black">
+                        <tr>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">USER</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">RATING</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">DIRECT_MESSAGE</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">DATE_LOGGED</th>
+                          <th className="p-3 text-center font-bold border-b border-black uppercase">X</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {feedbacks.map((fb) => (
+                          <tr key={fb.id} className="border-b border-gray-300 hover:bg-[#f8f8f8]">
+                            <td className="p-3">
+                              <div className="font-bold uppercase">{fb.name}</div>
+                              <div className="text-xs lowercase text-gray-500">{fb.email}</div>
+                            </td>
+                            <td className="p-3">
+                              <div className="flex text-[#39ff14] bg-black px-2 py-1 w-fit border border-black">
+                                {[1, 2, 3, 4, 5].map(s => (
+                                  <span key={s} className={`material-symbols-outlined text-sm ${s <= fb.rating ? '' : 'opacity-30'}`} style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="p-3 max-w-xs break-words lowercase">{fb.message || '<NULL_PACKET>'}</td>
+                            <td className="p-3 font-mono text-xs">{new Date(fb.createdAt).toLocaleDateString()}</td>
+                            <td className="p-3 text-center">
+                              <button onClick={() => deleteFeedback(fb.id)} className="text-red-600 hover:bg-red-100 p-1 border border-transparent hover:border-red-600">
+                                <span className="material-symbols-outlined">delete</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {feedbacks.length === 0 && (
+                          <tr><td colSpan={5} className="p-8 text-center uppercase font-bold text-gray-400">NO FEEDBACK LOGS</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Pagination total={totalFeedbacks} page={feedbackPage} setPage={setFeedbackPage} rowsPerPage={feedbackRowsPerPage} setRowsPerPage={setFeedbackRowsPerPage} />
+                </div>
+              )}
+
+              {/* MESSAGES TAB */}
+              {tabValue === 5 && (
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold uppercase flex items-center gap-4">
+                      INBOUND COMMS [{totalContacts}]
+                      {unreadContacts > 0 && <span className="bg-[#39ff14] text-black px-2 border-2 border-black text-xs shadow-[2px_2px_0px_0px_#000]">{unreadContacts} NEW</span>}
+                    </h2>
+                    <button onClick={fetchContacts} className="px-3 py-1 border-2 border-black bg-black text-[#39ff14] hover:bg-[#39ff14] hover:text-black transition-colors flex items-center gap-2 font-bold text-sm">
+                      <span className="material-symbols-outlined text-[16px]">refresh</span> SYNC
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6">
+                    {contacts.map((msg) => (
+                      <div key={msg.id} className={`border-2 border-black p-6 ${msg.read ? 'bg-white shadow-[4px_4px_0px_0px_#000000]' : 'bg-[#f0f0f0] shadow-[8px_8px_0px_0px_#39ff14] border-l-8 border-l-[#39ff14]'}`}>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+                          <div>
+                            <div className="flex items-center gap-3 mb-1">
+                              <span className="font-bold text-lg uppercase">{msg.name}</span>
+                              <span className="text-xs border-2 border-black px-1 lowercase bg-white">{msg.email}</span>
+                            </div>
+                            <div className="font-bold border-b border-black pb-1 uppercase">{msg.subject}</div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-mono">{new Date(msg.createdAt).toLocaleString()}</span>
+                            {!msg.read && (
+                              <button onClick={() => markAsRead(msg.id)} className="px-2 py-1 bg-black text-white text-xs font-bold uppercase hover:bg-[#39ff14] hover:text-black border-2 border-black transition-colors">
+                                MARK READ
+                              </button>
+                            )}
+                            <button onClick={() => deleteContact(msg.id)} className="px-2 py-1 bg-red-600 text-white text-xs font-bold uppercase hover:bg-black border-2 border-black transition-colors flex items-center">
+                              <span className="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                          </div>
+                        </div>
+                        <div className="font-mono text-sm leading-relaxed p-4 bg-white border-2 border-gray-300">
+                          {msg.message}
+                        </div>
+                      </div>
+                    ))}
+                    {contacts.length === 0 && (
+                      <div className="border-2 border-black bg-white p-12 text-center shadow-[4px_4px_0px_0px_#000] font-bold text-gray-400 uppercase">
+                        INBOX EMPTY
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-6">
+                    <Pagination total={totalContacts} page={contactPage} setPage={setContactPage} rowsPerPage={contactRowsPerPage} setRowsPerPage={setContactRowsPerPage} />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* CUSTOM OVERLAY DIALOG (DELETE) */}
+      {deleteDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white border-2 border-black p-8 shadow-[12px_12px_0px_0px_#39ff14] max-w-sm w-full">
+            <h3 className="text-2xl font-black uppercase mb-4 border-b-2 border-black pb-2 flex items-center gap-2">
+              <span className="material-symbols-outlined text-red-600 text-3xl">warning</span>
+              PURGE USER
+            </h3>
+            <p className="mb-4 font-bold lowercase text-sm">
+              are you sure you want to permanently delete <strong className="uppercase bg-[#39ff14] px-1">{userToDelete?.name}</strong>?
+            </p>
+            <div className="bg-red-100 border-2 border-red-600 text-red-700 p-2 text-xs font-bold uppercase mb-6 flex items-start gap-2">
+              <span className="material-symbols-outlined text-sm">dangerous</span>
+              DATA CANNOT BE RECOVERED.
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setDeleteDialogOpen(false)}
+                className="flex-1 border-2 border-black font-bold uppercase py-2 hover:bg-gray-100 transition-colors"
+              >
+                ABORT
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                className="flex-1 border-2 border-black bg-red-600 text-white font-bold uppercase py-2 shadow-[4px_4px_0px_0px_#000] active:shadow-none hover:bg-black transition-all"
+              >
+                EXECUTE
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-      {/* Delete Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete User</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete <strong>{userToDelete?.name}</strong>?
-          </Typography>
-          <Alert severity="warning" sx={{ mt: 2 }}>Irreversible action.</Alert>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteUser} color="error" variant="contained">Delete</Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+    </div>
   );
 };
 

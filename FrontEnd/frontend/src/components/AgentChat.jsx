@@ -40,7 +40,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
   const dragRef = useRef({ startX: 0, startY: 0, startRight: 0, startBottom: 0, moved: false });
 
   // Resizable panel state
-  const [panelSize, setPanelSize] = useState({ width: 420, height: 580 });
+  const [panelSize, setPanelSize] = useState({ width: 360, height: 460 });
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef({ startX: 0, startY: 0, startW: 0, startH: 0, edge: '' });
 
