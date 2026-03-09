@@ -24,7 +24,8 @@ public class AtsScoreServiceImpl implements AtsScoreService {
     private static final long BASE_DELAY_MS = 1000; // 1 second base delay
     private static final int MAX_JOB_DESCRIPTION_LENGTH = 5000; // Max chars for job description
     private static final List<String> REQUIRED_KEYS = List.of(
-            "atsScore", "scoreBreakdown", "strengths", "weaknesses", "detailedSuggestions");
+            "atsScore", "scoreBreakdown", "strengths", "weaknesses", "detailedSuggestions",
+            "penaltyLog", "keywordAnalysis", "rewriteExamples");
 
     private final GeminiService geminiService;
     private final ResumeServiceImpl resumeService;

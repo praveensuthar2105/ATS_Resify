@@ -135,6 +135,11 @@ const AtsChecker = () => {
 
     const hasContent = Object.keys(core || {}).length > 0;
 
+    const penaltyLog = Array.isArray(core?.penaltyLog) ? core.penaltyLog : [];
+    const keywordAnalysis = core?.keywordAnalysis ?? {};
+    const rewriteExamples = Array.isArray(core?.rewriteExamples) ? core.rewriteExamples : [];
+    const topMissingKeywords = Array.isArray(core?.topMissingKeywords) ? core.topMissingKeywords : [];
+
     return {
       score: Number.isFinite(percent) ? percent : null,
       breakdown: {
@@ -143,12 +148,17 @@ const AtsChecker = () => {
         sectionCompleteness: parseScore(breakdown.sectionCompleteness ?? breakdown.sections),
         impactScore: parseScore(breakdown.impactScore ?? breakdown.impact),
         brevity: parseScore(breakdown.brevity ?? breakdown.readability),
+        experienceFit: parseScore(breakdown.experienceFit),
       },
       strengths,
       weaknesses,
       suggestions,
-      keywords: core?.keywords || [],
-      missingKeywords: core?.missingKeywords || [],
+      penaltyLog,
+      keywordAnalysis,
+      rewriteExamples,
+      topMissingKeywords,
+      keywords: keywordAnalysis.matchedKeywords || core?.keywords || [],
+      missingKeywords: keywordAnalysis.missingKeywords || core?.missingKeywords || [],
       feedback: core?.feedback,
       error: core?.error || res?.error,
       hasContent,
@@ -202,6 +212,7 @@ const AtsChecker = () => {
     { key: 'sectionCompleteness', label: 'SECTION COMPLETENESS', icon: 'contact_page' },
     { key: 'impactScore', label: 'IMPACT & METRICS', icon: 'trending_up' },
     { key: 'brevity', label: 'BREVITY & READABILITY', icon: 'short_text' },
+    { key: 'experienceFit', label: 'EXPERIENCE FIT', icon: 'work_history' },
   ];
 
   return (
@@ -281,8 +292,8 @@ const AtsChecker = () => {
               {/* Submit Button */}
               <button
                 className={`w-full font-black px-6 py-5 text-xl border-2 flex items-center justify-center gap-3 transition-all brutal-shadow-white group ${selectedFile
-                    ? 'bg-neon-green text-black border-brutal-white hover:translate-x-1 hover:translate-y-1 hover:shadow-none cursor-pointer'
-                    : 'bg-transparent text-slate-500 border-slate-600 cursor-not-allowed hidden-shadow'
+                  ? 'bg-neon-green text-black border-brutal-white hover:translate-x-1 hover:translate-y-1 hover:shadow-none cursor-pointer'
+                  : 'bg-transparent text-slate-500 border-slate-600 cursor-not-allowed hidden-shadow'
                   }`}
                 onClick={handleSubmit}
                 disabled={!selectedFile}
@@ -427,17 +438,39 @@ const AtsChecker = () => {
                         : ' CRITICAL PARSING FAILURE LIKELY. REDEVELOP USING STANDARD TEMPLATES.'}
                   </p>
 
-                  <div className="flex flex-col gap-3 font-mono text-[10px] border-t border-dashed border-slate-600 pt-4">
+                  <div className="flex flex-col gap-3 font-mono text-[10px] border-t border-dashed border-slate-600 pt-4 mt-auto">
                     <div className="flex justify-between">
                       <span className="text-slate-500">PARSER_STATUS:</span>
                       <span className="text-neon-green font-bold">OPERATIONAL</span>
                     </div>
                     <div className="flex justify-between">
+                      <span className="text-slate-500">MATCH_RATE:</span>
+                      <span className="text-brutal-white font-bold">{atsResult.keywordAnalysis?.matchRate || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="text-slate-500">CATEGORIES_SCANNED:</span>
-                      <span>5</span>
+                      <span>6</span>
                     </div>
                   </div>
                 </div>
+
+                {/* Penalty Log Section */}
+                {atsResult.penaltyLog.length > 0 && (
+                  <div className="border-2 border-red-500/50 p-6 bg-red-500/5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="material-symbols-outlined text-red-500">heart_broken</span>
+                      <h3 className="font-black text-xs text-red-500">PENALTY_LOG_FILE</h3>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {atsResult.penaltyLog.map((p, i) => (
+                        <div key={i} className="flex justify-between text-[10px] lowercase border-b border-red-500/10 pb-1">
+                          <span className="text-slate-400">{p.reason}</span>
+                          <span className="text-red-500 font-bold">{p.deduction}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <button
                   className="w-full bg-neon-green text-black font-black py-4 border-2 border-brutal-white brutal-shadow-white hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center gap-2 text-sm"
@@ -492,6 +525,77 @@ const AtsChecker = () => {
               </div>
             </div>
 
+            {/* Keyword Analysis Section */}
+            {(atsResult.missingKeywords.length > 0 || atsResult.keywords.length > 0) && (
+              <div className="border-2 border-brutal-white p-6 md:p-10 bg-brutal-black">
+                <div className="flex justify-between items-center mb-8 border-b-2 border-brutal-white pb-4">
+                  <div>
+                    <h3 className="text-2xl font-black">KEYWORD_DATABANK</h3>
+                    <p className="text-xs text-slate-400 lowercase">frequency mapping and alignment with target parameters.</p>
+                  </div>
+                  {atsResult.keywordAnalysis?.matchRate && (
+                    <div className="px-4 py-2 bg-neon-green text-black font-black text-sm">
+                      MATCH: {atsResult.keywordAnalysis.matchRate}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                  <div>
+                    <h4 className="text-xs font-black mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-neon-green"></span> MATCHED_TAGS
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {atsResult.keywords.map((kw, i) => (
+                        <span key={i} className="px-2 py-1 bg-neon-green/10 border border-neon-green/30 text-neon-green text-[10px] font-bold uppercase">
+                          {kw}
+                        </span>
+                      ))}
+                      {atsResult.keywords.length === 0 && <span className="text-xs text-slate-500">ERROR: NO MATCHES_DETECTED</span>}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-red-500"></span> MISSING_PROTOTYPES
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {atsResult.missingKeywords.map((kw, i) => (
+                        <span key={i} className="px-2 py-1 bg-red-500/10 border border-red-500/30 text-red-500 text-[10px] font-bold uppercase">
+                          {kw}
+                        </span>
+                      ))}
+                      {atsResult.missingKeywords.length === 0 && <span className="text-xs text-neon-green">ALL_TARGETS_ACQUIRED</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Rewrite Examples Section */}
+            {atsResult.rewriteExamples.length > 0 && (
+              <div className="border-2 border-neon-green p-6 md:p-10 bg-neon-green/5">
+                <div className="mb-8 border-b-2 border-neon-green pb-4">
+                  <h3 className="text-2xl font-black text-neon-green">BULLET_RECONSTRUCT_V1</h3>
+                  <p className="text-xs text-neon-green/60 lowercase">transforming weak descriptions into quantified high-impact data points.</p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  {atsResult.rewriteExamples.map((ex, i) => (
+                    <div key={i} className="grid grid-cols-1 lg:grid-cols-2 gap-1 overflow-hidden border border-neon-green/20">
+                      <div className="bg-red-500/5 p-4 border-r border-neon-green/20 relative">
+                        <div className="absolute top-0 right-0 text-[8px] bg-red-500 text-white px-2 py-[2px] font-bold">ORIGINAL</div>
+                        <p className="text-xs italic text-slate-400 line-through">"{ex.original}"</p>
+                      </div>
+                      <div className="bg-neon-green/10 p-4 relative">
+                        <div className="absolute top-0 right-0 text-[8px] bg-neon-green text-black px-2 py-[2px] font-bold">IMPROVED</div>
+                        <p className="text-xs text-neon-green font-bold">"{ex.improved}"</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* AI Suggestions (Grid) */}
             {atsResult.suggestions.length > 0 && (
               <div className="border-2 border-brutal-white bg-brutal-black p-6 md:p-10">
@@ -539,8 +643,8 @@ const AtsChecker = () => {
       {snack.open && (
         <div className="fixed bottom-6 right-6 z-[9999] toast-slide-in">
           <div className={`p-4 border-2 brutal-shadow-white flex items-center gap-3 bg-brutal-black ${snack.type === 'error' ? 'border-red-500 text-red-500' :
-              snack.type === 'info' ? 'border-blue-400 text-blue-400' :
-                'border-neon-green text-neon-green'
+            snack.type === 'info' ? 'border-blue-400 text-blue-400' :
+              'border-neon-green text-neon-green'
             }`}>
             <span className="material-symbols-outlined flex-shrink-0">
               {snack.type === 'error' ? 'error' : snack.type === 'info' ? 'info' : 'check_circle'}
