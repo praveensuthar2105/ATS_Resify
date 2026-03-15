@@ -1,4 +1,6 @@
-package com.Backend.AI_Resume_Builder_Backend.Service;
+package com.Backend.AI_Resume_Builder_Backend.Service.ServiceImpl;
+
+import com.Backend.AI_Resume_Builder_Backend.Service.*;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

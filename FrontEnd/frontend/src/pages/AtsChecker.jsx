@@ -135,7 +135,15 @@ const AtsChecker = () => {
 
     const hasContent = Object.keys(core || {}).length > 0;
 
-    const penaltyLog = Array.isArray(core?.penaltyLog) ? core.penaltyLog : [];
+    const penaltyLog = Array.isArray(core?.penaltyLog)
+      ? core.penaltyLog.filter(p => {
+        if (!p.deduction) return false;
+        // Extract only digits from the deduction string (e.g. "-5%" -> "5")
+        const numericalValue = String(p.deduction).replace(/[^\d]/g, '');
+        // Only keep penalties that have a number greater than 0
+        return numericalValue !== '' && parseInt(numericalValue, 10) > 0;
+      })
+      : [];
     const keywordAnalysis = core?.keywordAnalysis ?? {};
     const rewriteExamples = Array.isArray(core?.rewriteExamples) ? core.rewriteExamples : [];
     const topMissingKeywords = Array.isArray(core?.topMissingKeywords) ? core.topMissingKeywords : [];

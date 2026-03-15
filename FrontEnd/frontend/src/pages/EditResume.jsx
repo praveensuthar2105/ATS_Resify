@@ -8,6 +8,45 @@ import SEO from '../components/SEO';
 import { Helmet } from 'react-helmet-async';
 import SectionHeader from '../components/SectionHeader';
 
+const FormItem = ({ label, value, onChange, placeholder, type = "text", colspan = 1 }) => (
+  <div className={`flex flex-col gap-1 ${colspan > 1 ? `col-span-${colspan} sm:col-span-${colspan}` : ''}`}>
+    <label className="text-xs font-bold uppercase tracking-widest">{label}</label>
+    {type === "textarea" ? (
+      <textarea
+        value={value} onChange={onChange} placeholder={placeholder} rows={5}
+        className="border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[4px_4px_0px_0px_#39ff14] p-3 text-sm font-mono transition-all"
+      />
+    ) : (
+      <input
+        type={type} value={value} onChange={onChange} placeholder={placeholder}
+        className="border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[4px_4px_0px_0px_#39ff14] p-3 text-sm font-mono transition-all h-12"
+      />
+    )}
+  </div>
+);
+
+const SectionCard = ({ icon, title, subtitle, children, buttonText, onAdd }) => (
+  <div className="border-4 border-black bg-[#f8f8f8] mb-8 shadow-[8px_8px_0px_0px_#000000]">
+    <div className="border-b-4 border-black p-4 flex items-center gap-4 bg-white">
+      <div className="w-12 h-12 border-2 border-black bg-black text-[#39ff14] flex items-center justify-center shadow-[4px_4px_0px_0px_#39ff14]">
+        <span className="material-symbols-outlined text-2xl">{icon}</span>
+      </div>
+      <div>
+        <h3 className="text-xl font-black uppercase tracking-tighter">{title}</h3>
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">{subtitle}</p>
+      </div>
+    </div>
+    <div className="p-6">
+      {children}
+      {buttonText && (
+        <button onClick={onAdd} className="mt-6 w-full py-4 border-2 border-black border-dashed font-bold uppercase hover:bg-[#39ff14] hover:border-solid transition-colors text-sm flex items-center justify-center gap-2">
+          <span className="material-symbols-outlined">add</span> {buttonText}
+        </button>
+      )}
+    </div>
+  </div>
+);
+
 const EditResume = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -654,44 +693,7 @@ ${sections}
     handleFieldChange();
   };
 
-  const FormItem = ({ label, value, onChange, placeholder, type = "text", colspan = 1 }) => (
-    <div className={`flex flex-col gap-1 ${colspan > 1 ? `col-span-${colspan} sm:col-span-${colspan}` : ''}`}>
-      <label className="text-xs font-bold uppercase tracking-widest">{label}</label>
-      {type === "textarea" ? (
-        <textarea
-          value={value} onChange={onChange} placeholder={placeholder} rows={5}
-          className="border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[4px_4px_0px_0px_#39ff14] p-3 text-sm font-mono transition-all"
-        />
-      ) : (
-        <input
-          type={type} value={value} onChange={onChange} placeholder={placeholder}
-          className="border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[4px_4px_0px_0px_#39ff14] p-3 text-sm font-mono transition-all h-12"
-        />
-      )}
-    </div>
-  );
 
-  const SectionCard = ({ icon, title, subtitle, children, buttonText, onAdd }) => (
-    <div className="border-4 border-black bg-[#f8f8f8] mb-8 shadow-[8px_8px_0px_0px_#000000]">
-      <div className="border-b-4 border-black p-4 flex items-center gap-4 bg-white">
-        <div className="w-12 h-12 border-2 border-black bg-black text-[#39ff14] flex items-center justify-center shadow-[4px_4px_0px_0px_#39ff14]">
-          <span className="material-symbols-outlined text-2xl">{icon}</span>
-        </div>
-        <div>
-          <h3 className="text-xl font-black uppercase tracking-tighter">{title}</h3>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">{subtitle}</p>
-        </div>
-      </div>
-      <div className="p-6">
-        {children}
-        {buttonText && (
-          <button onClick={onAdd} className="mt-6 w-full py-4 border-2 border-black border-dashed font-bold uppercase hover:bg-[#39ff14] hover:border-solid transition-colors text-sm flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined">add</span> {buttonText}
-          </button>
-        )}
-      </div>
-    </div>
-  );
 
   if (loading) {
     return (

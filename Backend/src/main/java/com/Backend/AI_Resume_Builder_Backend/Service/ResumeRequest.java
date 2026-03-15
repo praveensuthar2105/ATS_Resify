@@ -9,7 +9,7 @@ public class ResumeRequest {
     @Size(max = 50000, message = "userResumeDescription cannot exceed 50000 characters")
     private String userResumeDescription;
 
-    @Pattern(regexp = "modern|classic|minimal|professional", message = "templateType must be one of: modern, classic, minimal, professional")
+    @Pattern(regexp = "modern|classic|minimal|professional|ats", message = "templateType must be one of: modern, classic, minimal, professional, ats")
     private String templateType;
 
     private String message;

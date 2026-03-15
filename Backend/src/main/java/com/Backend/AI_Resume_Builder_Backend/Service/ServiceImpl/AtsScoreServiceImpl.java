@@ -1,5 +1,6 @@
-package com.Backend.AI_Resume_Builder_Backend.Service;
+package com.Backend.AI_Resume_Builder_Backend.Service.ServiceImpl;
 
+import com.Backend.AI_Resume_Builder_Backend.Service.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
