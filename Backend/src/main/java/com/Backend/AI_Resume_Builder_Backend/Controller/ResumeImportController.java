@@ -41,13 +41,6 @@ public class ResumeImportController {
             @RequestParam(value = "source", defaultValue = "general") String source,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
-            // Validate authentication
-            if (!isAuthenticated(authHeader)) {
-                return new ResponseEntity<>(
-                        Map.of("success", false, "error", "Please sign in to import a resume."),
-                        HttpStatus.UNAUTHORIZED);
-            }
-
             log.info("Resume import request received — source: {}, file: {}, size: {}KB",
                     source, file.getOriginalFilename(), file.getSize() / 1024);
 
@@ -78,13 +71,6 @@ public class ResumeImportController {
             @RequestBody Map<String, String> request,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
-            // Validate authentication
-            if (!isAuthenticated(authHeader)) {
-                return new ResponseEntity<>(
-                        Map.of("success", false, "error", "Please sign in to import a resume."),
-                        HttpStatus.UNAUTHORIZED);
-            }
-
             String text = request.get("text");
             if (text == null || text.trim().isEmpty()) {
                 return new ResponseEntity<>(

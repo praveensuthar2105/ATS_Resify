@@ -19,6 +19,7 @@ const AtsChecker = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
+  const [usageCount, setUsageCount] = useState(() => parseInt(localStorage.getItem('freeUsageCount') || '0', 10));
 
   const showToast = (text, type = 'success') => {
     setSnack({ open: true, text, type });
@@ -41,6 +42,11 @@ const AtsChecker = () => {
         return;
       }
       setAtsResult(normalized);
+      if (!isAuthenticated) {
+        const newCount = usageCount + 1;
+        setUsageCount(newCount);
+        localStorage.setItem('freeUsageCount', newCount.toString());
+      }
       showToast('ATS ANALYSIS COMPLETE!', 'success');
     } catch (error) {
       console.error('Error calculating ATS score:', error);
@@ -65,9 +71,12 @@ const AtsChecker = () => {
 
   const handleSubmit = () => {
     if (!isAuthenticated) {
-      showToast('PLEASE SIGN IN TO ANALYZE YOUR RESUME.', 'info');
-      setTimeout(() => navigate('/login', { state: { from: location } }), 1500);
-      return;
+      const usageCount = parseInt(localStorage.getItem('freeUsageCount') || '0', 10);
+      if (usageCount >= 2) {
+        showToast('FREE LIMIT REACHED. PLEASE SIGN IN TO CONTINUE.', 'info');
+        setTimeout(() => navigate('/login', { state: { from: location } }), 1500);
+        return;
+      }
     }
 
     if (!selectedFile) {
@@ -296,6 +305,19 @@ const AtsChecker = () => {
                   onChange={(e) => setJobDescription(e.target.value)}
                 ></textarea>
               </div>
+
+              {/* Usage Counter for Guest Users */}
+              {!isAuthenticated && (
+                <div className="flex items-center justify-between px-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-neon-green animate-pulse"></span>
+                    <span className="text-[10px] font-bold text-slate-400">GUEST_SESSION_ACTIVE</span>
+                  </div>
+                  <div className={`text-[10px] font-bold px-3 py-1 border-2 ${usageCount >= 2 ? 'border-red-500 text-red-500' : 'border-neon-green text-neon-green bg-neon-green/5'}`}>
+                    FREE USES REMAINING: {Math.max(0, 2 - usageCount)} / 2
+                  </div>
+                </div>
+              )}
 
               {/* Submit Button */}
               <button

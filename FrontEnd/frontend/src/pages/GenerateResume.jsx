@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { resumeAPI } from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
 import './GenerateResume.css';
 
@@ -21,6 +22,9 @@ const GenerateResume = () => {
   const fileInputRef = React.useRef(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  const [usageCount, setUsageCount] = useState(() => parseInt(localStorage.getItem('freeUsageCount') || '0', 10));
 
   const writingTips = [
     { num: 1, text: 'Quantify your impact with numbers and percentages.' },
@@ -49,6 +53,15 @@ const GenerateResume = () => {
   const handleGenerateResume = async (e) => {
     e.preventDefault();
 
+    if (!isAuthenticated) {
+      const usageCount = parseInt(localStorage.getItem('freeUsageCount') || '0', 10);
+      if (usageCount >= 2) {
+        showToast('FREE LIMIT REACHED. PLEASE SIGN IN TO CONTINUE.', 'info');
+        setTimeout(() => navigate('/login', { state: { from: location } }), 1500);
+        return;
+      }
+    }
+
     // PDF Mode Logic
     if (inputMode === 'pdf' || inputMode === 'linkedin') {
       if (!selectedFile) {
@@ -67,6 +80,11 @@ const GenerateResume = () => {
             selectedTemplate: selectedTemplate
           };
           localStorage.setItem('generatedResume', JSON.stringify(resumeWithTemplate));
+          if (!isAuthenticated) {
+            const newCount = usageCount + 1;
+            setUsageCount(newCount);
+            localStorage.setItem('freeUsageCount', newCount.toString());
+          }
           showToast('RESUME EXTRACTED SUCCESSFULLY!', 'success');
 
           setTimeout(() => navigate('/edit-resume'), 1000);
@@ -95,6 +113,11 @@ const GenerateResume = () => {
         selectedTemplate: selectedTemplate
       };
       localStorage.setItem('generatedResume', JSON.stringify(resumeWithTemplate));
+      if (!isAuthenticated) {
+        const newCount = usageCount + 1;
+        setUsageCount(newCount);
+        localStorage.setItem('freeUsageCount', newCount.toString());
+      }
       showToast('RESUME GENERATED SUCCESSFULLY!', 'success');
 
       setTimeout(() => navigate('/edit-resume'), 1000);
@@ -344,6 +367,19 @@ const GenerateResume = () => {
                       onChange={handleFileSelect}
                       className="hidden"
                     />
+                  </div>
+                </div>
+              )}
+
+              {/* Usage Counter for Guest Users */}
+              {!isAuthenticated && (
+                <div className="flex items-center justify-between px-2 mb-2 mt-4 font-mono">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-neon-green animate-pulse"></span>
+                    <span className="text-[10px] font-bold text-slate-400">GUEST_RECON_ACTIVE</span>
+                  </div>
+                  <div className={`text-[10px] font-bold px-3 py-1 border-2 ${usageCount >= 2 ? 'border-red-500 text-red-500' : 'border-neon-green text-neon-green bg-neon-green/5'}`}>
+                    FREE USES REMAINING: {Math.max(0, 2 - usageCount)} / 2
                   </div>
                 </div>
               )}

@@ -43,6 +43,9 @@ public class SecurityConfig {
                                                                 "/api/health/**",
                                                                 "/actuator/health",
                                                                 "/actuator/info",
+                                                                "/api/resume/generate",
+                                                                "/api/resume/ats-score",
+                                                                "/api/resume/import/**",
                                                                 "/",
                                                                 "/health")
                                                 .permitAll()
