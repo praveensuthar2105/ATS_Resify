@@ -15,6 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByProviderId(String providerId);
 
-    @Query("SELECT DATE(u.createdAt) as date, COUNT(u) as count FROM User u WHERE u.createdAt >= :startDate GROUP BY DATE(u.createdAt) ORDER BY date ASC")
+    @Query(value = "SELECT DATE(created_at) as date, COUNT(*) as count FROM users WHERE created_at >= :startDate GROUP BY DATE(created_at) ORDER BY date ASC", nativeQuery = true)
     List<Object[]> findSignupsAfter(@Param("startDate") LocalDateTime startDate);
 }

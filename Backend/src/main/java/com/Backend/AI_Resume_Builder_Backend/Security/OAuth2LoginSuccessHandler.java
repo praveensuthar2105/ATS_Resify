@@ -4,7 +4,10 @@ import com.Backend.AI_Resume_Builder_Backend.Entity.User;
 import com.Backend.AI_Resume_Builder_Backend.Repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -18,8 +21,11 @@ import java.util.UUID;
 @Component
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
+        private static final Logger logger = LoggerFactory.getLogger(OAuth2LoginSuccessHandler.class);
+
         @Autowired
         private UserRepository userRepository;
+
 
         @Autowired
         private JwtUtil jwtUtil;
@@ -63,6 +69,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
                 // Generate a one-time authorization code instead of putting JWT in URL
                 String code = UUID.randomUUID().toString();
+                logger.info("[AUTH] Generated one-time code for {}: {}", email, code);
                 authorizationCodeStore.store(code, token, email, name);
 
                 // Redirect to frontend with one-time code (not the JWT)
@@ -71,6 +78,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                                 .build()
                                 .toUriString();
 
+                logger.info("[AUTH] Redirecting to: {}", redirectUrl);
                 getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+
         }
 }

@@ -12,17 +12,14 @@ const AuthCallback = () => {
   const { login } = useAuth();
   const isProcessing = useRef(false);
 
+  const code = searchParams.get('code');
+
   useEffect(() => {
-    // Guard against StrictMode double-render
-    if (isProcessing.current) return;
+    // Guard against multiple executions (Strict Mode, re-renders, or race conditions)
+    if (!code || isProcessing.current) return;
+    
+    // Mark as processing immediately
     isProcessing.current = true;
-
-    const code = searchParams.get('code');
-
-    if (!code) {
-      setError('INVALID AUTHENTICATION RESPONSE. MISSING AUTHORIZATION CODE.');
-      return;
-    }
 
     setStatus('EXCHANGING AUTHORIZATION CODE...');
 
@@ -35,6 +32,8 @@ const AuthCallback = () => {
     })
       .then(res => {
         if (!res.ok) {
+          // If the backend returns 401/400, it usually means the code was already used
+          // or has expired.
           throw new Error('CODE EXCHANGE FAILED. THE CODE MAY HAVE EXPIRED.');
         }
         return res.json();
@@ -64,7 +63,7 @@ const AuthCallback = () => {
             localStorage.removeItem('redirectAfterAuth');
 
             setTimeout(() => {
-              navigate(redirectTo);
+              navigate(redirectTo, { replace: true });
             }, 500);
           })
           .catch(err => {
@@ -81,15 +80,18 @@ const AuthCallback = () => {
             localStorage.removeItem('redirectAfterAuth');
 
             setTimeout(() => {
-              navigate(redirectTo);
+              navigate(redirectTo, { replace: true });
             }, 500);
           });
       })
       .catch(err => {
         console.error('Code exchange error:', err);
         setError(err.message || 'AUTHENTICATION FAILED. PLEASE TRY AGAIN.');
+        // Reset processing if it was a network error so user can potentially retry
+        // But for auth codes, they are usually one-time use anyway.
       });
-  }, [searchParams, navigate]);
+  }, [code, navigate, login]);
+
 
   return (
     <div className="bg-[#ffffff] text-black min-h-screen flex flex-col font-mono uppercase selection:bg-[#39ff14] selection:text-black mt-[-64px]" style={{ fontFamily: "'Space Mono', monospace" }}>

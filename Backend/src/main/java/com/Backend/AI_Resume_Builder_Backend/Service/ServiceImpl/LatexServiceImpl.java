@@ -17,7 +17,7 @@ public class LatexServiceImpl implements LatexService {
     public String generateLatexCode(Map<String, Object> resumeData, String templateType) throws IOException {
         // Default to professional if template not specified
         if (templateType == null || templateType.trim().isEmpty()) {
-            templateType = "professional";
+            templateType = "ats";
         }
 
         // Load template
@@ -32,10 +32,8 @@ public class LatexServiceImpl implements LatexService {
     @Override
     public Map<String, String> getAvailableTemplates() {
         Map<String, String> templates = new LinkedHashMap<>();
-        templates.put("modern", "Modern CV - Clean and contemporary design with ModernCV package");
-        templates.put("professional", "Professional - Classic two-column layout for all industries");
         templates.put("ats", "ATS-Optimized - Simple format that passes automated screening");
-        templates.put("creative", "Creative - Bold and unique design for creative professionals");
+        templates.put("minimal", "Minimal Typographic - Elegant serif design focused on pure typography");
         return templates;
     }
 
@@ -121,7 +119,7 @@ public class LatexServiceImpl implements LatexService {
         template = handleSkillsSection(template, resumeData);
 
         // Experience
-        template = handleExperienceSection(template, resumeData);
+        template = handleExperienceSection(template, resumeData, templateType);
 
         // Projects
         template = handleProjectsSection(template, resumeData, templateType);
@@ -232,7 +230,7 @@ public class LatexServiceImpl implements LatexService {
         return template;
     }
 
-    private String handleExperienceSection(String template, Map<String, Object> resumeData) {
+    private String handleExperienceSection(String template, Map<String, Object> resumeData, String templateType) {
         List<Map<String, Object>> experiences = getListValue(resumeData, "experience");
 
         if (experiences == null || experiences.isEmpty()) {
@@ -270,9 +268,14 @@ public class LatexServiceImpl implements LatexService {
                 for (String point : points) {
                     String trimmedPoint = point.trim();
                     if (!trimmedPoint.isEmpty()) {
-                        responsibilityItems.append("      \\resumeItem{")
-                                .append(escapeLatexSpecialChars(trimmedPoint))
-                                .append("}\n");
+                        if ("minimal".equals(templateType)) {
+                            responsibilityItems.append("  \\item ").append(escapeLatexSpecialChars(trimmedPoint))
+                                    .append("\n");
+                        } else {
+                            responsibilityItems.append("      \\resumeItem{")
+                                    .append(escapeLatexSpecialChars(trimmedPoint))
+                                    .append("}\n");
+                        }
                     }
                 }
             }
@@ -597,8 +600,19 @@ public class LatexServiceImpl implements LatexService {
             }
             String content = result.toString().trim();
             return content;
+        } else if ("minimal".equals(templateType)) {
+            // For minimal template, use \item
+            StringBuilder result = new StringBuilder();
+            for (String point : points) {
+                result.append("  \\item ").append(escapeLatexSpecialChars(point)).append("\n");
+            }
+            String content = result.toString();
+            if (content.endsWith("\n")) {
+                content = content.substring(0, content.length() - 1);
+            }
+            return content;
         } else {
-            // For professional template, use \\resumeItem{...}
+            // Fallback: use \resumeItem{...} (Professional style)
             StringBuilder result = new StringBuilder();
             for (String point : points) {
                 result.append("      \\resumeItem{").append(escapeLatexSpecialChars(point)).append("}\n");
@@ -607,7 +621,6 @@ public class LatexServiceImpl implements LatexService {
             if (content.endsWith("\n")) {
                 content = content.substring(0, content.length() - 1);
             }
-            System.err.println("DEBUG: Generated content length: " + content.length());
             return content;
         }
     }

@@ -16,6 +16,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.Backend.AI_Resume_Builder_Backend.Repository.AtsCheckRepository;
+import com.Backend.AI_Resume_Builder_Backend.Repository.UserRepository;
+import com.Backend.AI_Resume_Builder_Backend.Entity.AtsCheck;
+import com.Backend.AI_Resume_Builder_Backend.Entity.User;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 
 @Service
 public class AtsScoreServiceImpl implements AtsScoreService {
@@ -30,10 +36,14 @@ public class AtsScoreServiceImpl implements AtsScoreService {
 
     private final GeminiService geminiService;
     private final ResumeServiceImpl resumeService;
+    private final AtsCheckRepository atsCheckRepository;
+    private final UserRepository userRepository;
 
-    public AtsScoreServiceImpl(GeminiService geminiService, ResumeServiceImpl resumeService) {
+    public AtsScoreServiceImpl(GeminiService geminiService, ResumeServiceImpl resumeService, AtsCheckRepository atsCheckRepository, UserRepository userRepository) {
         this.geminiService = geminiService;
         this.resumeService = resumeService;
+        this.atsCheckRepository = atsCheckRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -80,6 +90,14 @@ public class AtsScoreServiceImpl implements AtsScoreService {
                 if (isValidAtsResponse(result)) {
                     log.info("ATS analysis succeeded on attempt {}", attempt);
                     logSafeAtsMetadata(result);
+                    
+                    // Persist ATS check record
+                    try {
+                        recordAtsCheck(jobDescription != null && !jobDescription.trim().isEmpty());
+                    } catch (Exception e) {
+                        log.warn("Failed to persist ATS check record: {}", e.getMessage());
+                    }
+
                     result.put("resumeText", resumeText);
                     return result;
                 }
@@ -203,5 +221,18 @@ public class AtsScoreServiceImpl implements AtsScoreService {
             PDFTextStripper pdfStripper = new PDFTextStripper();
             return pdfStripper.getText(document);
         }
+    }
+
+    private void recordAtsCheck(boolean hasJobDescription) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = null;
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            String email = auth.getName();
+            user = userRepository.findByEmail(email).orElse(null);
+        }
+        
+        AtsCheck check = new AtsCheck(user, hasJobDescription);
+        atsCheckRepository.save(check);
+        log.debug("AtsCheck record saved to database");
     }
 }

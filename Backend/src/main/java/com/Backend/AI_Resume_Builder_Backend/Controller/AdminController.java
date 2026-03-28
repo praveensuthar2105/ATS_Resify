@@ -3,9 +3,11 @@ package com.Backend.AI_Resume_Builder_Backend.Controller;
 import com.Backend.AI_Resume_Builder_Backend.Entity.AdminAuditLog;
 import com.Backend.AI_Resume_Builder_Backend.Entity.ContactMessage;
 import com.Backend.AI_Resume_Builder_Backend.Entity.Feedback;
+import com.Backend.AI_Resume_Builder_Backend.Entity.Resume;
 import com.Backend.AI_Resume_Builder_Backend.Entity.Role;
 import com.Backend.AI_Resume_Builder_Backend.Entity.User;
 import com.Backend.AI_Resume_Builder_Backend.Repository.AdminAuditLogRepository;
+import com.Backend.AI_Resume_Builder_Backend.Repository.AtsCheckRepository;
 import com.Backend.AI_Resume_Builder_Backend.Repository.ContactMessageRepository;
 import com.Backend.AI_Resume_Builder_Backend.Repository.FeedbackRepository;
 import com.Backend.AI_Resume_Builder_Backend.Repository.ResumeRepository;
@@ -47,10 +49,15 @@ public class AdminController {
     private ResumeRepository resumeRepository;
 
     @Autowired
+    private AtsCheckRepository atsCheckRepository;
+
+    @Autowired
     private FeedbackRepository feedbackRepository;
 
     @Autowired
     private ContactMessageRepository contactMessageRepository;
+
+    @Autowired
     private SystemStatsService systemStatsService;
 
     @Autowired
@@ -107,6 +114,12 @@ public class AdminController {
         }
 
         try {
+            // Verify services are not null
+            if (systemStatsService == null) {
+                logger.error("Critical Failure: systemStatsService is null in AdminController");
+                throw new RuntimeException("System stats service unavailable");
+            }
+
             long totalResumes = resumeRepository.count();
             long totalPdf = systemStatsService.getStatValue(SystemStatsService.KEY_PDF_COMPILATIONS);
             long totalAts = systemStatsService.getStatValue(SystemStatsService.KEY_ATS_CHECKS);
@@ -115,20 +128,25 @@ public class AdminController {
             List<Object[]> templateStats = resumeRepository.countByTemplateType();
             List<Map<String, Object>> templateUsage = templateStats.stream().map(obj -> {
                 Map<String, Object> map = new HashMap<>();
-                map.put("name", obj[0]);
-                map.put("value", obj[1]);
+                map.put("name", obj[0] != null ? obj[0].toString() : "Unknown");
+                map.put("value", obj[1] != null ? obj[1] : 0);
                 return map;
             }).collect(Collectors.toList());
 
-            // Daily signups (last 30 days)
+            // 30-day time series data
             LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+
+            // 1. Signups
             List<Object[]> signupStats = userRepository.findSignupsAfter(thirtyDaysAgo);
-            List<Map<String, Object>> dailySignups = signupStats.stream().map(obj -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("date", obj[0].toString());
-                map.put("count", obj[1]);
-                return map;
-            }).collect(Collectors.toList());
+            List<Map<String, Object>> dailySignups = formatTimeSeries(signupStats);
+
+            // 2. Resumes Created
+            List<Object[]> resumeTimeSeries = resumeRepository.findResumeCountsAfter(thirtyDaysAgo);
+            List<Map<String, Object>> dailyResumes = formatTimeSeries(resumeTimeSeries);
+
+            // 3. ATS Checks
+            List<Object[]> atsTimeSeries = atsCheckRepository.findAtsCheckCountsAfter(thirtyDaysAgo);
+            List<Map<String, Object>> dailyAts = formatTimeSeries(atsTimeSeries);
 
             Map<String, Object> stats = new HashMap<>();
             stats.put("totalResumes", totalResumes);
@@ -136,10 +154,57 @@ public class AdminController {
             stats.put("totalAts", totalAts);
             stats.put("templateUsage", templateUsage);
             stats.put("dailySignups", dailySignups);
+            stats.put("dailyResumes", dailyResumes);
+            stats.put("dailyAts", dailyAts);
 
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
-            return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            logger.error("[ADMIN_STATS] FAILED: {}", e.getMessage(), e);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            errorResponse.put("type", e.getClass().getSimpleName());
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private List<Map<String, Object>> formatTimeSeries(List<Object[]> rawData) {
+        return rawData.stream().map(obj -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("date", obj[0].toString());
+            map.put("count", obj[1]);
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    // Get all resumes (Admin only) - Paginated
+    @GetMapping("/resumes")
+    public ResponseEntity<?> getAllResumes(
+            @RequestHeader("Authorization") String authHeader,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        try {
+            if (!isAdmin(authHeader)) {
+                return new ResponseEntity<>(Map.of("error", "Access denied."), HttpStatus.FORBIDDEN);
+            }
+
+            Page<Resume> resumePage = resumeRepository.findAll(pageable);
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", resumePage.getContent().stream().map(resume -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", resume.getId());
+                map.put("email", resume.getUser().getEmail());
+                map.put("userName", resume.getUser().getName());
+                map.put("templateType", resume.getTemplateType());
+                map.put("createdAt", resume.getCreatedAt().toString());
+                return map;
+            }).collect(Collectors.toList()));
+            response.put("currentPage", resumePage.getNumber());
+            response.put("totalElements", resumePage.getTotalElements());
+            response.put("totalPages", resumePage.getTotalPages());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error fetching resumes for admin", e);
+            return new ResponseEntity<>(Map.of("error", "Internal server error"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

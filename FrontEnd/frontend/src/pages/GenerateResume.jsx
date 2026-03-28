@@ -7,7 +7,6 @@ import './GenerateResume.css';
 
 const GenerateResume = () => {
   const [description, setDescription] = useState('');
-  const [selectedTemplate] = useState('ats'); // ATS-optimized template only
   const [loading, setLoading] = useState(false);
   const [charCount, setCharCount] = useState(0);
 
@@ -25,6 +24,12 @@ const GenerateResume = () => {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
   const [usageCount, setUsageCount] = useState(() => parseInt(localStorage.getItem('freeUsageCount') || '0', 10));
+  const [selectedTemplate, setSelectedTemplate] = useState('ats');
+
+  const availableTemplates = {
+    'ats': 'ATS-Engine v2.0 - Stripped of graphical noise to ensure 100% OCR compatibility with enterprise systems.',
+    'minimal': 'Minimal Typographic - Elegant serif-driven design for senior roles and high-impact clarity.'
+  };
 
   const writingTips = [
     { num: 1, text: 'Quantify your impact with numbers and percentages.' },
@@ -260,14 +265,41 @@ const GenerateResume = () => {
           {/* RIGHT SIDE - FORM */}
           <div className="lg:col-span-8 flex flex-col gap-8">
 
-            {/* Template Selected Banner */}
-            <div className="brutal-border bg-brutal-black p-6 flex flex-col sm:flex-row items-center gap-6">
-              <div className="w-16 h-16 shrink-0 brutal-border bg-neon-green flex items-center justify-center font-black text-black text-2xl">
-                ✓
+            {/* Template Selection */}
+            <div className="brutal-border bg-brutal-black p-6 relative">
+              <div className="absolute -top-3 -left-3 bg-neon-green border-2 border-brutal-white px-2 text-[10px] font-black text-black tracking-tighter">
+                /SELECT_ENGINE
               </div>
-              <div>
-                <h3 className="text-lg font-black mb-1">ATS-OPTIMIZED TEMPLATE ACTIVE</h3>
-                <p className="text-xs lowercase text-slate-700">configured to bypass applicant tracking algorithms natively.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                {Object.entries(availableTemplates).map(([key, description]) => (
+                  <div
+                    key={key}
+                    onClick={() => setSelectedTemplate(key)}
+                    className={`p-4 border-2 transition-all cursor-pointer group flex flex-col justify-between min-h-[100px] relative overflow-hidden ${selectedTemplate === key
+                      ? 'bg-neon-green border-brutal-white text-black brutal-shadow-white translate-x-1 translate-y-1 shadow-none'
+                      : 'border-slate-800 bg-transparent text-slate-400 hover:border-slate-600 hover:bg-white/5'
+                      }`}
+                  >
+                    {selectedTemplate === key && (
+                      <div className="absolute top-0 right-0 w-8 h-8 bg-brutal-white flex items-center justify-center rotate-12 translate-x-4 -translate-y-4">
+                        <span className="material-symbols-outlined text-black text-xs font-black">check</span>
+                      </div>
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${selectedTemplate === key ? 'text-black' : 'text-neon-green'}`}>
+                          {key === 'ats' ? 'ATS_OPTIMIZED' : 'MINIMAL_SERIF'}
+                        </span>
+                        {selectedTemplate === key && (
+                          <span className="px-1.5 py-0.5 border border-black text-[8px] font-black animate-pulse">ACTIVE</span>
+                        )}
+                      </div>
+                      <p className={`text-[10px] lowercase leading-relaxed ${selectedTemplate === key ? 'text-black/80 font-medium' : 'text-slate-500'}`}>
+                        {description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 

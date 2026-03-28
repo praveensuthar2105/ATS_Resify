@@ -103,6 +103,11 @@ export const resumeAPI = {
     const response = await apiClient.post('/resume/import/text', { text });
     return response?.data;
   },
+
+  getTemplates: async () => {
+    const response = await apiClient.get('/latex/templates');
+    return response?.data;
+  },
 };
 
 export default apiClient;

@@ -51,6 +51,15 @@ const AdminPanel = () => {
   const [totalContacts, setTotalContacts] = useState(0);
   const [unreadContacts, setUnreadContacts] = useState(0);
 
+  // Resumes State
+  const [resumes, setResumes] = useState([]);
+  const [resumePage, setResumePage] = useState(0);
+  const [resumeRowsPerPage, setResumeRowsPerPage] = useState(20);
+  const [totalResumes, setTotalResumes] = useState(0);
+
+  // Chart Toggle
+  const [chartMetric, setChartMetric] = useState('signups'); // 'signups', 'resumes', 'ats'
+
   useEffect(() => {
     verifyAdmin();
   }, []);
@@ -63,8 +72,9 @@ const AdminPanel = () => {
       else if (tabValue === 3) fetchAuditLogs();
       else if (tabValue === 4) fetchFeedbacks();
       else if (tabValue === 5) fetchContacts();
+      else if (tabValue === 6) fetchResumes();
     }
-  }, [currentUserRole, tabValue, page, rowsPerPage, orderBy, order, auditPage, auditRowsPerPage, feedbackPage, feedbackRowsPerPage, contactPage, contactRowsPerPage]);
+  }, [currentUserRole, tabValue, page, rowsPerPage, orderBy, order, auditPage, auditRowsPerPage, feedbackPage, feedbackRowsPerPage, contactPage, contactRowsPerPage, resumePage, resumeRowsPerPage]);
 
   const verifyAdmin = async () => {
     const token = localStorage.getItem('authToken');
@@ -186,6 +196,22 @@ const AdminPanel = () => {
       setContacts(data.content || []);
       setTotalContacts(data.totalElements || 0);
       setUnreadContacts(data.unreadCount || 0);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchResumes = async () => {
+    setLoading(true);
+    try {
+      const url = `${API_BASE_URL}/admin/resumes?page=${resumePage}&size=${resumeRowsPerPage}&sort=createdAt,desc`;
+      const response = await fetch(url, { headers: getAuthHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch resumes');
+      const data = await response.json();
+      setResumes(data.content || []);
+      setTotalResumes(data.totalElements || 0);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -399,6 +425,7 @@ const AdminPanel = () => {
     { title: 'ANALYTICS', icon: 'timeline' },
     { title: 'SYSTEM HEALTH', icon: 'dns' },
     { title: 'AUDIT LOG', icon: 'history' },
+    { title: 'RESUMES', icon: 'description' },
     { title: 'FEEDBACK', icon: 'star' },
     { title: 'MESSAGES', icon: 'mail', badge: unreadContacts }
   ];
@@ -553,18 +580,35 @@ const AdminPanel = () => {
 
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="col-span-1 lg:col-span-2 border-2 border-black p-6 bg-white shadow-[8px_8px_0px_0px_#000000]">
-                      <h3 className="font-bold text-lg uppercase mb-6 flex items-center gap-2 border-b-2 border-black pb-2">
-                        <span className="w-3 h-3 bg-[#39ff14] border-2 border-black inline-block"></span>
-                        30-DAY REGISTRY
-                      </h3>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b-2 border-black pb-4 gap-4">
+                        <h3 className="font-bold text-lg uppercase flex items-center gap-2">
+                          <span className="w-3 h-3 bg-[#39ff14] border-2 border-black inline-block"></span>
+                          USAGE ANALYTICS (30 DAYS)
+                        </h3>
+                        <div className="flex border-2 border-black">
+                          {['signups', 'resumes', 'ats'].map(m => (
+                            <button
+                              key={m}
+                              onClick={() => setChartMetric(m)}
+                              className={`px-3 py-1 text-xs font-bold uppercase border-r-2 border-black last:border-r-0 transition-colors ${chartMetric === m ? 'bg-black text-[#39ff14]' : 'bg-white hover:bg-[#39ff14]'}`}
+                            >
+                              {m}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={analytics.dailySignups}>
+                          <LineChart data={
+                            chartMetric === 'signups' ? analytics.dailySignups :
+                              chartMetric === 'resumes' ? analytics.dailyResumes :
+                                analytics.dailyAts
+                          }>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                            <XAxis dataKey="date" tick={{ fontFamily: 'monospace', fontSize: 12 }} />
+                            <XAxis dataKey="date" tick={{ fontFamily: 'monospace', fontSize: 10 }} tickFormatter={(val) => val.split('T')[0]} />
                             <YAxis tick={{ fontFamily: 'monospace', fontSize: 12 }} />
                             <RechartsTooltip contentStyle={{ borderRadius: 0, border: '1px solid black', fontFamily: 'monospace', textTransform: 'uppercase' }} />
-                            <Line type="step" dataKey="count" stroke="#000000" strokeWidth={1.5} activeDot={{ r: 4, fill: '#39ff14', stroke: '#000', strokeWidth: 1 }} dot={false} />
+                            <Line type="monotone" dataKey="count" stroke="#000000" strokeWidth={2} activeDot={{ r: 6, fill: '#39ff14', stroke: '#000', strokeWidth: 2 }} dot={{ r: 3, fill: '#000' }} />
                           </LineChart>
                         </ResponsiveContainer>
                       </div>
@@ -654,8 +698,49 @@ const AdminPanel = () => {
                 </div>
               )}
 
-              {/* FEEDBACK TAB */}
+              {/* RESUMES TAB */}
               {tabValue === 4 && (
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold uppercase">GENERATED RESUMES [{totalResumes}]</h2>
+                    <button onClick={fetchResumes} className="px-3 py-1 border-2 border-black bg-black text-[#39ff14] hover:bg-[#39ff14] hover:text-black transition-colors flex items-center gap-2 font-bold text-sm">
+                      <span className="material-symbols-outlined text-[16px]">refresh</span> SYNC
+                    </button>
+                  </div>
+                  <div className="overflow-x-auto border border-black shadow-[2px_2px_0px_0px_#000000] bg-white">
+                    <table className="w-full text-sm">
+                      <thead className="bg-[#f0f0f0] border-b border-black">
+                        <tr>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">USER</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">TEMPLATE</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">DATE_CREATED</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {resumes.map((resume) => (
+                          <tr key={resume.id} className="border-b border-gray-300 hover:bg-[#f8f8f8]">
+                            <td className="p-3">
+                              <div className="font-bold uppercase">{resume.userName}</div>
+                              <div className="text-xs lowercase text-gray-500">{resume.email}</div>
+                            </td>
+                            <td className="p-3">
+                              <span className="px-2 py-1 border border-black bg-white text-xs font-bold uppercase">{resume.templateType}</span>
+                            </td>
+                            <td className="p-3 font-mono text-xs">{new Date(resume.createdAt).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                        {resumes.length === 0 && (
+                          <tr><td colSpan={3} className="p-8 text-center uppercase font-bold text-gray-400">NO RESUMES FOUND</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Pagination total={totalResumes} page={resumePage} setPage={setResumePage} rowsPerPage={resumeRowsPerPage} setRowsPerPage={setResumeRowsPerPage} />
+                </div>
+              )}
+
+              {/* FEEDBACK TAB */}
+              {tabValue === 5 && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold uppercase">USER FEEDBACK [{totalFeedbacks}]</h2>
@@ -708,7 +793,7 @@ const AdminPanel = () => {
               )}
 
               {/* MESSAGES TAB */}
-              {tabValue === 5 && (
+              {tabValue === 6 && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold uppercase flex items-center gap-4">

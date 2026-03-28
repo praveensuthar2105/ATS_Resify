@@ -46,6 +46,7 @@ public class SecurityConfig {
                                                                 "/api/resume/generate",
                                                                 "/api/resume/ats-score",
                                                                 "/api/resume/import/**",
+                                                                "/api/latex/templates",
                                                                 "/",
                                                                 "/health")
                                                 .permitAll()

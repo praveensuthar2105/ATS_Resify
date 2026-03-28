@@ -26,7 +26,7 @@ public class ResumeServiceImpl implements ResumeService {
 
     @Override
     public Map<String, Object> generateResumeResponse(String userResumeDescription) throws IOException {
-        return generateResumeResponse(userResumeDescription, "modern"); // default template
+        return generateResumeResponse(userResumeDescription, "ats"); // default template
     }
 
     public Map<String, Object> generateResumeResponse(String userResumeDescription, String templateType)

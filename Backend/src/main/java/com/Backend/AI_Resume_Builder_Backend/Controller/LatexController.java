@@ -45,11 +45,10 @@ public class LatexController {
             // Validate template type
             if (templateType != null) {
                 String normalized = templateType.toLowerCase();
-                if (!(normalized.equals("professional") || normalized.equals("modern") || normalized.equals("ats")
-                        || normalized.equals("creative"))) {
+                if (!(normalized.equals("ats") || normalized.equals("minimal"))) {
                     Map<String, Object> errorResponse = new HashMap<>();
                     errorResponse.put("error", "Invalid templateType");
-                    errorResponse.put("message", "Allowed values: professional, modern, ats, creative");
+                    errorResponse.put("message", "Allowed values: ats");
                     return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
                 }
                 templateType = normalized;

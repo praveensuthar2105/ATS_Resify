@@ -1,0 +1,131 @@
+%==============================================
+% TEMPLATE: Minimal Typographic
+% Best for: Ultra-clean, senior roles, startups
+% No icons — pure typography-driven design
+%==============================================
+\documentclass[10pt, a4paper]{article}
+
+\usepackage[top=0.6in, bottom=0.6in, left=0.75in, right=0.75in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage[T1]{fontenc}
+\usepackage{charter} % Elegant serif font
+
+\definecolor{darkgray}{RGB}{50, 50, 50}
+\definecolor{medgray}{RGB}{100, 100, 100}
+\definecolor{accent}{RGB}{0, 90, 180}
+
+\hypersetup{colorlinks=true, urlcolor=accent, hidelinks}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+% Section style: small caps with a rule
+\titleformat{\section}
+  {\normalsize\scshape\color{darkgray}}
+  {}{0em}{}
+  [{\color{medgray}\vspace{1pt}\hrule height 0.4pt\vspace{2pt}}]
+\titlespacing{\section}{0pt}{10pt}{4pt}
+
+\newcommand{\entry}[4]{
+  {\small\textbf{#1}\hfill\textit{\color{medgray}#2}}\\
+  {\footnotesize\color{medgray}#3\hfill#4}
+}
+
+\begin{document}
+
+%--- HEADER ---
+\begin{center}
+  {\LARGE\scshape {{FULL_NAME}}}\\[5pt]
+  {\small
+    {{PHONE_NUMBER}} \enspace\textbar\enspace
+    \href{mailto:{{EMAIL}}}{{EMAIL}}
+    {{#LINKEDIN}} \enspace\textbar\enspace \href{https://{{LINKEDIN_DISPLAY}}}{{{LINKEDIN_DISPLAY}}} {{/LINKEDIN}}
+    {{#GITHUB}} \enspace\textbar\enspace \href{https://{{GITHUB_DISPLAY}}}{{{GITHUB_DISPLAY}}} {{/GITHUB}}
+    {{#PORTFOLIO}} \enspace\textbar\enspace \href{https://{{PORTFOLIO}}}{{{PORTFOLIO}}} {{/PORTFOLIO}}
+  }
+\end{center}
+
+\vspace{4pt}
+
+%--- SUMMARY ---
+{{#SUMMARY}}
+\section{Summary}
+{\small {{SUMMARY}}}
+\vspace{4pt}
+{{/SUMMARY}}
+
+%--- EDUCATION ---
+{{#HAS_EDUCATION}}
+\section{Education}
+{{#EDUCATION}}
+\entry{ {{UNIVERSITY}} --- {{DEGREE}} }{ {{GRADUATION_YEAR}} }{ {{LOCATION}} }{}
+\vspace{2pt}
+{{/EDUCATION}}
+{{/HAS_EDUCATION}}
+
+%--- EXPERIENCE ---
+{{#HAS_EXPERIENCE}}
+\section{Experience}
+{{#EXPERIENCE}}
+\entry{ {{JOB_TITLE}} }{ {{DURATION}} }{ {{COMPANY}} }{ {{LOCATION}} }
+
+\begin{itemize}[leftmargin=14pt, topsep=3pt, itemsep=1pt]
+  \footnotesize
+{{RESPONSIBILITY}}
+\end{itemize}
+\vspace{4pt}
+{{/EXPERIENCE}}
+{{/HAS_EXPERIENCE}}
+
+%--- PROJECTS ---
+{{#HAS_PROJECTS}}
+\section{Projects}
+{{#PROJECTS}}
+\entry{ {{PROJECT_TITLE}} }{}{\href{ {{GITHUB_LINK}} }{ {{GITHUB_LINK}} } \textnormal{\footnotesize| {{TECHNOLOGIES}} }}{}
+
+\begin{itemize}[leftmargin=14pt, topsep=3pt, itemsep=1pt]
+  \footnotesize
+{{PROJECT_DESCRIPTION}}
+\end{itemize}
+\vspace{4pt}
+{{/PROJECTS}}
+{{/HAS_PROJECTS}}
+
+%--- SKILLS ---
+{{#HAS_SKILLS}}
+\section{Technical Skills}
+\begin{tabular}{@{}ll}
+  {{#SKILL_LANGUAGES}} \small\textbf{Languages:} & \small {{SKILL_LANGUAGES}} \\[2pt] {{/SKILL_LANGUAGES}}
+  {{#SKILL_FRAMEWORKS}} \small\textbf{Frameworks:} & \small {{SKILL_FRAMEWORKS}} \\[2pt] {{/SKILL_FRAMEWORKS}}
+  {{#SKILL_DATABASES}} \small\textbf{Databases:} & \small {{SKILL_DATABASES}} \\[2pt] {{/SKILL_DATABASES}}
+  {{#SKILL_TOOLS}} \small\textbf{Tools:} & \small {{SKILL_TOOLS}} \\[2pt] {{/SKILL_TOOLS}}
+  {{#SKILL_CLOUD}} \small\textbf{Cloud:} & \small {{SKILL_CLOUD}} \\[2pt] {{/SKILL_CLOUD}}
+  {{#SKILL_OTHER}} \small\textbf{Other:} & \small {{SKILL_OTHER}} \\[2pt] {{/SKILL_OTHER}}
+\end{tabular}
+{{/HAS_SKILLS}}
+
+%--- ACHIEVEMENTS ---
+{{#HAS_ACHIEVEMENTS}}
+\section{Achievements \& Certifications}
+\begin{itemize}[leftmargin=14pt, itemsep=1pt]
+  \footnotesize
+{{#ACHIEVEMENTS}}
+  \item {{ACH_TITLE}} ({{ACH_YEAR}})
+{{/ACHIEVEMENTS}}
+\end{itemize}
+{{/HAS_ACHIEVEMENTS}}
+
+%--- CERTIFICATIONS ---
+{{#HAS_CERTIFICATIONS}}
+\section{Certifications}
+\begin{itemize}[leftmargin=14pt, itemsep=1pt]
+  \footnotesize
+{{#CERTIFICATIONS}}
+  \item {{CERT_TITLE}} --- {{ISSUING_ORG}} ({{CERT_YEAR}})
+{{/CERTIFICATIONS}}
+\end{itemize}
+{{/HAS_CERTIFICATIONS}}
+
+\end{document}

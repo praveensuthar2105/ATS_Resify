@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { API_BASE_URL } from '../services/api';
 import { Helmet } from 'react-helmet-async';
+import SEO from '../components/SEO';
 
 const Feedback = () => {
     const [formData, setFormData] = useState({ name: '', email: '', rating: 0, message: '' });
