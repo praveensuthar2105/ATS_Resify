@@ -116,9 +116,18 @@ export const ResumeProvider = ({ children }) => {
     const email = escapeLatex(pi.email || 'email@example.com');
     const phone = escapeLatex(pi.phoneNumber || '+1 234 567 8900');
     const location = escapeLatex(pi.location || '');
-    const linkedin = pi.linkedIn ? escapeLatex(pi.linkedIn) : '';
-    const github = pi.gitHub ? escapeLatex(pi.gitHub) : '';
-    const portfolio = pi.portfolio ? escapeLatex(pi.portfolio) : '';
+    const linkedin = pi.linkedIn ? escapeLatex((() => {
+      const u = pi.linkedIn.trim();
+      return /^https?:\/\//i.test(u) ? u : `https://${u}`;
+    })()) : '';
+    const github = pi.gitHub ? escapeLatex((() => {
+      const u = pi.gitHub.trim();
+      return /^https?:\/\//i.test(u) ? u : `https://${u}`;
+    })()) : '';
+    const portfolio = pi.portfolio ? escapeLatex((() => {
+      const u = pi.portfolio.trim();
+      return /^https?:\/\//i.test(u) ? u : `https://${u}`;
+    })()) : '';
 
     let contactParts = [];
     if (phone) contactParts.push(phone);

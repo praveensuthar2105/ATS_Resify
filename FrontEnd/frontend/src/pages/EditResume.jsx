@@ -154,9 +154,19 @@ const EditResume = () => {
     const email = escapeLatex(pi.email || 'email@example.com');
     const phone = escapeLatex(pi.phoneNumber || '+1 234 567 8900');
     const location = escapeLatex(pi.location || '');
-    const linkedin = pi.linkedIn ? escapeLatex(pi.linkedIn) : '';
-    const github = pi.gitHub ? escapeLatex(pi.gitHub) : '';
-    const portfolio = pi.portfolio ? escapeLatex(pi.portfolio) : '';
+
+    // Ensure URL has https:// so \href produces a working hyperlink in the PDF.
+    // The form blur already normalizes to a full URL; this is just a safety net.
+    const ensureHttps = (url) => {
+      if (!url) return '';
+      const u = url.trim();
+      if (!u) return '';
+      return /^https?:\/\//i.test(u) ? u : `https://${u}`;
+    };
+
+    const linkedin = pi.linkedIn ? escapeLatex(ensureHttps(pi.linkedIn)) : '';
+    const github = pi.gitHub ? escapeLatex(ensureHttps(pi.gitHub)) : '';
+    const portfolio = pi.portfolio ? escapeLatex(ensureHttps(pi.portfolio)) : '';
 
     let contactParts = [];
     if (phone) contactParts.push(phone);
@@ -752,6 +762,59 @@ ${sections}
               <FormItem label="EMAIL" type="email" value={formData.email} onChange={(e) => updateField('email', e.target.value)} placeholder="USER@DOMAIN.COM" />
               <FormItem label="PHONE NUMBER" value={formData.phoneNumber} onChange={(e) => updateField('phoneNumber', e.target.value)} placeholder="000-000-0000" />
               <FormItem label="LOCATION" value={formData.location} onChange={(e) => updateField('location', e.target.value)} placeholder="CITY, NATION" />
+              {/* LinkedIn */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase tracking-widest">
+                  LINKEDIN <span className="normal-case text-[10px] bg-black text-[#39ff14] px-1 py-0.5 ml-1">🔗 CLICKABLE IN RESUME</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.linkedIn || ''}
+                  onChange={(e) => updateField('linkedIn', e.target.value)}
+                  onBlur={(e) => {
+                    const v = e.target.value.trim();
+                    if (!v) return;
+                    if (/^https?:\/\/(www\.)?linkedin\.com/i.test(v)) return; // already correct
+                    if (/^(www\.)?linkedin\.com/i.test(v)) { updateField('linkedIn', `https://${v}`); return; }
+                    if (/^in\//i.test(v)) { updateField('linkedIn', `https://www.linkedin.com/${v}`); return; }
+                    updateField('linkedIn', `https://www.linkedin.com/in/${v}`);
+                  }}
+                  placeholder="linkedin.com/in/yourname or yourname"
+                  className="border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[4px_4px_0px_0px_#39ff14] p-3 text-sm font-mono transition-all h-12"
+                />
+                {formData.linkedIn && (
+                  <a href={formData.linkedIn} target="_blank" rel="noopener noreferrer"
+                    className="text-[11px] font-bold text-blue-600 hover:text-[#39ff14] hover:underline mt-0.5">
+                    ↗ Preview link
+                  </a>
+                )}
+              </div>
+              {/* GitHub */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase tracking-widest">
+                  GITHUB <span className="normal-case text-[10px] bg-black text-[#39ff14] px-1 py-0.5 ml-1">🔗 CLICKABLE IN RESUME</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.gitHub || ''}
+                  onChange={(e) => updateField('gitHub', e.target.value)}
+                  onBlur={(e) => {
+                    const v = e.target.value.trim();
+                    if (!v) return;
+                    if (/^https?:\/\/(www\.)?github\.com/i.test(v)) return; // already correct
+                    if (/^(www\.)?github\.com/i.test(v)) { updateField('gitHub', `https://${v}`); return; }
+                    updateField('gitHub', `https://github.com/${v}`);
+                  }}
+                  placeholder="github.com/yourname or yourname"
+                  className="border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[4px_4px_0px_0px_#39ff14] p-3 text-sm font-mono transition-all h-12"
+                />
+                {formData.gitHub && (
+                  <a href={formData.gitHub} target="_blank" rel="noopener noreferrer"
+                    className="text-[11px] font-bold text-blue-600 hover:text-[#39ff14] hover:underline mt-0.5">
+                    ↗ Preview link
+                  </a>
+                )}
+              </div>
             </div>
           </SectionCard>
 

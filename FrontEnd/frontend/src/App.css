@@ -304,6 +304,35 @@ button {
     }
 }
 
+/* Field badge - used in PersonalInfoForm to mark fields that become clickable links */
+.field-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 7px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 20px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--primary);
+  vertical-align: middle;
+}
+
+/* Preview link shown beneath LinkedIn/GitHub inputs */
+.field-preview-link {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.field-preview-link:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
 /* Print Styles */
 @media print {
     body {
