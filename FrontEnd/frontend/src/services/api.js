@@ -7,7 +7,7 @@ const isLocalhost = Boolean(
   window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
 );
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (isLocalhost ? 'http://localhost:8080/api' : 'https://api.atsresify.me/api');
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (isLocalhost ? 'http://localhost:8080/api' : 'https://ats-resify-backend-692397969993.asia-south1.run.app/api');
 export const API_ROOT_URL = API_BASE_URL.replace(/\/api\/?$/, '') || '';
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
