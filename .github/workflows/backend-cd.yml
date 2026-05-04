@@ -1,4 +1,4 @@
-name: Backend CI/CD to AWS Elastic Beanstalk (Docker)
+name: Backend CI/CD to Google Cloud Run
 
 on:
   push:
@@ -7,6 +7,11 @@ on:
     paths:
       - 'Backend/**'
   workflow_dispatch:
+
+env:
+  GCP_REGION: asia-south1
+  SERVICE_NAME: ats-resify-backend
+  DOCKER_REPO: ats-resify-repo
 
 jobs:
   build_and_deploy:
@@ -26,23 +31,51 @@ jobs:
       - name: Build with Maven
         working-directory: ./Backend
         run: mvn clean package -DskipTests
-      
-      - name: Generate Deployment Package
-        run: |
-          cd Backend
-          # We zip the Dockerfile and the generated compiled jar from the target folder
-          zip -r deploy.zip Dockerfile target/*.jar
-          
-      - name: Deploy to Elastic Beanstalk
-        uses: einaregilsson/beanstalk-deploy@v22
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          region: ${{ secrets.AWS_REGION }}
-          application_name: ${{ secrets.EB_APPLICATION_NAME }}
-          environment_name: ${{ secrets.EB_ENVIRONMENT_NAME }}
-          version_label: "backend-deploy-${{ github.sha }}"
-          deployment_package: Backend/deploy.zip
-          wait_for_deployment: true
-          wait_for_environment_recovery: 600
-          use_existing_version_if_available: true
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and Push Docker Image
+        working-directory: ./Backend
+        run: |
+          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.DOCKER_REPO }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
+          docker build -t $IMAGE .
+          docker push $IMAGE
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.GCP_REGION }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.DOCKER_REPO }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          flags: >-
+            --allow-unauthenticated
+            --memory=1Gi
+            --cpu=1
+            --min-instances=0
+            --max-instances=2
+            --timeout=300
+            --concurrency=80
+          env_vars: |
+            SPRING_PROFILES_ACTIVE=gcp
+          secrets: |
+            DB_URL=DB_URL:latest
+            DB_USERNAME=DB_USERNAME:latest
+            DB_PASSWORD=DB_PASSWORD:latest
+            FRONTEND_URL=FRONTEND_URL:latest
+            GEMINI_API_KEY=GEMINI_API_KEY:latest
+            GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID:latest
+            GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET:latest
+            JWT_SECRET=JWT_SECRET:latest
+            REDIS_HOST=REDIS_HOST:latest
+            REDIS_PORT=REDIS_PORT:latest
+            REDIS_PASSWORD=REDIS_PASSWORD:latest
+            VERTEX_PROJECT_ID=VERTEX_PROJECT_ID:latest

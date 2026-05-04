@@ -16,9 +16,10 @@ RUN apt-get update && \
 # Note we specify target directory explicitly assuming it is included in deploy.zip
 COPY target/app.jar /app/app.jar
 
-ENV PORT=5000
+# Cloud Run injects PORT=8080 at runtime; fallback to 8080 for local testing
+ENV PORT=8080
 ENV LATEX_COMPILER=pdflatex
 ENV LATEX_COMPILER_PATH=pdflatex
 
-EXPOSE 5000
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+EXPOSE 8080
+ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-jar", "/app/app.jar"]
