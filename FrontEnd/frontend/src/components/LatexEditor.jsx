@@ -164,7 +164,6 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
             const label = hrefMatch[2].toLowerCase();
             if (label.includes('linkedin')) result.personalInformation.linkedIn = unescapeLatex(url);
             else if (label.includes('github')) result.personalInformation.gitHub = unescapeLatex(url);
-            else if (label.includes('portfolio')) result.personalInformation.portfolio = unescapeLatex(url);
           } else if (part.includes('@')) {
             result.personalInformation.email = unescapeLatex(part);
           } else if (part.match(/^[+\d\s\-().]+$/)) {
@@ -388,13 +387,11 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
     const location = escapeLatex(pi.location || '');
     const linkedin = pi.linkedIn ? escapeLatex(pi.linkedIn) : '';
     const github = pi.gitHub ? escapeLatex(pi.gitHub) : '';
-    const portfolio = pi.portfolio ? escapeLatex(pi.portfolio) : '';
 
     // Build contact line
     let contactParts = [phone, email];
     if (linkedin) contactParts.push(`\\href{${linkedin}}{LinkedIn}`);
     if (github) contactParts.push(`\\href{${github}}{GitHub}`);
-    if (portfolio) contactParts.push(`\\href{${portfolio}}{Portfolio}`);
     if (location) contactParts.push(location);
     const contactLine = contactParts.join(' $|$ ');
 

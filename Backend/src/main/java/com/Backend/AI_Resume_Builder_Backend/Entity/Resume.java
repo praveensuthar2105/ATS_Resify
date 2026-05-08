@@ -18,6 +18,12 @@ public class Resume {
     @Column(nullable = false)
     private String templateType;
 
+    @Column(columnDefinition = "LONGTEXT")
+    private String resumeJson;
+
+    @Column
+    private String candidateName;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -66,5 +72,21 @@ public class Resume {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getResumeJson() {
+        return resumeJson;
+    }
+
+    public void setResumeJson(String resumeJson) {
+        this.resumeJson = resumeJson;
+    }
+
+    public String getCandidateName() {
+        return candidateName;
+    }
+
+    public void setCandidateName(String candidateName) {
+        this.candidateName = candidateName;
     }
 }

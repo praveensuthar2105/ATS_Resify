@@ -61,7 +61,7 @@ export const parseLatexToResumeData = (latex) => {
                     const label = hrefMatch[2].toLowerCase();
                     if (label.includes('linkedin')) result.personalInformation.linkedIn = unescapeLatex(url);
                     else if (label.includes('github')) result.personalInformation.gitHub = unescapeLatex(url);
-                    else if (label.includes('portfolio') || label.includes('website')) result.personalInformation.portfolio = unescapeLatex(url);
+
                 } else if (part.includes('@')) {
                     result.personalInformation.email = unescapeLatex(part.replace(/\\href\{[^}]*\}\{([^}]*)\}/, '$1'));
                 } else if (part.match(/[+\d]{1,3}[-\s\.]?\d{3}[-\s\.]?\d{3,4}/)) {

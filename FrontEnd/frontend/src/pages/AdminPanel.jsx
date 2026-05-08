@@ -56,9 +56,27 @@ const AdminPanel = () => {
   const [resumePage, setResumePage] = useState(0);
   const [resumeRowsPerPage, setResumeRowsPerPage] = useState(20);
   const [totalResumes, setTotalResumes] = useState(0);
+  const [selectedResume, setSelectedResume] = useState(null);
+  const [resumeDrawerOpen, setResumeDrawerOpen] = useState(false);
+
+  // ATS Checks State
+  const [atsChecks, setAtsChecks] = useState([]);
+  const [atsCheckPage, setAtsCheckPage] = useState(0);
+  const [atsCheckRowsPerPage, setAtsCheckRowsPerPage] = useState(20);
+  const [totalAtsChecks, setTotalAtsChecks] = useState(0);
+  const [selectedAtsCheck, setSelectedAtsCheck] = useState(null);
+  const [atsDrawerOpen, setAtsDrawerOpen] = useState(false);
 
   // Chart Toggle
   const [chartMetric, setChartMetric] = useState('signups'); // 'signups', 'resumes', 'ats'
+
+  // New Phase 2 States
+  const [userProfile, setUserProfile] = useState(null);
+  const [userProfileDrawerOpen, setUserProfileDrawerOpen] = useState(false);
+  const [engagementStats, setEngagementStats] = useState(null);
+  const [feedbackSummary, setFeedbackSummary] = useState(null);
+  const [liveStats, setLiveStats] = useState(null);
+
 
   useEffect(() => {
     verifyAdmin();
@@ -70,11 +88,27 @@ const AdminPanel = () => {
       else if (tabValue === 1) fetchAnalytics();
       else if (tabValue === 2) fetchHealth();
       else if (tabValue === 3) fetchAuditLogs();
-      else if (tabValue === 4) fetchFeedbacks();
-      else if (tabValue === 5) fetchContacts();
-      else if (tabValue === 6) fetchResumes();
+      else if (tabValue === 4) fetchResumes();
+      else if (tabValue === 5) fetchAtsChecks();
+      else if (tabValue === 6) { fetchFeedbacks(); fetchFeedbackSummary(); }
+      else if (tabValue === 7) fetchContacts();
+      else if (tabValue === 8) fetchEngagementStats();
     }
-  }, [currentUserRole, tabValue, page, rowsPerPage, orderBy, order, auditPage, auditRowsPerPage, feedbackPage, feedbackRowsPerPage, contactPage, contactRowsPerPage, resumePage, resumeRowsPerPage]);
+  }, [currentUserRole, tabValue, page, rowsPerPage, orderBy, order, auditPage, auditRowsPerPage, feedbackPage, feedbackRowsPerPage, contactPage, contactRowsPerPage, resumePage, resumeRowsPerPage, atsCheckPage, atsCheckRowsPerPage]);
+
+  const fetchLiveStats = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/live-stats`, { headers: getAuthHeaders() });
+      if (response.ok) {
+        const data = await response.json();
+        setLiveStats(data);
+      }
+    } catch (err) { console.error('Live stats error', err); }
+  };
+
+  useEffect(() => {
+    if (currentUserRole === 'ADMIN') fetchLiveStats();
+  }, [currentUserRole]);
 
   const verifyAdmin = async () => {
     const token = localStorage.getItem('authToken');
@@ -113,7 +147,10 @@ const AdminPanel = () => {
     setLoading(true);
     try {
       const sortParam = `${orderBy},${order}`;
-      const url = `${API_BASE_URL}/admin/users?page=${page}&size=${rowsPerPage}&sort=${sortParam}`;
+      let url = `${API_BASE_URL}/admin/users?page=${page}&size=${rowsPerPage}&sort=${sortParam}`;
+      if (searchQuery && searchQuery.trim() !== '') {
+        url += `&search=${encodeURIComponent(searchQuery.trim())}`;
+      }
       const response = await fetch(url, { headers: getAuthHeaders() });
       if (!response.ok) throw new Error('Failed to fetch users');
       const data = await response.json();
@@ -219,6 +256,46 @@ const AdminPanel = () => {
     }
   };
 
+  const fetchResumeDetails = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/resumes/${id}`, { headers: getAuthHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch resume details');
+      const data = await response.json();
+      setSelectedResume(data);
+      setResumeDrawerOpen(true);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const fetchAtsChecks = async () => {
+    setLoading(true);
+    try {
+      const url = `${API_BASE_URL}/admin/ats-checks?page=${atsCheckPage}&size=${atsCheckRowsPerPage}&sort=createdAt,desc`;
+      const response = await fetch(url, { headers: getAuthHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch ATS checks');
+      const data = await response.json();
+      setAtsChecks(data.content || []);
+      setTotalAtsChecks(data.totalElements || 0);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAtsCheckDetails = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/ats-checks/${id}`, { headers: getAuthHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch ATS details');
+      const data = await response.json();
+      setSelectedAtsCheck(data);
+      setAtsDrawerOpen(true);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const markAsRead = async (id) => {
     try {
       await fetch(`${API_BASE_URL}/admin/contacts/${id}/read`, { method: 'PUT', headers: getAuthHeaders() });
@@ -244,6 +321,36 @@ const AdminPanel = () => {
     } catch (err) { setError(err.message); }
   };
 
+  const fetchUserProfile = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/users/${id}/profile`, { headers: getAuthHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch user profile');
+      const data = await response.json();
+      setUserProfile(data);
+      setUserProfileDrawerOpen(true);
+    } catch (err) { setError(err.message); }
+  };
+
+  const fetchEngagementStats = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/stats/engagement`, { headers: getAuthHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch engagement stats');
+      const data = await response.json();
+      setEngagementStats(data);
+    } catch (err) { setError(err.message); } finally { setLoading(false); }
+  };
+
+  const fetchFeedbackSummary = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/feedback/summary`, { headers: getAuthHeaders() });
+      if (response.ok) {
+        const data = await response.json();
+        setFeedbackSummary(data);
+      }
+    } catch (err) { console.error(err); }
+  };
+
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
@@ -265,6 +372,36 @@ const AdminPanel = () => {
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const exportResumes = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/export/resumes`, { headers: getAuthHeaders() });
+      if (!response.ok) throw new Error('Failed to export resumes');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'resumes_export.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) { setError(err.message); }
+  };
+
+  const exportAnalytics = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/export/analytics`, { headers: getAuthHeaders() });
+      if (!response.ok) throw new Error('Failed to export analytics');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'analytics_summary.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) { setError(err.message); }
   };
 
   const grantAdminRole = async (userId, userName) => {
@@ -409,6 +546,312 @@ const AdminPanel = () => {
     );
   };
 
+  const ResumeDrawer = () => {
+    if (!selectedResume || !resumeDrawerOpen) return null;
+    let resumeData = null;
+    if (selectedResume.resumeJson) {
+      try {
+        resumeData = JSON.parse(selectedResume.resumeJson);
+      } catch (e) { console.error("Failed to parse resume JSON", e); }
+    }
+
+    return (
+      <div className="fixed inset-y-0 right-0 w-full md:w-[600px] bg-white border-l-4 border-black shadow-[-8px_0px_0px_0px_rgba(0,0,0,0.1)] z-50 overflow-y-auto font-mono flex flex-col transform transition-transform">
+        <div className="sticky top-0 bg-black text-[#39ff14] p-4 flex justify-between items-center border-b-4 border-[#39ff14] z-10">
+          <h2 className="text-xl font-black uppercase flex items-center gap-2">
+            <span className="material-symbols-outlined">description</span>
+            RESUME DATA
+          </h2>
+          <button onClick={() => setResumeDrawerOpen(false)} className="hover:text-white transition-colors">
+            <span className="material-symbols-outlined text-3xl">close</span>
+          </button>
+        </div>
+        
+        <div className="p-6 flex-1">
+          <div className="mb-6 grid grid-cols-2 gap-4">
+            <div className="border-2 border-black p-3 bg-[#f8f8f8]">
+              <div className="text-xs font-bold uppercase text-gray-500 mb-1">Generated By</div>
+              <div className="font-bold uppercase truncate">{selectedResume.userName}</div>
+              <div className="text-xs lowercase">{selectedResume.email}</div>
+            </div>
+            <div className="border-2 border-black p-3 bg-[#f8f8f8]">
+              <div className="text-xs font-bold uppercase text-gray-500 mb-1">Metadata</div>
+              <div className="font-bold uppercase text-xs mb-1">Template: <span className="bg-black text-[#39ff14] px-1">{selectedResume.templateType}</span></div>
+              <div className="text-xs">{new Date(selectedResume.createdAt).toLocaleString()}</div>
+            </div>
+          </div>
+
+          {!resumeData ? (
+            <div className="border-2 border-dashed border-gray-400 p-8 text-center text-gray-500 font-bold uppercase bg-gray-50">
+              <span className="material-symbols-outlined text-4xl mb-2 opacity-50">data_alert</span>
+              <p>NO RESUME CONTENT STORED IN DATABASE</p>
+              <p className="text-xs mt-2 font-normal normal-case">This resume was generated before content persistence was enabled.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="border-2 border-black shadow-[4px_4px_0px_0px_#000]">
+                <div className="bg-[#39ff14] border-b-2 border-black p-2 font-bold uppercase border-t-0">Personal Info</div>
+                <div className="p-4 bg-white grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><span className="font-bold text-gray-500 text-xs">NAME:</span><br/>{resumeData?.personalInformation?.fullName || resumeData?.name || '—'}</div>
+                  <div><span className="font-bold text-gray-500 text-xs">EMAIL:</span><br/><span className="lowercase">{resumeData?.personalInformation?.email || resumeData?.email || '—'}</span></div>
+                  <div><span className="font-bold text-gray-500 text-xs">PHONE:</span><br/>{resumeData?.personalInformation?.phoneNumber || resumeData?.phone || '—'}</div>
+                  <div className="col-span-1 md:col-span-2"><span className="font-bold text-gray-500 text-xs">ADDRESS:</span><br/>{resumeData?.personalInformation?.location || resumeData?.address || '—'}</div>
+                  {(resumeData?.personalInformation?.linkedIn || resumeData?.linkedlnId) && <div className="col-span-1 md:col-span-2"><span className="font-bold text-gray-500 text-xs">LINKEDIN:</span><br/>{resumeData?.personalInformation?.linkedIn || resumeData?.linkedlnId}</div>}
+                  {(resumeData?.personalInformation?.gitHub || resumeData?.githubId) && <div className="col-span-1 md:col-span-2"><span className="font-bold text-gray-500 text-xs">GITHUB:</span><br/>{resumeData?.personalInformation?.gitHub || resumeData?.githubId}</div>}
+                </div>
+              </div>
+
+              {resumeData.summary && (
+                <div className="border-2 border-black shadow-[4px_4px_0px_0px_#000]">
+                  <div className="bg-[#39ff14] border-b-2 border-black p-2 font-bold uppercase border-t-0">Summary</div>
+                  <div className="p-4 bg-white text-sm whitespace-pre-wrap">{resumeData.summary}</div>
+                </div>
+              )}
+
+              {resumeData.skills && (
+                <div className="border-2 border-black shadow-[4px_4px_0px_0px_#000]">
+                  <div className="bg-[#39ff14] border-b-2 border-black p-2 font-bold uppercase border-t-0">Skills</div>
+                  <div className="p-4 bg-white flex flex-wrap gap-2">
+                    {Array.isArray(resumeData.skills) 
+                      ? resumeData.skills.map((skill, i) => (
+                          <span key={`arr-${i}`} className="border border-black px-2 py-1 text-xs font-bold uppercase bg-gray-100">{typeof skill === 'string' ? skill : JSON.stringify(skill)}</span>
+                        ))
+                      : typeof resumeData.skills === 'object' && resumeData.skills !== null
+                        ? Object.entries(resumeData.skills).flatMap(([category, skills]) => 
+                            Array.isArray(skills) ? skills.map((skill, i) => (
+                              <span key={`${category}-${i}`} className="border border-black px-2 py-1 text-xs font-bold uppercase bg-gray-100">{typeof skill === 'string' ? skill : JSON.stringify(skill)}</span>
+                            )) : []
+                          )
+                        : <span className="border border-black px-2 py-1 text-xs font-bold uppercase bg-gray-100">{String(resumeData.skills)}</span>
+                    }
+                  </div>
+                </div>
+              )}
+
+              {(resumeData.experience || resumeData.experienceList) && (resumeData.experience || resumeData.experienceList).length > 0 && (
+                <div className="border-2 border-black shadow-[4px_4px_0px_0px_#000]">
+                  <div className="bg-[#39ff14] border-b-2 border-black p-2 font-bold uppercase border-t-0">Experience</div>
+                  <div className="p-0 bg-white">
+                    {(resumeData.experience || resumeData.experienceList).map((exp, i) => (
+                      <div key={i} className="p-4 border-b-2 border-gray-200 last:border-b-0">
+                        <div className="font-bold uppercase text-lg">{exp.jobTitle || exp.title}</div>
+                        <div className="text-sm font-bold">{exp.company} <span className="text-gray-500 font-normal">| {exp.duration}</span></div>
+                        {(exp.responsibility || exp.description) && <p className="text-sm mt-2 whitespace-pre-wrap">{exp.responsibility || exp.description}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(resumeData.education || resumeData.educationList) && (resumeData.education || resumeData.educationList).length > 0 && (
+                <div className="border-2 border-black shadow-[4px_4px_0px_0px_#000]">
+                  <div className="bg-[#39ff14] border-b-2 border-black p-2 font-bold uppercase border-t-0">Education</div>
+                  <div className="p-0 bg-white">
+                    {(resumeData.education || resumeData.educationList).map((edu, i) => (
+                      <div key={i} className="p-4 border-b-2 border-gray-200 last:border-b-0">
+                        <div className="font-bold uppercase">{edu.degree}</div>
+                        <div className="text-sm">{edu.university || edu.college} <span className="text-gray-500 font-normal">| {edu.graduationYear || edu.year}</span></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const AtsDrawer = () => {
+    if (!selectedAtsCheck || !atsDrawerOpen) return null;
+
+    let scoreBreakdown = null;
+    let suggestions = null;
+
+    try {
+      if (selectedAtsCheck.scoreBreakdown) scoreBreakdown = JSON.parse(selectedAtsCheck.scoreBreakdown);
+      if (selectedAtsCheck.suggestions) suggestions = JSON.parse(selectedAtsCheck.suggestions);
+    } catch (e) {
+      console.error("Failed to parse ATS JSON fields", e);
+    }
+
+    const getScoreColor = (score) => {
+      if (score >= 80) return "text-[#39ff14] border-[#39ff14]";
+      if (score >= 60) return "text-yellow-400 border-yellow-400";
+      return "text-red-500 border-red-500";
+    };
+
+    return (
+      <div className="fixed inset-y-0 right-0 w-full md:w-[600px] bg-white border-l-4 border-black shadow-[-8px_0px_0px_0px_rgba(0,0,0,0.1)] z-50 overflow-y-auto font-mono flex flex-col transform transition-transform">
+        <div className="sticky top-0 bg-black text-white p-4 flex justify-between items-center border-b-4 border-black z-10">
+          <h2 className="text-xl font-black uppercase flex items-center gap-2">
+            <span className="material-symbols-outlined">fact_check</span>
+            ATS ANALYSIS RESULT
+          </h2>
+          <button onClick={() => setAtsDrawerOpen(false)} className="hover:text-[#39ff14] transition-colors">
+            <span className="material-symbols-outlined text-3xl">close</span>
+          </button>
+        </div>
+
+        <div className="p-6 flex-1 bg-gray-50">
+          <div className="mb-6 grid grid-cols-2 gap-4">
+            <div className="border-2 border-black p-3 bg-white shadow-[4px_4px_0px_0px_#000]">
+              <div className="text-xs font-bold uppercase text-gray-500 mb-1">CANDIDATE</div>
+              <div className="font-bold uppercase truncate">{selectedAtsCheck.userName}</div>
+              <div className="text-xs lowercase">{selectedAtsCheck.email}</div>
+            </div>
+            <div className="border-2 border-black p-3 bg-white shadow-[4px_4px_0px_0px_#000]">
+              <div className="text-xs font-bold uppercase text-gray-500 mb-1">METADATA</div>
+              <div className="text-xs mb-1">Target Job Provided: <strong>{selectedAtsCheck.jobDescriptionProvided ? 'YES' : 'NO'}</strong></div>
+              <div className="text-xs">{new Date(selectedAtsCheck.createdAt).toLocaleString()}</div>
+            </div>
+          </div>
+
+          <div className="mb-8 flex flex-col items-center justify-center border-2 border-black bg-black text-white p-6 shadow-[6px_6px_0px_0px_#39ff14]">
+            <div className="text-sm font-bold uppercase mb-2">OVERALL MATCH SCORE</div>
+            <div className={`text-7xl font-black ${getScoreColor(selectedAtsCheck.atsScore || 0).split(' ')[0]}`}>
+              {selectedAtsCheck.atsScore || 0}<span className="text-3xl text-gray-500">/100</span>
+            </div>
+          </div>
+
+          {scoreBreakdown && (
+            <div className="mb-6">
+              <h3 className="font-bold uppercase mb-3 flex items-center gap-2"><span className="material-symbols-outlined text-sm">analytics</span> SCORE BREAKDOWN</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(scoreBreakdown).map(([key, val]) => {
+                  const score = typeof val === 'object' && val !== null ? val.score || 0 : val;
+                  return (
+                    <div key={key} className="border-2 border-black bg-white p-3 flex justify-between items-center shadow-[2px_2px_0px_0px_#000]">
+                      <span className="text-xs font-bold uppercase text-gray-600">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                      <span className={`font-black ${getScoreColor(score).split(' ')[0]}`}>{score}/100</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {suggestions && suggestions.length > 0 && (
+            <div className="mb-6">
+              <h3 className="font-bold uppercase mb-3 flex items-center gap-2"><span className="material-symbols-outlined text-sm">lightbulb</span> TOP SUGGESTIONS</h3>
+              <div className="space-y-3">
+                {suggestions.map((sugg, i) => {
+                  const text = typeof sugg === 'object' && sugg !== null ? sugg.suggestion || sugg.text : sugg;
+                  const section = typeof sugg === 'object' && sugg !== null ? sugg.section : null;
+                  const priority = typeof sugg === 'object' && sugg !== null ? sugg.priority : null;
+                  return (
+                    <div key={i} className="border-l-4 border-l-[#39ff14] border-2 border-black bg-white p-4 shadow-[2px_2px_0px_0px_#000]">
+                      {section && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 mb-2 inline-block uppercase border border-black mr-2 ${priority === 'high' ? 'bg-red-500 text-white' : priority === 'medium' ? 'bg-yellow-400 text-black' : 'bg-black text-white'}`}>
+                          {section}
+                        </span>
+                      )}
+                      <p className="text-sm">{typeof text === 'string' ? text : JSON.stringify(text)}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {selectedAtsCheck.resumeText && (
+            <div className="mb-6">
+              <h3 className="font-bold uppercase mb-3 flex items-center gap-2"><span className="material-symbols-outlined text-sm">format_align_left</span> EXTRACTED TEXT PREVIEW</h3>
+              <div className="border-2 border-black bg-white p-4 h-64 overflow-y-auto text-xs whitespace-pre-wrap">
+                {selectedAtsCheck.resumeText}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const UserProfileDrawer = () => {
+    if (!userProfile || !userProfileDrawerOpen) return null;
+
+    return (
+      <div className="fixed inset-y-0 right-0 w-full md:w-[600px] bg-white border-l-4 border-black shadow-[-8px_0px_0px_0px_rgba(0,0,0,0.1)] z-50 overflow-y-auto font-mono flex flex-col transform transition-transform">
+        <div className="sticky top-0 bg-black text-[#39ff14] p-4 flex justify-between items-center border-b-4 border-[#39ff14] z-10">
+          <h2 className="text-xl font-black uppercase flex items-center gap-2">
+            <span className="material-symbols-outlined">person</span>
+            USER PROFILE & ACTIVITY
+          </h2>
+          <button onClick={() => setUserProfileDrawerOpen(false)} className="hover:text-white transition-colors">
+            <span className="material-symbols-outlined text-3xl">close</span>
+          </button>
+        </div>
+
+        <div className="p-6 flex-1 bg-gray-50 space-y-6">
+          <div className="border-2 border-black p-4 bg-white shadow-[4px_4px_0px_0px_#000]">
+            <div className="flex items-center gap-4 border-b-2 border-gray-200 pb-4 mb-4">
+              <div className="w-16 h-16 bg-black text-[#39ff14] flex items-center justify-center text-2xl font-black uppercase border-2 border-black">
+                {userProfile.name.charAt(0)}
+              </div>
+              <div>
+                <h3 className="font-black text-xl uppercase">{userProfile.name}</h3>
+                <p className="text-sm lowercase text-gray-600">{userProfile.email}</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs font-bold text-gray-500 uppercase">Provider</span>
+                <div className="font-bold">{userProfile.provider}</div>
+              </div>
+              <div>
+                <span className="text-xs font-bold text-gray-500 uppercase">Joined</span>
+                <div className="font-bold text-sm">{new Date(userProfile.createdAt).toLocaleDateString()}</div>
+              </div>
+              <div>
+                <span className="text-xs font-bold text-gray-500 uppercase">Resumes</span>
+                <div className="font-bold text-2xl">{userProfile.resumeCount}</div>
+              </div>
+              <div>
+                <span className="text-xs font-bold text-gray-500 uppercase">ATS Checks</span>
+                <div className="font-bold text-2xl">{userProfile.atsCount}</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-black text-lg uppercase mb-4 border-b-2 border-black pb-2">Activity Timeline</h3>
+            {(!userProfile.resumes.length && !userProfile.atsChecks.length) ? (
+              <div className="text-center p-6 border-2 border-dashed border-gray-400 font-bold uppercase text-gray-500">
+                No activity recorded
+              </div>
+            ) : (
+              <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
+                {[...userProfile.resumes.map(r => ({ ...r, type: 'RESUME' })), ...userProfile.atsChecks.map(a => ({ ...a, type: 'ATS' }))]
+                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                  .map((item, i) => (
+                    <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 border-black bg-white shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[2px_2px_0px_0px_#000] z-10">
+                        <span className="material-symbols-outlined text-sm">{item.type === 'RESUME' ? 'description' : 'fact_check'}</span>
+                      </div>
+                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] border-2 border-black bg-white p-3 shadow-[4px_4px_0px_0px_#000]">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-black uppercase text-sm">{item.type === 'RESUME' ? 'Resume Generated' : 'ATS Check'}</span>
+                          <span className="text-xs font-bold text-gray-500">{new Date(item.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="text-sm">
+                          {item.type === 'RESUME' 
+                            ? `Template: ${item.templateType}` 
+                            : `Score: ${item.atsScore}/100`}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (currentUserRole !== 'ADMIN' && !loading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center font-mono selection:bg-[#39ff14] selection:text-black">
@@ -426,13 +869,28 @@ const AdminPanel = () => {
     { title: 'SYSTEM HEALTH', icon: 'dns' },
     { title: 'AUDIT LOG', icon: 'history' },
     { title: 'RESUMES', icon: 'description' },
+    { title: 'ATS CHECKS', icon: 'fact_check' },
     { title: 'FEEDBACK', icon: 'star' },
-    { title: 'MESSAGES', icon: 'mail', badge: unreadContacts }
+    { title: 'MESSAGES', icon: 'mail', badge: unreadContacts },
+    { title: 'ENGAGEMENT', icon: 'monitoring' }
   ];
 
   return (
     <div className="min-h-screen bg-[#ffffff] text-black font-mono selection:bg-[#39ff14] selection:text-black pb-20">
       <div className="max-w-[1400px] mx-auto px-4 pt-12">
+        {liveStats && (
+          <div className="mb-4 bg-black text-[#39ff14] border-2 border-[#39ff14] p-3 flex justify-between items-center shadow-[4px_4px_0px_0px_#39ff14] font-mono">
+            <div className="flex gap-6">
+              <span className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">group</span> Est. Online: <strong className="text-white">{liveStats.onlineUsers}</strong></span>
+              <span className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">description</span> Resumes Today: <strong className="text-white">{liveStats.resumesToday}</strong></span>
+              <span className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">fact_check</span> ATS Today: <strong className="text-white">{liveStats.atsChecksToday}</strong></span>
+            </div>
+            <button onClick={fetchLiveStats} className="flex items-center gap-1 hover:text-white border border-[#39ff14] px-2 py-1 text-xs uppercase font-bold transition-colors">
+              <span className="material-symbols-outlined text-[14px]">refresh</span> Refresh
+            </button>
+          </div>
+        )}
+
         <div className="mb-8 border-b border-black pb-4 flex items-center gap-4">
           <div className="w-12 h-12 bg-black text-[#39ff14] flex items-center justify-center shadow-[2px_2px_0px_0px_#39ff14]">
             <span className="material-symbols-outlined text-3xl">admin_panel_settings</span>
@@ -502,12 +960,18 @@ const AdminPanel = () => {
                           placeholder="SEARCH USERS..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              setPage(0);
+                              fetchUsers();
+                            }
+                          }}
                           className="pl-10 pr-4 py-2 border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] font-bold text-sm uppercase w-full sm:w-64"
                         />
                       </div>
-                      <button onClick={fetchUsers} className="px-4 py-2 border-2 border-black bg-black text-white hover:bg-[#39ff14] hover:text-black transition-colors flex items-center gap-2 font-bold text-sm shadow-[2px_2px_0px_0px_#39ff14]">
+                      <button onClick={() => { setPage(0); fetchUsers(); }} className="px-4 py-2 border-2 border-black bg-black text-white hover:bg-[#39ff14] hover:text-black transition-colors flex items-center gap-2 font-bold text-sm shadow-[2px_2px_0px_0px_#39ff14]">
                         <span className="material-symbols-outlined text-[18px]">refresh</span>
-                        <span className="hidden sm:inline">REFRESH</span>
+                        <span className="hidden sm:inline">SEARCH</span>
                       </button>
                     </div>
                     <button onClick={exportUsers} className="px-4 py-2 border-2 border-black bg-white hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2 font-bold text-sm shadow-[2px_2px_0px_0px_#000000]">
@@ -524,12 +988,13 @@ const AdminPanel = () => {
                           <SortHeader label="EMAIL" property="email" />
                           <th className="p-3 text-left font-bold border-b border-black">ROLE</th>
                           <SortHeader label="JOINED" property="createdAt" />
+                          <th className="p-3 text-left font-bold border-b border-black">LAST ACTIVE</th>
                           <th className="p-3 text-center font-bold border-b border-black">ACTIONS</th>
                         </tr>
                       </thead>
                       <tbody>
                         {users.map(user => (
-                          <tr key={user.id} className="border-b border-gray-300 hover:bg-[#f8f8f8] transition-colors">
+                          <tr key={user.id} onClick={() => fetchUserProfile(user.id)} className="border-b border-gray-300 hover:bg-[#f8f8f8] transition-colors cursor-pointer">
                             <td className="p-3">
                               <div className="flex items-center gap-3">
                                 {user.picture ? (
@@ -547,14 +1012,18 @@ const AdminPanel = () => {
                               </span>
                             </td>
                             <td className="p-3 font-mono">{new Date(user.createdAt).toLocaleDateString()}</td>
-                            <td className="p-3">
+                            <td className="p-3 font-mono text-gray-500 text-xs">
+                              <span className="material-symbols-outlined text-[14px] align-middle mr-1">history</span>
+                              CLICK TO VIEW
+                            </td>
+                            <td className="p-3" onClick={e => e.stopPropagation()}>
                               <div className="flex justify-center gap-2">
                                 {user.role === 'ADMIN' ? (
-                                  <button onClick={() => revokeAdminRole(user.id, user.name)} className="px-2 py-1 text-xs border border-black bg-black text-white hover:bg-red-500 font-bold uppercase">REVOKE</button>
+                                  <button onClick={(e) => { e.stopPropagation(); revokeAdminRole(user.id, user.name); }} className="px-2 py-1 text-xs border border-black bg-black text-white hover:bg-red-500 font-bold uppercase">REVOKE</button>
                                 ) : (
-                                  <button onClick={() => grantAdminRole(user.id, user.name)} className="px-2 py-1 text-xs border border-black bg-white hover:bg-[#39ff14] hover:text-black font-bold uppercase">GRANT ADMIN</button>
+                                  <button onClick={(e) => { e.stopPropagation(); grantAdminRole(user.id, user.name); }} className="px-2 py-1 text-xs border border-black bg-white hover:bg-[#39ff14] hover:text-black font-bold uppercase">GRANT ADMIN</button>
                                 )}
-                                <button onClick={() => { setUserToDelete(user); setDeleteDialogOpen(true); }} className="px-1 py-1 text-red-600 hover:bg-red-100 border border-transparent hover:border-red-600 transition-colors">
+                                <button onClick={(e) => { e.stopPropagation(); setUserToDelete(user); setDeleteDialogOpen(true); }} className="px-1 py-1 text-red-600 hover:bg-red-100 border border-transparent hover:border-red-600 transition-colors">
                                   <span className="material-symbols-outlined text-[18px]">delete</span>
                                 </button>
                               </div>
@@ -598,7 +1067,7 @@ const AdminPanel = () => {
                         </div>
                       </div>
                       <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                           <LineChart data={
                             chartMetric === 'signups' ? analytics.dailySignups :
                               chartMetric === 'resumes' ? analytics.dailyResumes :
@@ -620,7 +1089,7 @@ const AdminPanel = () => {
                         TEMPLATE DISTRIBUTION
                       </h3>
                       <div className="h-[250px] flex-grow flex items-center justify-center">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                           <PieChart>
                             <Pie
                               data={analytics.templateUsage}
@@ -703,9 +1172,14 @@ const AdminPanel = () => {
                 <div>
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold uppercase">GENERATED RESUMES [{totalResumes}]</h2>
-                    <button onClick={fetchResumes} className="px-3 py-1 border-2 border-black bg-black text-[#39ff14] hover:bg-[#39ff14] hover:text-black transition-colors flex items-center gap-2 font-bold text-sm">
-                      <span className="material-symbols-outlined text-[16px]">refresh</span> SYNC
-                    </button>
+                    <div className="flex gap-4">
+                      <button onClick={exportResumes} className="px-3 py-1 border-2 border-black bg-white hover:bg-black hover:text-white transition-colors flex items-center gap-2 font-bold text-sm shadow-[2px_2px_0px_0px_#000]">
+                        <span className="material-symbols-outlined text-[16px]">download</span> EXPORT
+                      </button>
+                      <button onClick={fetchResumes} className="px-3 py-1 border-2 border-black bg-black text-[#39ff14] hover:bg-[#39ff14] hover:text-black transition-colors flex items-center gap-2 font-bold text-sm">
+                        <span className="material-symbols-outlined text-[16px]">refresh</span> SYNC
+                      </button>
+                    </div>
                   </div>
                   <div className="overflow-x-auto border border-black shadow-[2px_2px_0px_0px_#000000] bg-white">
                     <table className="w-full text-sm">
@@ -713,7 +1187,10 @@ const AdminPanel = () => {
                         <tr>
                           <th className="p-3 text-left font-bold border-b border-black uppercase">USER</th>
                           <th className="p-3 text-left font-bold border-b border-black uppercase">TEMPLATE</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">CANDIDATE</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">PREVIEW</th>
                           <th className="p-3 text-left font-bold border-b border-black uppercase">DATE_CREATED</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">ACTION</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -726,11 +1203,24 @@ const AdminPanel = () => {
                             <td className="p-3">
                               <span className="px-2 py-1 border border-black bg-white text-xs font-bold uppercase">{resume.templateType}</span>
                             </td>
+                            <td className="p-3">
+                              <div className="font-bold uppercase text-xs">{resume.candidateName || '—'}</div>
+                            </td>
+                            <td className="p-3">
+                              <div className="text-[10px] font-mono text-gray-500 max-w-[150px] truncate">
+                                {resume.resumeJson ? 'JSON STORED' : 'NO DATA'}
+                              </div>
+                            </td>
                             <td className="p-3 font-mono text-xs">{new Date(resume.createdAt).toLocaleString()}</td>
+                            <td className="p-3">
+                              <button onClick={() => fetchResumeDetails(resume.id)} className="px-3 py-1 border-2 border-black bg-black text-[#39ff14] hover:bg-[#39ff14] hover:text-black transition-colors font-bold text-xs uppercase shadow-[2px_2px_0px_0px_#000] active:shadow-none translate-y-0 active:translate-y-[2px]">
+                                VIEW
+                              </button>
+                            </td>
                           </tr>
                         ))}
                         {resumes.length === 0 && (
-                          <tr><td colSpan={3} className="p-8 text-center uppercase font-bold text-gray-400">NO RESUMES FOUND</td></tr>
+                          <tr><td colSpan={6} className="p-8 text-center uppercase font-bold text-gray-400">NO RESUMES FOUND</td></tr>
                         )}
                       </tbody>
                     </table>
@@ -739,15 +1229,117 @@ const AdminPanel = () => {
                 </div>
               )}
 
-              {/* FEEDBACK TAB */}
+              {/* ATS CHECKS TAB */}
               {tabValue === 5 && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold uppercase">USER FEEDBACK [{totalFeedbacks}]</h2>
-                    <button onClick={fetchFeedbacks} className="px-3 py-1 border-2 border-black bg-black text-[#39ff14] hover:bg-[#39ff14] hover:text-black transition-colors flex items-center gap-2 font-bold text-sm">
+                    <h2 className="text-xl font-bold uppercase">ATS ANALYSES [{totalAtsChecks}]</h2>
+                    <button onClick={fetchAtsChecks} className="px-3 py-1 border-2 border-black bg-black text-[#39ff14] hover:bg-[#39ff14] hover:text-black transition-colors flex items-center gap-2 font-bold text-sm">
                       <span className="material-symbols-outlined text-[16px]">refresh</span> SYNC
                     </button>
                   </div>
+                  <div className="overflow-x-auto border border-black shadow-[2px_2px_0px_0px_#000000] bg-white">
+                    <table className="w-full text-sm">
+                      <thead className="bg-[#f0f0f0] border-b border-black">
+                        <tr>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">CANDIDATE</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">SCORE</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">TARGET_JOB</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">SNIPPET</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">DATE_LOGGED</th>
+                          <th className="p-3 text-left font-bold border-b border-black uppercase">ACTION</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {atsChecks.map((check) => (
+                          <tr key={check.id} className="border-b border-gray-300 hover:bg-[#f8f8f8]">
+                            <td className="p-3">
+                              <div className="font-bold uppercase">{check.userName}</div>
+                              <div className="text-xs lowercase text-gray-500">{check.email}</div>
+                            </td>
+                            <td className="p-3">
+                              <div className={`font-black text-lg ${check.atsScore >= 80 ? 'text-[#39ff14]' : check.atsScore >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>
+                                {check.atsScore || '—'}<span className="text-xs text-gray-400">/100</span>
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              {check.jobDescriptionProvided ? (
+                                <span className="px-2 py-1 bg-black text-[#39ff14] font-bold text-[10px] uppercase">PROVIDED</span>
+                              ) : (
+                                <span className="px-2 py-1 bg-gray-200 text-gray-600 font-bold text-[10px] uppercase">NONE</span>
+                              )}
+                            </td>
+                            <td className="p-3">
+                              <div className="text-[10px] font-mono text-gray-500 max-w-[200px] truncate">
+                                {check.resumeSnippet || 'NO TEXT'}
+                              </div>
+                            </td>
+                            <td className="p-3 font-mono text-xs">{new Date(check.createdAt).toLocaleString()}</td>
+                            <td className="p-3">
+                              <button onClick={() => fetchAtsCheckDetails(check.id)} className="px-3 py-1 border-2 border-black bg-black text-[#39ff14] hover:bg-[#39ff14] hover:text-black transition-colors font-bold text-xs uppercase shadow-[2px_2px_0px_0px_#000] active:shadow-none translate-y-0 active:translate-y-[2px]">
+                                REPORT
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {atsChecks.length === 0 && (
+                          <tr><td colSpan={6} className="p-8 text-center uppercase font-bold text-gray-400">NO ATS CHECKS FOUND</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Pagination total={totalAtsChecks} page={atsCheckPage} setPage={setAtsCheckPage} rowsPerPage={atsCheckRowsPerPage} setRowsPerPage={setAtsCheckRowsPerPage} />
+                </div>
+              )}
+
+              {/* FEEDBACK TAB */}
+              {tabValue === 6 && (
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold uppercase">USER FEEDBACK [{totalFeedbacks}]</h2>
+                    <button onClick={() => { fetchFeedbacks(); fetchFeedbackSummary(); }} className="px-3 py-1 border-2 border-black bg-black text-[#39ff14] hover:bg-[#39ff14] hover:text-black transition-colors flex items-center gap-2 font-bold text-sm">
+                      <span className="material-symbols-outlined text-[16px]">refresh</span> SYNC
+                    </button>
+                  </div>
+
+                  {feedbackSummary && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      <div className="border-2 border-black bg-white p-6 shadow-[4px_4px_0px_0px_#000] flex flex-col justify-center items-center text-center">
+                        <div className="text-xs font-bold uppercase text-gray-500 mb-2">AVERAGE RATING</div>
+                        <div className="text-6xl font-black text-[#39ff14]" style={{ textShadow: "2px 2px 0px #000" }}>
+                          {feedbackSummary.averageRating.toFixed(1)}
+                        </div>
+                        <div className="flex text-[#39ff14] bg-black px-2 py-1 mt-4">
+                          {[1, 2, 3, 4, 5].map(s => (
+                            <span key={s} className={`material-symbols-outlined ${s <= Math.round(feedbackSummary.averageRating) ? '' : 'opacity-30'}`} style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                          ))}
+                        </div>
+                        <div className="text-xs font-bold uppercase mt-4 text-gray-600">
+                          {((feedbackSummary.withMessageCount / feedbackSummary.totalFeedback) * 100 || 0).toFixed(0)}% INCLUDE MESSAGES
+                        </div>
+                      </div>
+                      
+                      <div className="border-2 border-black bg-white p-6 shadow-[4px_4px_0px_0px_#000]">
+                        <div className="text-xs font-bold uppercase text-gray-500 mb-4 text-center">RATING DISTRIBUTION</div>
+                        <div className="space-y-3">
+                          {[5, 4, 3, 2, 1].map(star => {
+                            const count = feedbackSummary.ratingDistribution[star] || 0;
+                            const total = feedbackSummary.totalFeedback || 1;
+                            const percentage = (count / total) * 100;
+                            return (
+                              <div key={star} className="flex items-center gap-3">
+                                <span className="font-bold w-12 flex items-center justify-end">{star} <span className="material-symbols-outlined text-[14px]">star</span></span>
+                                <div className="flex-1 h-4 bg-gray-200 border border-black">
+                                  <div className="h-full bg-[#39ff14] border-r border-black" style={{ width: `${percentage}%` }}></div>
+                                </div>
+                                <span className="font-mono text-xs w-8 text-right">{count}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="overflow-x-auto border border-black shadow-[2px_2px_0px_0px_#000000] bg-white">
                     <table className="w-full text-sm">
                       <thead className="bg-[#f0f0f0] border-b border-black">
@@ -793,7 +1385,7 @@ const AdminPanel = () => {
               )}
 
               {/* MESSAGES TAB */}
-              {tabValue === 6 && (
+              {tabValue === 7 && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold uppercase flex items-center gap-4">
@@ -843,6 +1435,80 @@ const AdminPanel = () => {
                   </div>
                 </div>
               )}
+
+              {/* ENGAGEMENT TAB */}
+              {tabValue === 8 && engagementStats && (
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold uppercase">USER ENGAGEMENT & RETENTION</h2>
+                    <div className="flex gap-4">
+                      <button onClick={exportAnalytics} className="px-3 py-1 border-2 border-black bg-white hover:bg-black hover:text-white transition-colors flex items-center gap-2 font-bold text-sm shadow-[2px_2px_0px_0px_#000]">
+                        <span className="material-symbols-outlined text-[16px]">download</span> EXPORT
+                      </button>
+                      <button onClick={fetchEngagementStats} className="px-3 py-1 border-2 border-black bg-black text-[#39ff14] hover:bg-[#39ff14] hover:text-black transition-colors flex items-center gap-2 font-bold text-sm">
+                        <span className="material-symbols-outlined text-[16px]">refresh</span> SYNC
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="border-2 border-black p-6 bg-white shadow-[4px_4px_0px_0px_#000]">
+                      <h3 className="font-bold text-lg uppercase mb-4 border-b-2 border-black pb-2 flex items-center gap-2">
+                        <span className="material-symbols-outlined">favorite</span> RETENTION COHORTS
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-xs font-bold uppercase text-gray-500">DAU / MAU</div>
+                          <div className="text-3xl font-black text-[#39ff14]" style={{ textShadow: "1px 1px 0px #000" }}>
+                            {engagementStats.dauMauRatio.toFixed(1)}%
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold uppercase text-gray-500">POWER USERS (&gt;5 Resumes)</div>
+                          <div className="text-3xl font-black">{engagementStats.powerUsers}</div>
+                        </div>
+                        <div className="col-span-2 mt-2">
+                          <div className="text-xs font-bold uppercase text-gray-500 mb-2">LAST 30 DAYS RETENTION</div>
+                          <div className="w-full h-8 bg-gray-200 border-2 border-black relative">
+                            <div className="absolute top-0 left-0 h-full bg-black flex items-center pl-2 text-[#39ff14] font-bold text-xs" style={{ width: `${engagementStats.retentionRate}%` }}>
+                              {engagementStats.retentionRate}%
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-2 border-black p-6 bg-white shadow-[4px_4px_0px_0px_#000]">
+                      <h3 className="font-bold text-lg uppercase mb-4 border-b-2 border-black pb-2 flex items-center gap-2">
+                        <span className="material-symbols-outlined">api</span> FEATURE USAGE
+                      </h3>
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex justify-between text-xs font-bold uppercase mb-1">
+                            <span>RESUME BUILDER</span>
+                            <span>{engagementStats.featureUsage.resumeBuilder} USERS</span>
+                          </div>
+                          <div className="w-full h-4 border border-black bg-gray-100">
+                            <div className="h-full bg-[#39ff14] border-r border-black" style={{ width: `${(engagementStats.featureUsage.resumeBuilder / (engagementStats.dauMauRatio > 0 ? 100 : 1)) * 100}%` }}></div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-xs font-bold uppercase mb-1">
+                            <span>ATS SCANNER</span>
+                            <span>{engagementStats.featureUsage.atsScanner} USERS</span>
+                          </div>
+                          <div className="w-full h-4 border border-black bg-gray-100">
+                            <div className="h-full bg-black border-r border-black" style={{ width: `${(engagementStats.featureUsage.atsScanner / (engagementStats.dauMauRatio > 0 ? 100 : 1)) * 100}%` }}></div>
+                          </div>
+                        </div>
+                        <p className="text-xs font-bold text-gray-500 mt-4 leading-tight">
+                          FEATURE USAGE TRACKS UNIQUE USERS ENGAGING WITH SPECIFIC TOOLS IN THE LAST 30 DAYS.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -880,6 +1546,16 @@ const AdminPanel = () => {
           </div>
         </div>
       )}
+      
+      {/* RESUME VIEWER DRAWER */}
+      <ResumeDrawer />
+      {resumeDrawerOpen && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setResumeDrawerOpen(false)}></div>}
+      {/* ATS VIEWER DRAWER */}
+      <AtsDrawer />
+      {atsDrawerOpen && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setAtsDrawerOpen(false)}></div>}
+      {/* USER PROFILE DRAWER */}
+      <UserProfileDrawer />
+      {userProfileDrawerOpen && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setUserProfileDrawerOpen(false)}></div>}
     </div>
   );
 };

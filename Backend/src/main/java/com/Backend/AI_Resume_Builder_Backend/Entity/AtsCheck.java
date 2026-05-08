@@ -17,6 +17,21 @@ public class AtsCheck {
 
     private boolean jobDescriptionProvided;
 
+    @Column
+    private Integer atsScore;
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String resumeText;
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String scoreBreakdown;
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String suggestions;
+
+    @Column
+    private String fileName;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -64,5 +79,45 @@ public class AtsCheck {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Integer getAtsScore() {
+        return atsScore;
+    }
+
+    public void setAtsScore(Integer atsScore) {
+        this.atsScore = atsScore;
+    }
+
+    public String getResumeText() {
+        return resumeText;
+    }
+
+    public void setResumeText(String resumeText) {
+        this.resumeText = resumeText;
+    }
+
+    public String getScoreBreakdown() {
+        return scoreBreakdown;
+    }
+
+    public void setScoreBreakdown(String scoreBreakdown) {
+        this.scoreBreakdown = scoreBreakdown;
+    }
+
+    public String getSuggestions() {
+        return suggestions;
+    }
+
+    public void setSuggestions(String suggestions) {
+        this.suggestions = suggestions;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 }

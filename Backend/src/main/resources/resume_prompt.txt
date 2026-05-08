@@ -71,8 +71,7 @@ JSON Structure Requirements (all content must be in English):
     "phoneNumber": "string",
     "location": "string (in English)",
     "linkedIn": "string or null",
-    "gitHub": "string or null",
-    "portfolio": "string or null"
+    "gitHub": "string or null"
   },
   "summary": "string (professional summary in English)",
   "skills": {

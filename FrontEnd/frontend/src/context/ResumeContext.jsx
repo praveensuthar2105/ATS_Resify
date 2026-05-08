@@ -124,17 +124,12 @@ export const ResumeProvider = ({ children }) => {
       const u = pi.gitHub.trim();
       return /^https?:\/\//i.test(u) ? u : `https://${u}`;
     })()) : '';
-    const portfolio = pi.portfolio ? escapeLatex((() => {
-      const u = pi.portfolio.trim();
-      return /^https?:\/\//i.test(u) ? u : `https://${u}`;
-    })()) : '';
 
     let contactParts = [];
     if (phone) contactParts.push(phone);
     if (email) contactParts.push(email);
     if (linkedin) contactParts.push(`\\href{${linkedin}}{LinkedIn}`);
     if (github) contactParts.push(`\\href{${github}}{GitHub}`);
-    if (portfolio) contactParts.push(`\\href{${portfolio}}{Portfolio}`);
     if (location) contactParts.push(location);
     const contactLine = contactParts.length > 0 ? contactParts.join(' $|$ ') : '';
 
@@ -308,7 +303,7 @@ ${sections}
   const parseLatexToData = useCallback((latex) => {
     if (!latex) return null;
     const data = {
-      personalInformation: { fullName: '', email: '', phoneNumber: '', location: '', linkedIn: '', gitHub: '', portfolio: '' },
+      personalInformation: { fullName: '', email: '', phoneNumber: '', location: '', linkedIn: '', gitHub: '' },
       summary: '',
       skills: [],
       experience: [],
@@ -351,7 +346,6 @@ ${sections}
           const label = part.match(/\{([^}]*)\}\s*$/)?.[1] || '';
           if (label.toLowerCase().includes('linkedin')) data.personalInformation.linkedIn = url;
           else if (label.toLowerCase().includes('github')) data.personalInformation.gitHub = url;
-          else if (label.toLowerCase().includes('portfolio')) data.personalInformation.portfolio = url;
         } else if (part && !data.personalInformation.location) {
           data.personalInformation.location = unescape(part);
         }
@@ -682,7 +676,6 @@ ${sections}
           location: pi.location || '',
           linkedIn: pi.linkedIn || pi.linkedin || '',
           gitHub: pi.gitHub || pi.github || '',
-          portfolio: pi.portfolio || '',
           summary: data.summary || '',
           skills: skillsRaw.map(skill => (
             typeof skill === 'string'
@@ -803,7 +796,6 @@ ${sections}
         location: formData.location,
         linkedIn: formData.linkedIn || null,
         gitHub: formData.gitHub || null,
-        portfolio: formData.portfolio || null,
       },
       summary: formData.summary,
       skills: formData.skills?.map(s => ({

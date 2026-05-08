@@ -5,6 +5,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -93,7 +94,7 @@ public class AtsScoreServiceImpl implements AtsScoreService {
                     
                     // Persist ATS check record
                     try {
-                        recordAtsCheck(jobDescription != null && !jobDescription.trim().isEmpty());
+                        recordAtsCheck(jobDescription != null && !jobDescription.trim().isEmpty(), result, resumeText, resumeFile.getOriginalFilename());
                     } catch (Exception e) {
                         log.warn("Failed to persist ATS check record: {}", e.getMessage());
                     }
@@ -223,7 +224,7 @@ public class AtsScoreServiceImpl implements AtsScoreService {
         }
     }
 
-    private void recordAtsCheck(boolean hasJobDescription) {
+    private void recordAtsCheck(boolean hasJobDescription, Map<String, Object> result, String resumeText, String fileName) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = null;
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
@@ -232,6 +233,42 @@ public class AtsScoreServiceImpl implements AtsScoreService {
         }
         
         AtsCheck check = new AtsCheck(user, hasJobDescription);
+        check.setResumeText(resumeText);
+        check.setFileName(fileName);
+        
+        if (result != null && result.get("data") instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> data = (Map<String, Object>) result.get("data");
+            
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                
+                Object atsScoreObj = data.get("atsScore");
+                if (atsScoreObj instanceof Number) {
+                    check.setAtsScore(((Number) atsScoreObj).intValue());
+                } else if (atsScoreObj instanceof String) {
+                    try {
+                        String scoreStr = (String) atsScoreObj;
+                        scoreStr = scoreStr.replace("%", "").trim();
+                        check.setAtsScore(Integer.parseInt(scoreStr));
+                    } catch (NumberFormatException ignored) {}
+                }
+                
+                Object scoreBreakdownObj = data.get("scoreBreakdown");
+                if (scoreBreakdownObj != null) {
+                    check.setScoreBreakdown(mapper.writeValueAsString(scoreBreakdownObj));
+                }
+                
+                Object suggestionsObj = data.get("detailedSuggestions");
+                if (suggestionsObj != null) {
+                    check.setSuggestions(mapper.writeValueAsString(suggestionsObj));
+                }
+                
+            } catch (Exception e) {
+                log.warn("Failed to serialize ATS check metadata: {}", e.getMessage());
+            }
+        }
+        
         atsCheckRepository.save(check);
         log.debug("AtsCheck record saved to database");
     }

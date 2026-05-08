@@ -109,7 +109,7 @@ const EditResume = () => {
   }, [isResizing, resize, stopResizing]);
 
   const [formData, setFormData] = useState({
-    fullName: '', email: '', phoneNumber: '', location: '', linkedIn: '', gitHub: '', portfolio: '', summary: '',
+    fullName: '', email: '', phoneNumber: '', location: '', linkedIn: '', gitHub: '', summary: '',
     skills: [], experience: [], education: [], projects: [], certifications: [], achievements: [], languages: [], interests: [],
   });
 
@@ -166,14 +166,11 @@ const EditResume = () => {
 
     const linkedin = pi.linkedIn ? escapeLatex(ensureHttps(pi.linkedIn)) : '';
     const github = pi.gitHub ? escapeLatex(ensureHttps(pi.gitHub)) : '';
-    const portfolio = pi.portfolio ? escapeLatex(ensureHttps(pi.portfolio)) : '';
-
     let contactParts = [];
     if (phone) contactParts.push(phone);
     if (email) contactParts.push(email);
     if (linkedin) contactParts.push(`\\href{${linkedin}}{LinkedIn}`);
     if (github) contactParts.push(`\\href{${github}}{GitHub}`);
-    if (portfolio) contactParts.push(`\\href{${portfolio}}{Portfolio}`);
     if (location) contactParts.push(location);
     const contactLine = contactParts.length > 0 ? contactParts.join(' $|$ ') : '';
 
@@ -479,7 +476,6 @@ ${sections}
           location: pi.location || '',
           linkedIn: pi.linkedIn || pi.linkedin || '',
           gitHub: pi.gitHub || pi.github || '',
-          portfolio: pi.portfolio || '',
           summary: data.summary || '',
           skills: skillsRaw.map(skill => (
             typeof skill === 'string'
@@ -569,7 +565,7 @@ ${sections}
     const updatedResume = {
       personalInformation: {
         fullName: formData.fullName, email: formData.email, phoneNumber: formData.phoneNumber,
-        location: formData.location, linkedIn: formData.linkedIn || null, gitHub: formData.gitHub || null, portfolio: formData.portfolio || null,
+        location: formData.location, linkedIn: formData.linkedIn || null, gitHub: formData.gitHub || null,
       },
       summary: formData.summary,
       skills: formData.skills?.map(s => ({ title: s.title || '', level: s.level || 'Intermediate', items: s.items || null })) || [],

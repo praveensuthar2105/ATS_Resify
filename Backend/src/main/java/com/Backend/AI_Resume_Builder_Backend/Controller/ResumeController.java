@@ -25,6 +25,7 @@ import com.Backend.AI_Resume_Builder_Backend.Security.JwtUtil;
 import com.Backend.AI_Resume_Builder_Backend.Service.ResumeRequest;
 import com.Backend.AI_Resume_Builder_Backend.Service.ResumeService;
 import com.Backend.AI_Resume_Builder_Backend.Service.AtsScoreService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -59,6 +60,9 @@ public class ResumeController {
 				templateType = "modern";
 			}
 
+			Map<String, Object> jsonObject = resumeService
+					.generateResumeResponse(resumeRequest.getUserResumeDescription(), templateType);
+
 			// Save resume generation record if user is authenticated
 			org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
 			if (authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser")) {
@@ -66,12 +70,38 @@ public class ResumeController {
 				Optional<User> userOpt = userRepository.findByEmail(email);
 				if (userOpt.isPresent()) {
 					Resume resume = new Resume(userOpt.get(), templateType);
+					
+					try {
+						// Extract and save resume content
+						Object dataObj = jsonObject.get("data");
+						if (dataObj != null) {
+							ObjectMapper mapper = new ObjectMapper();
+							String resumeJson = mapper.writeValueAsString(dataObj);
+							resume.setResumeJson(resumeJson);
+							
+							// Try to extract name for easy reference
+							if (dataObj instanceof Map) {
+								@SuppressWarnings("unchecked")
+								Map<String, Object> dataMap = (Map<String, Object>) dataObj;
+								Object personalInfoObj = dataMap.get("personalInformation");
+								if (personalInfoObj instanceof Map) {
+									@SuppressWarnings("unchecked")
+									Map<String, Object> personalInfo = (Map<String, Object>) personalInfoObj;
+									Object nameObj = personalInfo.get("fullName");
+									if (nameObj != null) {
+										resume.setCandidateName(nameObj.toString());
+									}
+								}
+							}
+						}
+					} catch (Exception ex) {
+						log.warn("Failed to serialize resume content for persistence", ex);
+					}
+					
 					resumeRepository.save(resume);
 				}
 			}
 
-			Map<String, Object> jsonObject = resumeService
-					.generateResumeResponse(resumeRequest.getUserResumeDescription(), templateType);
 			return new ResponseEntity<>(jsonObject, HttpStatus.OK);
 		} catch (IOException e) {
 			Map<String, Object> errorResponse = new HashMap<>();

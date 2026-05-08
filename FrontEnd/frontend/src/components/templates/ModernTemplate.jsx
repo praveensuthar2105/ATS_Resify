@@ -53,11 +53,7 @@ const ModernTemplate = ({ data }) => {
               <a href={pi.gitHub} target="_blank" rel="noopener noreferrer">GitHub</a>
             </span>
           )}
-          {pi.portfolio && (
-            <span>
-              <a href={pi.portfolio} target="_blank" rel="noopener noreferrer">Portfolio</a>
-            </span>
-          )}
+
           {pi.location && <span>{pi.location}</span>}
         </div>
       </div>
