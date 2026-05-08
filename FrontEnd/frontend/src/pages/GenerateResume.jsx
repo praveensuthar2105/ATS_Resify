@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { resumeAPI } from '../services/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -189,8 +189,9 @@ const GenerateResume = () => {
   return (
     <div className="min-h-screen bg-brutal-black text-brutal-white font-mono uppercase grid-bg relative selection:bg-neon-green selection:text-black">
       <SEO
-        title="AI Resume Generator"
-        description="Share your professional journey or upload your LinkedIn profile, and our AI will craft an ATS-optimized resume tailored to your target role in seconds."
+        title="Free AI Resume Generator — Build an ATS Resume in Seconds"
+        description="Generate a complete, ATS-optimized resume from scratch using AI. Paste your experience, import your LinkedIn PDF, and get a polished resume ready to apply with — free, no templates to fill."
+        href="https://atsresify.me/generate"
       />
       <div className="scanline"></div>
 

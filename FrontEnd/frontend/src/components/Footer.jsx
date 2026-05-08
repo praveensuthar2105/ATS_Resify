@@ -10,7 +10,7 @@ const Footer = () => {
           <div className="col-span-1">
             <div className="mb-8">
               <RouterLink to="/" className="flex items-center gap-3 no-underline">
-                <img src="/logo.png" alt="Logo" className="h-12 w-auto object-contain" />
+                <img src="/logo.png" alt="ATS Resify logo" width="48" height="48" className="h-12 w-12 object-contain" loading="lazy" />
                 <span className="text-2xl font-black text-brutal-white tracking-tighter">RESIFY</span>
               </RouterLink>
             </div>
@@ -37,7 +37,7 @@ const Footer = () => {
 
           {/* Product Links */}
           <div>
-            <h4 className="text-brutal-white font-black mb-8 text-sm">[ PRODUCT ]</h4>
+            <p className="text-brutal-white font-black mb-8 text-sm">[ PRODUCT ]</p>
             <ul className="space-y-4 text-[11px] font-bold list-none p-0 m-0">
               <li>
                 <RouterLink to="/features" className="text-brutal-white no-underline hover:underline transition-all">
@@ -64,7 +64,7 @@ const Footer = () => {
 
           {/* Resources Links */}
           <div>
-            <h4 className="text-brutal-white font-black mb-8 text-sm">[ RESOURCES ]</h4>
+            <p className="text-brutal-white font-black mb-8 text-sm">[ RESOURCES ]</p>
             <ul className="space-y-4 text-[11px] font-bold list-none p-0 m-0">
               <li>
                 <RouterLink to="/team" className="text-brutal-white no-underline hover:underline transition-all">
@@ -89,7 +89,7 @@ const Footer = () => {
 
           {/* Company Links */}
           <div>
-            <h4 className="text-brutal-white font-black mb-8 text-sm">[ COMPANY ]</h4>
+            <p className="text-brutal-white font-black mb-8 text-sm">[ COMPANY ]</p>
             <ul className="space-y-4 text-[11px] font-bold list-none p-0 m-0">
               <li>
                 <RouterLink to="/about" className="text-brutal-white no-underline hover:underline transition-all">

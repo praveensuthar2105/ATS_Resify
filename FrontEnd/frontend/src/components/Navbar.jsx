@@ -75,7 +75,7 @@ const Navbar = () => {
       <div className="max-w-[1400px] mx-auto px-4 h-full flex items-center justify-between">
         {/* Logo */}
         <RouterLink to="/" className="flex items-center no-underline gap-3" onClick={() => setMobileNavOpen(false)}>
-          <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
+          <img src="/logo.png" alt="ATS Resify logo" width="40" height="40" className="h-10 w-10 object-contain" loading="eager" />
           <span className="text-xl font-black tracking-tighter text-brutal-white">ATS RESIFY</span>
         </RouterLink>
 

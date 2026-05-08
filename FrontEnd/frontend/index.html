@@ -7,116 +7,79 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- ===== PRIMARY SEO META TAGS ===== -->
-  <title>ATS Resify — Free AI Resume Builder & ATS Checker</title>
+  <title>ATS Resify — Free AI Resume Builder & ATS Score Checker</title>
   <meta name="description"
-    content="ATS Resify is a free AI-powered resume builder and ATS checker. Generate ATS-optimized resumes, check your ATS score, and export professional PDFs instantly. Used by thousands of job seekers worldwide." />
+    content="Build a job-winning resume in minutes with ATS Resify — the free AI resume builder trusted by thousands. Generate ATS-optimized resumes, get an instant ATS score, and export polished PDFs. No credit card needed." />
   <meta name="keywords"
-    content="resume builder, AI resume builder, ATS checker, ATS score, free resume builder, resume AI, ATS resume, resume generator, resume optimizer, ATS optimizer, applicant tracking system, professional resume, resume maker, CV builder, CV maker, resume creator, free ATS checker, online resume builder, resume templates, ATS-friendly resume, resume PDF, AI CV, job resume, resume tool" />
+    content="free AI resume builder, ATS checker online free, ATS score checker, resume builder AI, ATS resume generator, resify ai, atsresify, resume optimizer, ATS-friendly resume, AI resume maker, resume generator free, check ATS score, resume PDF download, ATS resume builder India, CV builder free" />
   <meta name="author" content="ATS Resify" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <link rel="canonical" href="https://atsresify.me/" />
+  <!-- hreflang for primary audience -->
+  <link rel="alternate" hreflang="en" href="https://atsresify.me/" />
+  <link rel="alternate" hreflang="en-IN" href="https://atsresify.me/" />
+  <link rel="alternate" hreflang="x-default" href="https://atsresify.me/" />
 
   <!-- ===== OPEN GRAPH (Facebook, LinkedIn, WhatsApp) ===== -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://atsresify.me/" />
-  <meta property="og:title" content="ATS Resify — Free AI Resume Builder & ATS Checker" />
+  <meta property="og:title" content="ATS Resify — Free AI Resume Builder & ATS Score Checker" />
   <meta property="og:description"
-    content="Build professional, ATS-optimized resumes with AI in minutes. Check your ATS score, edit with a live LaTeX editor, and export PDF resumes for free." />
+    content="Build a job-winning resume in minutes — free AI resume builder with instant ATS score, keyword analysis, and one-click PDF export. No sign-up required to start." />
   <meta property="og:image" content="https://atsresify.me/og-image.png" />
   <meta property="og:site_name" content="ATS Resify" />
   <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="en_IN" />
 
   <!-- ===== TWITTER CARD ===== -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="https://atsresify.me/" />
-  <meta name="twitter:title" content="ATS Resify — Free AI Resume Builder & ATS Checker" />
+  <meta name="twitter:title" content="ATS Resify — Free AI Resume Builder & ATS Score Checker" />
   <meta name="twitter:description"
-    content="Generate ATS-optimized resumes with AI, check your ATS score instantly, and export professional PDFs for free." />
+    content="Free AI resume builder with instant ATS score checker. Generate ATS-optimized resumes, fix keyword gaps, and download polished PDFs in minutes." />
   <meta name="twitter:image" content="https://atsresify.me/og-image.png" />
+  <meta name="twitter:creator" content="@atsresify" />
 
   <!-- ===== STRUCTURED DATA (Google Rich Results) ===== -->
   <!-- Structured data is now dynamically injected via React Helmet Async in LandingPage.jsx -->
 
   <!-- ===== FONTS ===== -->
+  <!-- Preconnect to Google Fonts CDN -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-    rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
-    rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&display=swap"
-    rel="stylesheet" />
+  <!-- Preload critical font (JetBrains Mono — used for all mono text) -->
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap"
+    media="print" onload="this.media='all'" />
+  <!-- Non-critical fonts: load async -->
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=optional"
+    media="print" onload="this.media='all'" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&display=optional"
+    media="print" onload="this.media='all'" />
+  <!-- Fallback for no-JS -->
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=optional" />
+  </noscript>
 
-  <!-- ===== TAILWIND CDN ===== -->
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            'brutal-black': '#ffffff',
-            'brutal-white': '#000000',
-            'neon-green': '#39ff14',
-          },
-          fontFamily: {
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          borderWidth: {
-            3: '3px',
-          },
-        },
-      },
-    };
-  </script>
-  <style type="text/tailwindcss">
-    .brutal-border {
-      border: 2px solid #000000;
-    }
-    .brutal-shadow {
-      box-shadow: 6px 6px 0px 0px #39ff14;
-    }
-    .brutal-shadow-white {
-      box-shadow: 4px 4px 0px 0px #000000;
-    }
-    .grid-bg {
-      background-image: radial-gradient(#00000022 1px, transparent 1px);
-      background-size: 32px 32px;
-    }
-    .scanline {
-      width: 100%;
-      height: 2px;
-      background: rgba(0, 0, 0, 0.05);
-      position: fixed;
-      z-index: 100;
-      pointer-events: none;
-      animation: scan 8s linear infinite;
-    }
-    @keyframes scan {
-      0% { top: 0; }
-      100% { top: 100%; }
-    }
-    .wireframe-cube {
-      width: 100%;
-      height: 100%;
-      border: 1px solid #39ff14;
-      position: relative;
-      background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(57, 255, 20, 0.05) 10px, rgba(57, 255, 20, 0.05) 11px);
-    }
-  </style>
+  <!-- ===== LCP IMAGE HINT (resume-preview.png) ===== -->
+  <link rel="preload" as="image" href="/resume-preview.png" fetchpriority="high" />
 
   <!-- ===== GOOGLE ADSENSE ===== -->
   <meta name="google-adsense-account" content="ca-pub-3213050293695562">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3213050293695562"
     crossorigin="anonymous"></script>
 
-  <!-- ===== GOOGLE ANALYTICS (GA4) ===== -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SEV1TV5SW0"></script>
+  <!-- ===== GOOGLE ANALYTICS (GA4) — deferred so it doesn't block render ===== -->
+  <script defer src="https://www.googletagmanager.com/gtag/js?id=G-SEV1TV5SW0"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
-
     gtag('config', 'G-SEV1TV5SW0');
   </script>
 </head>

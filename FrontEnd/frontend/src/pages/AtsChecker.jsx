@@ -4,6 +4,7 @@ import { resumeAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import AgentChat from '../components/AgentChat';
 import SEO from '../components/SEO';
+import { Helmet } from 'react-helmet-async';
 import './AtsChecker.css';
 
 const AtsChecker = () => {
@@ -235,9 +236,28 @@ const AtsChecker = () => {
   return (
     <div className="min-h-screen bg-brutal-black text-brutal-white font-mono uppercase grid-bg relative selection:bg-neon-green selection:text-black">
       <SEO
-        title="Check ATS Score Online"
-        description="Upload your resume and get an instant AI-powered ATS score with keyword analysis, formatting checks, and actionable AI recommendations."
+        title="Free ATS Score Checker — Check Resume ATS Score Online"
+        description="Upload your resume PDF and get an instant ATS score with keyword gap analysis, formatting audit, and AI-powered fix suggestions. Free, no sign-up required."
+        href="https://atsresify.me/ats-checker"
       />
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "HowTo",
+            "name": "How to Check Your Resume ATS Score",
+            "description": "Check your resume ATS compatibility in 3 simple steps using ATS Resify's free online ATS score checker.",
+            "step": [
+              { "@type": "HowToStep", "name": "Upload Resume", "text": "Upload your resume as a PDF file (max 5MB)." },
+              { "@type": "HowToStep", "name": "Add Job Description", "text": "Optionally paste the target job description for contextual keyword analysis." },
+              { "@type": "HowToStep", "name": "Get ATS Score", "text": "Click 'Execute Scan' to receive your ATS score, keyword report, and AI-powered improvement suggestions." }
+            ],
+            "tool": { "@type": "HowToTool", "name": "ATS Resify — Free ATS Checker" },
+            "totalTime": "PT1M",
+            "supply": { "@type": "HowToSupply", "name": "Resume PDF" }
+          })}
+        </script>
+      </Helmet>
       <div className="scanline"></div>
 
       <main className="py-12 px-4 relative z-10 flex flex-col min-h-[calc(100vh-64px)] items-center">
