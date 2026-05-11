@@ -39,10 +39,12 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef({ startX: 0, startY: 0, startRight: 0, startBottom: 0, moved: false });
 
-  // Resizable panel state
+  // Resizable panel state — use ref for instant reads in mousemove
   const [panelSize, setPanelSize] = useState({ width: 360, height: 460 });
   const [isResizing, setIsResizing] = useState(false);
+  const isResizingRef = useRef(false);
   const resizeRef = useRef({ startX: 0, startY: 0, startW: 0, startH: 0, edge: '' });
+  const resizeRafRef = useRef(null);
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -163,27 +165,37 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
       startH: panelSize.height,
       edge,
     };
+    isResizingRef.current = true;
     setIsResizing(true);
   }, [panelSize]);
 
   useEffect(() => {
-    if (!isResizing) return;
-
     const handleResizeMove = (e) => {
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const dx = resizeRef.current.startX - clientX;
-      const dy = resizeRef.current.startY - clientY;
-      const { edge, startW, startH } = resizeRef.current;
+      if (!isResizingRef.current) return;
+      if (resizeRafRef.current) cancelAnimationFrame(resizeRafRef.current);
+      resizeRafRef.current = requestAnimationFrame(() => {
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const dx = resizeRef.current.startX - clientX;
+        const dy = resizeRef.current.startY - clientY;
+        const { edge, startW, startH } = resizeRef.current;
 
-      let newW = startW, newH = startH;
-      if (edge.includes('left')) newW = Math.max(320, Math.min(800, startW + dx));
-      if (edge.includes('top')) newH = Math.max(350, Math.min(900, startH + dy));
+        let newW = startW, newH = startH;
+        if (edge.includes('left')) newW = Math.max(320, Math.min(800, startW + dx));
+        if (edge.includes('top')) newH = Math.max(350, Math.min(900, startH + dy));
 
-      setPanelSize({ width: newW, height: newH });
+        setPanelSize({ width: newW, height: newH });
+      });
     };
 
-    const handleResizeEnd = () => setIsResizing(false);
+    const handleResizeEnd = () => {
+      isResizingRef.current = false;
+      setIsResizing(false);
+      if (resizeRafRef.current) {
+        cancelAnimationFrame(resizeRafRef.current);
+        resizeRafRef.current = null;
+      }
+    };
 
     window.addEventListener('mousemove', handleResizeMove);
     window.addEventListener('mouseup', handleResizeEnd);
@@ -195,7 +207,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
       window.removeEventListener('touchmove', handleResizeMove);
       window.removeEventListener('touchend', handleResizeEnd);
     };
-  }, [isResizing]);
+  }, []);
 
   // Auto-resize textarea
   const handleTextareaChange = useCallback((e) => {

@@ -3,6 +3,7 @@ import { resumeAPI } from '../services/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
+import AgentChat from '../components/AgentChat';
 import './GenerateResume.css';
 
 const GenerateResume = () => {
@@ -187,7 +188,7 @@ const GenerateResume = () => {
   };
 
   return (
-    <div className="min-h-screen bg-brutal-black text-brutal-white font-mono uppercase grid-bg relative selection:bg-neon-green selection:text-black">
+    <div className="min-h-screen bg-brutal-black text-brutal-white font-sans grid-bg relative selection:bg-neon-green selection:text-black">
       <SEO
         title="Free AI Resume Generator — Build an ATS Resume in Seconds"
         description="Generate a complete, ATS-optimized resume from scratch using AI. Paste your experience, import your LinkedIn PDF, and get a polished resume ready to apply with — free, no templates to fill."
@@ -198,15 +199,15 @@ const GenerateResume = () => {
       {/* ═══ HERO SECTION ═══ */}
       <section className="text-center pt-24 pb-12 px-6 border-b-2 border-brutal-white">
         <div className="max-w-[1400px] mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-neon-green text-black mb-8 w-fit text-xs font-black">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-neon-green text-black mb-8 w-fit text-xs font-black font-mono uppercase">
             [ SYSTEM STATUS: READY ] AI-POWERED ENGINE
           </div>
-          <h1 className="text-4xl md:text-6xl font-black leading-none mb-6 tracking-tight">
+          <h1 className="text-4xl md:text-6xl font-black leading-none mb-6 tracking-tight font-mono uppercase">
             INITIALIZE <span className="text-neon-green underline">YOUR RESUME.</span>
           </h1>
-          <p className="text-sm md:text-base text-slate-700 max-w-2xl mx-auto lowercase leading-relaxed">
-            &gt; IMPORT DATA VIA LINKEDIN PDF OR RAW TEXT.
-            OUR ENGINE WILL COMPILE AN ATS-OPTIMIZED DOCUMENT MEASURED FOR SUCCESS.
+          <p className="text-sm md:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            &gt; Import data via LinkedIn PDF or Raw Text.
+            Our engine will compile an ATS-optimized document measured for success.
           </p>
         </div>
       </section>
@@ -219,16 +220,16 @@ const GenerateResume = () => {
           <aside className="lg:col-span-4 flex flex-col gap-8">
             {/* Writing Tips */}
             <div className="brutal-border bg-brutal-black p-6 relative">
-              <div className="absolute -top-3 -left-3 bg-neon-green border-2 border-brutal-white px-2 text-xs font-black text-black">
+              <div className="absolute -top-3 -left-3 bg-neon-green border-2 border-brutal-white px-2 text-xs font-black text-black font-mono uppercase">
                 /TIPS
               </div>
               <ul className="flex flex-col gap-6 mt-4">
                 {writingTips.map((tip) => (
                   <li key={tip.num} className="flex gap-4 items-start group">
-                    <span className="w-8 h-8 shrink-0 flex items-center justify-center brutal-border bg-transparent group-hover:bg-neon-green group-hover:text-black transition-colors text-sm font-black">
+                    <span className="w-8 h-8 shrink-0 flex items-center justify-center brutal-border bg-transparent group-hover:bg-neon-green group-hover:text-black transition-colors text-sm font-black font-mono">
                       {tip.num}
                     </span>
-                    <span className="text-xs lowercase text-slate-700 leading-relaxed mt-1">{tip.text}</span>
+                    <span className="text-sm text-slate-300 leading-relaxed mt-1">{tip.text}</span>
                   </li>
                 ))}
               </ul>
@@ -252,11 +253,11 @@ const GenerateResume = () => {
                       setInputMode('text');
                     }}
                   >
-                    <div className="text-xs font-black mb-2 flex items-center justify-between">
+                    <div className="text-xs font-black mb-2 flex items-center justify-between font-mono uppercase">
                       {example.title}
                       <span className="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100">arrow_forward</span>
                     </div>
-                    <div className="text-[11px] lowercase opacity-80 leading-relaxed">{example.text}</div>
+                    <div className="text-sm opacity-80 leading-relaxed text-slate-300">{example.text}</div>
                   </div>
                 ))}
               </div>
@@ -268,7 +269,7 @@ const GenerateResume = () => {
 
             {/* Template Selection */}
             <div className="brutal-border bg-brutal-black p-6 relative">
-              <div className="absolute -top-3 -left-3 bg-neon-green border-2 border-brutal-white px-2 text-[10px] font-black text-black tracking-tighter">
+              <div className="absolute -top-3 -left-3 bg-neon-green border-2 border-brutal-white px-2 text-[10px] font-black text-black tracking-tighter font-mono uppercase">
                 /SELECT_ENGINE
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
@@ -288,14 +289,14 @@ const GenerateResume = () => {
                     )}
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className={`text-[10px] font-black uppercase tracking-widest ${selectedTemplate === key ? 'text-black' : 'text-neon-green'}`}>
+                        <span className={`text-[10px] font-black uppercase tracking-widest font-mono ${selectedTemplate === key ? 'text-black' : 'text-neon-green'}`}>
                           {key === 'ats' ? 'ATS_OPTIMIZED' : 'MINIMAL_SERIF'}
                         </span>
                         {selectedTemplate === key && (
-                          <span className="px-1.5 py-0.5 border border-black text-[8px] font-black animate-pulse">ACTIVE</span>
+                          <span className="px-1.5 py-0.5 border border-black text-[8px] font-black animate-pulse font-mono uppercase">ACTIVE</span>
                         )}
                       </div>
-                      <p className={`text-[10px] lowercase leading-relaxed ${selectedTemplate === key ? 'text-black/80 font-medium' : 'text-slate-500'}`}>
+                      <p className={`text-xs leading-relaxed ${selectedTemplate === key ? 'text-black/80 font-medium' : 'text-slate-300'}`}>
                         {description}
                       </p>
                     </div>
@@ -306,7 +307,7 @@ const GenerateResume = () => {
 
             {/* Form Container */}
             <div className="brutal-border bg-brutal-black p-6 relative">
-              <div className="absolute -top-3 -left-3 bg-neon-green border-2 border-brutal-white px-2 text-xs font-black text-black">
+              <div className="absolute -top-3 -left-3 bg-neon-green border-2 border-brutal-white px-2 text-xs font-black text-black font-mono uppercase">
                 /INPUT_DATA
               </div>
 
@@ -418,11 +419,11 @@ const GenerateResume = () => {
               )}
 
               {/* Generate Button Context Area */}
-              <div className="mt-8 pt-8 border-t-2 border-dashed border-brutal-white font-mono uppercase text-brutal-white bg-brutal-black">
+              <div className="mt-8 pt-8 border-t-2 border-dashed border-brutal-white">
                 <button
                   onClick={handleGenerateResume}
                   disabled={loading || (inputMode === 'text' && charCount < 50) || (inputMode !== 'text' && !selectedFile)}
-                  className="w-full bg-neon-green text-black font-black px-8 py-5 text-xl brutal-shadow-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all border-2 border-brutal-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-3 relative overflow-hidden group"
+                  className="w-full bg-neon-green text-black font-black px-8 py-5 text-xl btn-brutal border-2 border-brutal-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 relative overflow-hidden group font-mono uppercase"
                 >
                   {loading ? (
                     <>
@@ -463,6 +464,12 @@ const GenerateResume = () => {
           </div>
         </div>
       )}
+
+      {/* AI Agent Chat */}
+      <AgentChat
+        resumeContext={description ? `User's resume input (${inputMode} mode):\n${description}` : ''}
+        userId={isAuthenticated ? 'user' : 'anonymous'}
+      />
 
     </div>
   );

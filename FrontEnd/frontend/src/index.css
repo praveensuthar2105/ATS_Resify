@@ -13,7 +13,7 @@
   box-shadow: 4px 4px 0px 0px #000000;
 }
 .grid-bg {
-  background-image: radial-gradient(#00000022 1px, transparent 1px);
+  background-image: radial-gradient(#00000011 1px, transparent 1px);
   background-size: 32px 32px;
 }
 .wireframe-cube {
@@ -64,7 +64,7 @@
 
 body {
   margin: 0;
-  font-family: 'Space Mono', 'Inter', monospace;
+  font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
@@ -72,6 +72,28 @@ body {
   background-color: #ffffff;
   color: #000000;
   min-height: 100vh;
+}
+
+/* Standardized Brutalist Button */
+.btn-brutal {
+  border: 2px solid #000000;
+  box-shadow: 4px 4px 0px 0px #000000;
+  transition: all 0.2s ease;
+}
+
+.btn-brutal:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.btn-brutal:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px 0px #000000;
+}
+
+/* Utility to override text color on neon backgrounds */
+.text-on-neon {
+  color: #000000 !important;
 }
 
 code {

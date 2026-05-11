@@ -23,7 +23,15 @@ export default {
     'bg-white/5', 'bg-white/10',
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'neon-green': '#39FF14',
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        mono: ['Space Mono', 'monospace'],
+      },
+    },
   },
   plugins: [],
 }

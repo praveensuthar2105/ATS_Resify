@@ -234,7 +234,7 @@ const AtsChecker = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-brutal-black text-brutal-white font-mono uppercase grid-bg relative selection:bg-neon-green selection:text-black">
+    <div className="min-h-screen bg-brutal-black text-brutal-white font-sans grid-bg relative selection:bg-neon-green selection:text-black">
       <SEO
         title="Free ATS Score Checker — Check Resume ATS Score Online"
         description="Upload your resume PDF and get an instant ATS score with keyword gap analysis, formatting audit, and AI-powered fix suggestions. Free, no sign-up required."
@@ -269,11 +269,11 @@ const AtsChecker = () => {
             <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-neon-green border-2 border-brutal-white"></div>
 
             <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-6xl font-black mb-4 text-brutal-white">
+              <h1 className="text-4xl md:text-6xl font-black mb-4 text-brutal-white font-mono uppercase">
                 <span className="bg-neon-green px-2 text-black">ATS</span> OPTIMIZATION ENGINE
               </h1>
-              <p className="text-sm md:text-base text-slate-400 lowercase">
-                &gt; INITIALIZE SCAN SEQUENCE. UPLOAD RESUME DATA FOR ALGORITHMIC PARSING AND COMPLIANCE VERIFICATION.
+              <p className="text-sm md:text-base text-slate-300 leading-relaxed max-w-2xl mx-auto">
+                &gt; Initialize scan sequence. Upload resume data for algorithmic parsing and compliance verification.
               </p>
             </div>
 
@@ -298,12 +298,12 @@ const AtsChecker = () => {
                   {selectedFile ? selectedFile.name : 'DRAG & DROP YOUR RESUME'}
                 </h2>
 
-                <p className="text-xs text-slate-400 lowercase mb-6">
-                  {selectedFile ? '[ DATA STREAM LOADED - CLICK TO REPLACE ]' : 'SUPPORTED FORMATS: .PDF (MAX 5MB)'}
+                <p className="text-sm text-slate-300 mb-6">
+                  {selectedFile ? '[ DATA STREAM LOADED - CLICK TO REPLACE ]' : 'Supported Formats: .PDF (Max 5MB)'}
                 </p>
 
                 <button
-                  className="px-6 py-3 border-2 border-brutal-white text-brutal-white bg-brutal-black font-bold hover:bg-neon-green hover:text-black hover:border-brutal-white transition-all brutal-shadow-white group-hover:-translate-y-1"
+                  className="px-6 py-3 border-2 border-brutal-white text-brutal-white bg-brutal-black font-bold hover:bg-neon-green hover:text-black btn-brutal transition-all font-mono uppercase"
                   onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
                 >
                   BROWSE FILES
@@ -341,8 +341,8 @@ const AtsChecker = () => {
 
               {/* Submit Button */}
               <button
-                className={`w-full font-black px-6 py-5 text-xl border-2 flex items-center justify-center gap-3 transition-all brutal-shadow-white group ${selectedFile
-                  ? 'bg-neon-green text-black border-brutal-white hover:translate-x-1 hover:translate-y-1 hover:shadow-none cursor-pointer'
+                className={`w-full font-black px-6 py-5 text-xl border-2 flex items-center justify-center gap-3 transition-all btn-brutal font-mono uppercase group ${selectedFile
+                  ? 'bg-neon-green text-black border-brutal-white cursor-pointer'
                   : 'bg-transparent text-slate-500 border-slate-600 cursor-not-allowed hidden-shadow'
                   }`}
                 onClick={handleSubmit}
@@ -373,11 +373,11 @@ const AtsChecker = () => {
             {/* Header Reset */}
             <div className="flex justify-between items-end border-b-2 border-brutal-white pb-4 mb-4">
               <div>
-                <h2 className="text-3xl font-black">SCAN_RESULTS</h2>
-                <div className="text-xs text-slate-400">FILE: {selectedFile?.name || 'UNKNOWN_INPUT.PDF'}</div>
+                <h2 className="text-3xl font-black font-mono uppercase">SCAN_RESULTS</h2>
+                <div className="text-sm text-slate-400">FILE: {selectedFile?.name || 'UNKNOWN_INPUT.PDF'}</div>
               </div>
               <button
-                className="px-4 py-2 border-2 border-brutal-white text-xs font-bold hover:bg-neon-green hover:text-black transition-colors"
+                className="px-4 py-2 border-2 border-brutal-white text-xs font-bold hover:bg-neon-green hover:text-black transition-colors btn-brutal font-mono uppercase"
                 onClick={() => { setAtsResult(null); setJobDescription(''); setSelectedFile(null); }}
               >
                 RESET SCAN
@@ -476,16 +476,16 @@ const AtsChecker = () => {
                 <div className="border-2 border-brutal-white p-6 bg-brutal-black flex-1 flex flex-col">
                   <div className="flex items-center gap-2 border-b-2 border-brutal-white pb-3 mb-4">
                     <span className="material-symbols-outlined text-neon-green">terminal</span>
-                    <h3 className="font-black">ENGINE VERDICT</h3>
+                    <h3 className="font-black font-mono uppercase">ENGINE VERDICT</h3>
                   </div>
 
-                  <p className="text-xs lowercase text-slate-300 leading-relaxed mb-6 flex-1">
-                    YOUR RESUME DEMONSTRATES <strong className={`uppercase ${getScoreColor(atsResult.score ?? 0).text}`}>{getScoreLabel(atsResult.score ?? 0).toLowerCase()}</strong> COMPATIBILITY WITH ALGORITHMIC FILTERS.
+                  <p className="text-sm text-slate-300 leading-relaxed mb-6 flex-1">
+                    Your resume demonstrates <strong className={`uppercase ${getScoreColor(atsResult.score ?? 0).text}`}>{getScoreLabel(atsResult.score ?? 0)}</strong> compatibility with algorithmic filters.
                     {atsResult.score >= 75
-                      ? ' MINOR CALIBRATIONS IN KEYWORD DENSITY COULD ACHIEVE ELITE STATUS.'
+                      ? ' Minor calibrations in keyword density could achieve elite status.'
                       : atsResult.score >= 50
-                        ? ' SIGNIFICANT STRUCTURAL WEAKNESSES DETECTED. RECTIFICATION REQUIRED.'
-                        : ' CRITICAL PARSING FAILURE LIKELY. REDEVELOP USING STANDARD TEMPLATES.'}
+                        ? ' Significant structural weaknesses detected. Rectification required.'
+                        : ' Critical parsing failure likely. Redevelop using standard templates.'}
                   </p>
 
                   <div className="flex flex-col gap-3 font-mono text-[10px] border-t border-dashed border-slate-600 pt-4 mt-auto">
@@ -523,7 +523,7 @@ const AtsChecker = () => {
                 )}
 
                 <button
-                  className="w-full bg-neon-green text-black font-black py-4 border-2 border-brutal-white brutal-shadow-white hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center gap-2 text-sm"
+                  className="w-full bg-neon-green text-black font-black py-4 border-2 border-brutal-white btn-brutal transition-all flex items-center justify-center gap-2 text-sm font-mono uppercase"
                   onClick={() => navigate('/generate')}
                 >
                   <span className="material-symbols-outlined">auto_fix_high</span>
@@ -680,7 +680,29 @@ const AtsChecker = () => {
             {/* Embedded Agent Chat */}
             <div className="border-2 border-brutal-white">
               <AgentChat
-                resumeContext={`File: ${selectedFile?.name || 'Unknown'}\nJob Description: ${jobDescription || 'None'}\n\nResume Text:\n${atsResult.resumeText}\n\nOverall ATS Score: ${atsResult.score}%`}
+                resumeContext={(() => {
+                  const parts = [];
+                  parts.push(`File: ${selectedFile?.name || 'Unknown'}`);
+                  if (jobDescription) parts.push(`Job Description: ${jobDescription}`);
+                  parts.push(`\nOverall ATS Score: ${atsResult.score}%`);
+
+                  // Score breakdown
+                  const bd = atsResult.breakdown;
+                  if (bd) {
+                    const bdLines = Object.entries(bd)
+                      .filter(([, v]) => v)
+                      .map(([k, v]) => `  ${k}: ${v.num}/${v.den}`);
+                    if (bdLines.length) parts.push(`Score Breakdown:\n${bdLines.join('\n')}`);
+                  }
+
+                  if (atsResult.strengths?.length) parts.push(`Strengths:\n${atsResult.strengths.map(s => `  + ${s}`).join('\n')}`);
+                  if (atsResult.weaknesses?.length) parts.push(`Weaknesses:\n${atsResult.weaknesses.map(w => `  - ${w}`).join('\n')}`);
+                  if (atsResult.missingKeywords?.length) parts.push(`Missing Keywords: ${atsResult.missingKeywords.join(', ')}`);
+                  if (atsResult.keywords?.length) parts.push(`Matched Keywords: ${atsResult.keywords.join(', ')}`);
+                  if (atsResult.resumeText) parts.push(`\nResume Text:\n${atsResult.resumeText}`);
+
+                  return parts.join('\n');
+                })()}
                 userId={isAuthenticated ? 'user' : 'anonymous'}
               />
             </div>

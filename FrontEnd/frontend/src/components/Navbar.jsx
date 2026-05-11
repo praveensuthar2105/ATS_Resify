@@ -160,7 +160,7 @@ const Navbar = () => {
                 Log In
               </button>
               <button
-                className="bg-neon-green text-black text-xs font-black px-4 py-2 brutal-shadow-white border border-brutal-white cursor-pointer transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none uppercase font-mono"
+                className="bg-neon-green text-black text-xs font-black px-4 py-2 btn-brutal cursor-pointer uppercase font-mono"
                 onClick={handleLogin}
               >
                 GET STARTED

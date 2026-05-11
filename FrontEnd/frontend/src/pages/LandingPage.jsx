@@ -29,7 +29,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="landing-page grid-bg font-mono uppercase bg-brutal-black text-brutal-white">
+    <div className="landing-page grid-bg bg-brutal-black text-brutal-white font-sans">
       <SEO
         title="Free AI Resume Builder & ATS Score Checker"
         description="Get your resume past the bots — free. ATS Resify builds ATS-optimized resumes with AI, checks your ATS score instantly, and exports polished PDFs. Join thousands of job seekers who got hired faster."
@@ -125,26 +125,26 @@ const LandingPage = () => {
         <div className="max-w-[1400px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-0">
           {/* Left Side */}
           <div className="lg:col-span-7 p-8 lg:p-16 border-r-0 lg:border-r-2 border-brutal-white flex flex-col justify-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-neon-green text-black mb-8 w-fit text-xs font-black">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-neon-green text-black mb-8 w-fit text-xs font-black font-mono uppercase">
               [ SYSTEM STATUS: READY ] AI-POWERED RESUME BUILDER
             </div>
-            <h1 className="text-4xl md:text-7xl font-black leading-none mb-10 tracking-tight">
+            <h1 className="text-4xl md:text-7xl font-black leading-none mb-10 tracking-tight font-mono uppercase">
               BUILD A RESUME<br />
               THAT <span className="text-neon-green underline">BEATS THE BOTS.</span>
             </h1>
-            <p className="text-base md:text-lg text-slate-700 mb-12 max-w-2xl lowercase leading-tight">
-              &gt; OPTIMIZE YOUR CAREER PATH WITH AI-DRIVEN ATS ANALYSIS AND PROFESSIONAL TEMPLATES DESIGNED FOR MODERN RECRUITMENT CYCLES.
+            <p className="text-base md:text-lg text-slate-700 mb-12 max-w-2xl leading-tight">
+              &gt; Optimize your career path with AI-driven ATS analysis and professional templates designed for modern recruitment cycles.
             </p>
             <div className="flex flex-col sm:flex-row items-stretch gap-6">
               <button
                 onClick={() => navigate('/generate')}
-                className="px-8 py-5 bg-brutal-white text-brutal-black font-black text-lg brutal-shadow hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all"
+                className="px-8 py-5 bg-brutal-white text-brutal-black font-black text-lg btn-brutal font-mono uppercase"
               >
                 CREATE YOUR RESUME
               </button>
               <button
                 onClick={() => navigate('/ats-checker')}
-                className="px-8 py-5 border-2 border-brutal-white text-brutal-white font-black text-lg hover:bg-neon-green hover:text-black transition-all"
+                className="px-8 py-5 border-2 border-brutal-white text-brutal-white font-black text-lg hover:bg-neon-green hover:text-black btn-brutal transition-all font-mono uppercase"
               >
                 CHECK ATS SCORE
               </button>
@@ -189,43 +189,43 @@ const LandingPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {/* Header Card */}
           <div className="p-8 lg:p-12 border-b-2 border-r-0 md:border-r-2 border-brutal-white bg-brutal-white text-brutal-black flex flex-col">
-            <h2 className="text-3xl font-black mb-4 text-brutal-black">ENGINEERED FOR SUCCESS</h2>
-            <p className="text-sm font-bold lowercase leading-tight text-brutal-black">
-              POWERFUL TOOLS DESIGNED TO GET YOUR RESUME IN FRONT OF REAL HIRING MANAGERS.
+            <h2 className="text-3xl font-black mb-4 text-brutal-black font-mono uppercase">ENGINEERED FOR SUCCESS</h2>
+            <p className="text-sm font-bold leading-tight text-brutal-black">
+              Powerful tools designed to get your resume in front of real hiring managers.
             </p>
           </div>
 
           {/* Feature: AI Optimization */}
-          <div className="p-8 lg:p-12 border-b-2 border-r-0 lg:border-r-2 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors">
-            <div className="w-12 h-12 brutal-border flex items-center justify-center mb-8 border-brutal-white">
-              <span className="material-symbols-outlined text-brutal-white group-hover:text-black">auto_awesome</span>
+          <div className="p-8 lg:p-12 border-b-2 border-r-0 lg:border-r-2 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors text-brutal-white hover:text-black">
+            <div className="w-12 h-12 brutal-border flex items-center justify-center mb-8 border-current">
+              <span className="material-symbols-outlined text-current">auto_awesome</span>
             </div>
-            <h3 className="text-xl font-black mb-4">AI OPTIMIZATION</h3>
-            <p className="text-xs lowercase leading-relaxed opacity-80 text-slate-700">
-              LEVERAGE CUTTING-EDGE AI TO TAILOR YOUR RESUME FOR ANY JOB DESCRIPTION INSTANTLY, MATCHING KEYWORDS AND PHRASING PRECISELY.
+            <h3 className="text-xl font-black mb-4 font-mono uppercase">AI OPTIMIZATION</h3>
+            <p className="text-sm leading-relaxed opacity-90 text-slate-300 group-hover:text-black">
+              Leverage cutting-edge AI to tailor your resume for any job description instantly, matching keywords and phrasing precisely.
             </p>
           </div>
 
           {/* Feature: Smart Analysis */}
-          <div className="p-8 lg:p-12 border-b-2 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors">
-            <div className="w-12 h-12 brutal-border flex items-center justify-center mb-8 border-brutal-white">
-              <span className="material-symbols-outlined text-brutal-white group-hover:text-black">query_stats</span>
+          <div className="p-8 lg:p-12 border-b-2 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors text-brutal-white hover:text-black">
+            <div className="w-12 h-12 brutal-border flex items-center justify-center mb-8 border-current">
+              <span className="material-symbols-outlined text-current">query_stats</span>
             </div>
-            <h3 className="text-xl font-black mb-4">SMART ANALYSIS</h3>
-            <p className="text-xs lowercase leading-relaxed opacity-80 text-slate-700">
-              GET DETAILED FEEDBACK ON HOW YOUR RESUME PERFORMS AGAINST ATS ALGORITHMS BEFORE YOU HIT SEND ON YOUR APPLICATION.
+            <h3 className="text-xl font-black mb-4 font-mono uppercase">SMART ANALYSIS</h3>
+            <p className="text-sm leading-relaxed opacity-90 text-slate-300 group-hover:text-black">
+              Get detailed feedback on how your resume performs against ATS algorithms before you hit send on your application.
             </p>
           </div>
 
           {/* Feature: Premium Templates (full-width) */}
-          <div className="p-8 lg:p-12 md:col-span-2 lg:col-span-3 border-r-0 flex flex-col md:flex-row md:items-center gap-8 group hover:bg-neon-green transition-colors">
-            <div className="w-16 h-16 brutal-border flex items-center justify-center shrink-0 border-brutal-white">
-              <span className="material-symbols-outlined text-3xl text-brutal-white group-hover:text-black">description</span>
+          <div className="p-8 lg:p-12 md:col-span-2 lg:col-span-3 border-r-0 flex flex-col md:flex-row md:items-center gap-8 group hover:bg-neon-green transition-colors text-brutal-white hover:text-black">
+            <div className="w-16 h-16 brutal-border flex items-center justify-center shrink-0 border-current">
+              <span className="material-symbols-outlined text-3xl text-current">description</span>
             </div>
             <div>
-              <h3 className="text-2xl font-black mb-2">PREMIUM TEMPLATES</h3>
-              <p className="text-sm lowercase max-w-3xl opacity-80 text-slate-700">
-                CHOOSE FROM A COLLECTION OF PROFESSIONALLY DESIGNED, RECRUITER-APPROVED TEMPLATES THAT LOOK GREAT AND SCAN PERFECTLY.
+              <h3 className="text-2xl font-black mb-2 font-mono uppercase">PREMIUM TEMPLATES</h3>
+              <p className="text-sm max-w-3xl opacity-90 text-slate-300 group-hover:text-black">
+                Choose from a collection of professionally designed, recruiter-approved templates that look great and scan perfectly.
               </p>
             </div>
           </div>
@@ -259,20 +259,20 @@ const LandingPage = () => {
         <div className="max-w-4xl mx-auto brutal-border p-12 md:p-16 text-center bg-brutal-black relative">
           <div className="absolute -top-4 -left-4 w-8 h-8 bg-neon-green border-2 border-brutal-white"></div>
           <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-neon-green border-2 border-brutal-white"></div>
-          <h2 className="text-4xl md:text-5xl font-black mb-8 leading-none">
+          <h2 className="text-4xl md:text-5xl font-black mb-8 leading-none font-mono uppercase">
             READY TO LAND YOUR<br />
             <span className="bg-neon-green text-black px-2">DREAM JOB?</span>
           </h2>
-          <p className="text-slate-700 text-sm mb-12 max-w-xl mx-auto lowercase">
-            JOIN THOUSANDS OF JOB SEEKERS WHO BYPASSED THE BOTS AND SECURED THEIR SPOT IN THE INTERVIEW ROOM.
+          <p className="text-slate-300 text-sm mb-12 max-w-xl mx-auto">
+            Join thousands of job seekers who bypassed the bots and secured their spot in the interview room.
           </p>
           <button
             onClick={() => navigate('/generate')}
-            className="w-full sm:w-auto bg-neon-green text-black font-black px-12 py-6 text-xl brutal-shadow-white hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all border-2 border-brutal-white mb-8"
+            className="w-full sm:w-auto bg-neon-green text-black font-black px-12 py-6 text-xl btn-brutal border-2 border-brutal-white mb-8 font-mono uppercase"
           >
             GET STARTED NOW — IT'S FREE
           </button>
-          <p className="text-brutal-white text-[10px] font-bold tracking-widest">
+          <p className="text-brutal-white text-[10px] font-bold tracking-widest font-mono uppercase">
             NO CREDIT CARD REQUIRED. CANCEL ANYTIME.
           </p>
         </div>

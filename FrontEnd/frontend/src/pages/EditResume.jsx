@@ -9,38 +9,38 @@ import { Helmet } from 'react-helmet-async';
 import SectionHeader from '../components/SectionHeader';
 
 const FormItem = ({ label, value, onChange, placeholder, type = "text", colspan = 1 }) => (
-  <div className={`flex flex-col gap-1 ${colspan > 1 ? `col-span-${colspan} sm:col-span-${colspan}` : ''}`}>
-    <label className="text-xs font-bold uppercase tracking-widest">{label}</label>
+  <div className={`flex flex-col gap-1.5 ${colspan > 1 ? `col-span-${colspan} sm:col-span-${colspan}` : ''}`}>
+    <label className="text-[11px] font-bold uppercase tracking-widest text-gray-600 font-sans">{label}</label>
     {type === "textarea" ? (
       <textarea
-        value={value} onChange={onChange} placeholder={placeholder} rows={5}
-        className="border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[4px_4px_0px_0px_#39ff14] p-3 text-sm font-mono transition-all"
+        value={value} onChange={onChange} placeholder={placeholder} rows={4}
+        className="border-2 border-gray-300 bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[3px_3px_0px_0px_#39ff14] p-3 text-sm font-sans transition-all rounded-none resize-y"
       />
     ) : (
       <input
         type={type} value={value} onChange={onChange} placeholder={placeholder}
-        className="border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[4px_4px_0px_0px_#39ff14] p-3 text-sm font-mono transition-all h-12"
+        className="border-2 border-gray-300 bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[3px_3px_0px_0px_#39ff14] p-3 text-sm font-sans transition-all h-11 rounded-none"
       />
     )}
   </div>
 );
 
 const SectionCard = ({ icon, title, subtitle, children, buttonText, onAdd }) => (
-  <div className="border-4 border-black bg-[#f8f8f8] mb-8 shadow-[8px_8px_0px_0px_#000000]">
-    <div className="border-b-4 border-black p-4 flex items-center gap-4 bg-white">
-      <div className="w-12 h-12 border-2 border-black bg-black text-[#39ff14] flex items-center justify-center shadow-[4px_4px_0px_0px_#39ff14]">
-        <span className="material-symbols-outlined text-2xl">{icon}</span>
+  <div className="border-2 border-gray-200 bg-white mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.08)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.12)] transition-shadow">
+    <div className="border-b-2 border-gray-200 p-4 flex items-center gap-3 bg-gray-50">
+      <div className="w-10 h-10 border-2 border-black bg-black text-[#39ff14] flex items-center justify-center">
+        <span className="material-symbols-outlined text-xl">{icon}</span>
       </div>
       <div>
-        <h3 className="text-xl font-black uppercase tracking-tighter">{title}</h3>
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">{subtitle}</p>
+        <h3 className="text-lg font-black uppercase tracking-tight font-mono">{title}</h3>
+        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest font-sans">{subtitle}</p>
       </div>
     </div>
-    <div className="p-6">
+    <div className="p-5">
       {children}
       {buttonText && (
-        <button onClick={onAdd} className="mt-6 w-full py-4 border-2 border-black border-dashed font-bold uppercase hover:bg-[#39ff14] hover:border-solid transition-colors text-sm flex items-center justify-center gap-2">
-          <span className="material-symbols-outlined">add</span> {buttonText}
+        <button onClick={onAdd} className="mt-4 w-full py-3 border-2 border-dashed border-gray-300 font-bold uppercase hover:bg-[#39ff14] hover:border-solid hover:border-black transition-all text-xs flex items-center justify-center gap-2 font-sans text-gray-500 hover:text-black">
+          <span className="material-symbols-outlined text-lg">add</span> {buttonText}
         </button>
       )}
     </div>
@@ -68,45 +68,50 @@ const EditResume = () => {
   const [useOnlineCompiler, setUseOnlineCompiler] = useState(false);
   const autoCompileTimer = useRef(null);
 
-  // Resizer state
+  // Resizer state — use ref for the dragging flag so mousemove reads it instantly
   const [leftWidth, setLeftWidth] = useState(50);
+  const isResizingRef = useRef(false);
   const [isResizing, setIsResizing] = useState(false);
-  const resizerRef = useRef(null);
+  const rafRef = useRef(null);
 
   const startResizing = useCallback(() => {
+    isResizingRef.current = true;
     setIsResizing(true);
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
   }, []);
 
   const stopResizing = useCallback(() => {
-    setIsResizing(true);
+    isResizingRef.current = false;
     setIsResizing(false);
-    document.body.style.cursor = 'default';
-    document.body.style.userSelect = 'auto';
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
   }, []);
 
   const resize = useCallback((e) => {
-    if (!isResizing) return;
-    const newWidth = (e.clientX / window.innerWidth) * 100;
-    if (newWidth > 20 && newWidth < 80) {
-      setLeftWidth(newWidth);
-    }
-  }, [isResizing]);
+    if (!isResizingRef.current) return;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      const newWidth = (e.clientX / window.innerWidth) * 100;
+      if (newWidth > 25 && newWidth < 75) {
+        setLeftWidth(newWidth);
+      }
+    });
+  }, []);
 
   useEffect(() => {
-    if (isResizing) {
-      window.addEventListener('mousemove', resize);
-      window.addEventListener('mouseup', stopResizing);
-    } else {
-      window.removeEventListener('mousemove', resize);
-      window.removeEventListener('mouseup', stopResizing);
-    }
+    // Always attach listeners — the ref guard inside resize() is instant
+    window.addEventListener('mousemove', resize);
+    window.addEventListener('mouseup', stopResizing);
     return () => {
       window.removeEventListener('mousemove', resize);
       window.removeEventListener('mouseup', stopResizing);
     };
-  }, [isResizing, resize, stopResizing]);
+  }, [resize, stopResizing]);
 
   const [formData, setFormData] = useState({
     fullName: '', email: '', phoneNumber: '', location: '', linkedIn: '', gitHub: '', summary: '',
@@ -713,7 +718,7 @@ ${sections}
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-[#ffffff] text-black font-mono selection:bg-[#39ff14] selection:text-black flex flex-col lg:flex-row mt-[64px] absolute w-full top-0 left-0 bottom-0 overflow-hidden" style={{ fontFamily: "'Space Mono', monospace" }}>
+    <div className="fixed inset-0 top-[64px] bg-[#ffffff] text-black font-sans selection:bg-[#39ff14] selection:text-black flex flex-col lg:flex-row overflow-hidden z-[1]">
       <Helmet>
         <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
         <style>{`
@@ -730,24 +735,24 @@ ${sections}
 
       {/* LEFT PANEL: Form Editor */}
       <div
-        className="h-full overflow-y-auto border-r-4 border-black bg-white relative pb-24 lg:pb-0"
-        style={{ width: `calc(${leftWidth}%)` }}
+        className="h-full overflow-y-auto border-r-2 border-gray-200 bg-white relative pb-24 lg:pb-0"
+        style={{ width: `${leftWidth}%`, willChange: isResizing ? 'width' : 'auto' }}
       >
-        <div className="sticky top-0 z-10 bg-white border-b-4 border-black p-4 flex items-center justify-between shadow-[0px_4px_0px_0px_#000000]">
+        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined font-black cursor-pointer hover:text-[#39ff14]" onClick={() => navigate('/generate')}>arrow_back</span>
-              <h1 className="text-2xl font-black uppercase tracking-tighter leading-none">
-                EDIT <span className="text-[#39ff14]" style={{ textShadow: "2px 2px 0px #000" }}>RESUME</span>
+              <span className="material-symbols-outlined text-lg cursor-pointer hover:text-[#39ff14] transition-colors" onClick={() => navigate('/generate')}>arrow_back</span>
+              <h1 className="text-xl font-black uppercase tracking-tight leading-none font-mono">
+                EDIT <span className="text-[#39ff14]">RESUME</span>
               </h1>
             </div>
-            <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1 flex items-center gap-2">
-              <span className={`w-2 h-2 ${saving ? 'bg-yellow-500 animate-pulse' : 'bg-[#39ff14]'} inline-block`}></span>
-              {saving ? 'SYNCING DATA...' : lastSavedAt ? `LATEST COMMIT: ${new Date(lastSavedAt).toLocaleTimeString()}` : 'AWAITING EDITS'}
+            <div className="text-[10px] font-medium text-gray-400 uppercase tracking-widest mt-1 flex items-center gap-1.5 font-sans">
+              <span className={`w-1.5 h-1.5 rounded-full ${saving ? 'bg-yellow-500 animate-pulse' : 'bg-[#39ff14]'} inline-block`}></span>
+              {saving ? 'Syncing...' : lastSavedAt ? `Saved ${new Date(lastSavedAt).toLocaleTimeString()}` : 'Awaiting edits'}
             </div>
           </div>
-          <button className="px-4 py-2 bg-black text-white font-bold uppercase text-xs border-2 border-black hover:bg-[#39ff14] hover:text-black transition-colors lg:hidden flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">visibility</span> PREVIEW
+          <button className="px-3 py-2 bg-black text-white font-bold uppercase text-[10px] border border-black hover:bg-[#39ff14] hover:text-black transition-colors lg:hidden flex items-center gap-1.5 font-sans">
+            <span className="material-symbols-outlined text-[14px]">visibility</span> PREVIEW
           </button>
         </div>
 
@@ -940,30 +945,34 @@ ${sections}
       {/* DRAGGABLE RESIZER */}
       <div
         onMouseDown={startResizing}
-        className={`hidden lg:flex w-1 hover:w-2 bg-black/10 hover:bg-[#39ff14] transition-all cursor-col-resize z-50 h-full items-center justify-center group ${isResizing ? 'bg-[#39ff14] w-2' : ''}`}
+        className={`hidden lg:flex w-2 hover:w-3 cursor-col-resize z-50 h-full items-center justify-center group transition-colors ${isResizing ? 'bg-[#39ff14]' : 'bg-gray-200 hover:bg-[#39ff14]/50'}`}
       >
-        <div className="w-[1px] h-12 bg-black/20 group-hover:bg-black/50"></div>
+        <div className="flex flex-col gap-1 items-center">
+          <div className="w-0.5 h-1.5 bg-gray-400 group-hover:bg-black rounded-full"></div>
+          <div className="w-0.5 h-1.5 bg-gray-400 group-hover:bg-black rounded-full"></div>
+          <div className="w-0.5 h-1.5 bg-gray-400 group-hover:bg-black rounded-full"></div>
+        </div>
       </div>
 
       {/* RIGHT PANEL: PDF Preview */}
       <div
-        className="hidden lg:flex flex-col h-full bg-[#f0f0f0] border-black pb-0 relative"
-        style={{ width: `calc(${100 - leftWidth}%)` }}
+        className={`hidden lg:flex flex-col h-full bg-[#f0f0f0] pb-0 relative ${isResizing ? 'pointer-events-none' : ''}`}
+        style={{ width: `${100 - leftWidth}%`, willChange: isResizing ? 'width' : 'auto' }}
       >
-        <div className="bg-black text-[#39ff14] p-3 flex items-center justify-between border-b-4 border-black shadow-[0px_4px_0px_0px_#39ff14] z-10 shrink-0">
-          <div className="flex items-center gap-3">
-            <span className={`w-3 h-3 ${compiling ? 'bg-yellow-500 animate-pulse' : pdfUrl ? 'bg-[#39ff14]' : 'bg-red-500'} inline-block`}></span>
-            <span className="font-bold uppercase tracking-widest text-sm text-white">
-              {compiling ? 'RENDERING PDF...' : 'OUTPUT BUFFER (PDF)'}
+        <div className="bg-black text-[#39ff14] px-4 py-2.5 flex items-center justify-between z-10 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${compiling ? 'bg-yellow-500 animate-pulse' : pdfUrl ? 'bg-[#39ff14]' : 'bg-red-500'} inline-block`}></span>
+            <span className="font-bold uppercase tracking-widest text-xs text-white font-mono">
+              {compiling ? 'RENDERING...' : 'PDF PREVIEW'}
             </span>
-            {useOnlineCompiler && <span className="bg-blue-600 text-white text-[10px] px-2 border border-blue-400">EXT_SERVICE</span>}
+            {useOnlineCompiler && <span className="bg-blue-600 text-white text-[8px] px-1.5 py-0.5 font-mono">EXT</span>}
           </div>
-          <div className="flex items-center gap-3 bg-white text-black p-1 border-2 border-black">
-            <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="w-6 h-6 flex items-center justify-center hover:bg-black hover:text-[#39ff14]"><span className="material-symbols-outlined text-[16px]">remove</span></button>
-            <span className="font-bold text-xs w-12 text-center font-mono">{zoom}%</span>
-            <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="w-6 h-6 flex items-center justify-center hover:bg-black hover:text-[#39ff14]"><span className="material-symbols-outlined text-[16px]">add</span></button>
-            <div className="w-px h-6 bg-black mx-1"></div>
-            <button onClick={handleManualCompile} disabled={compiling} className="w-6 h-6 flex items-center justify-center hover:bg-[#39ff14]">
+          <div className="flex items-center gap-1 bg-white/10 text-white p-0.5 rounded">
+            <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded transition-colors"><span className="material-symbols-outlined text-[16px]">remove</span></button>
+            <span className="font-bold text-[10px] w-10 text-center font-mono">{zoom}%</span>
+            <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded transition-colors"><span className="material-symbols-outlined text-[16px]">add</span></button>
+            <div className="w-px h-5 bg-white/20 mx-0.5"></div>
+            <button onClick={handleManualCompile} disabled={compiling} className="w-7 h-7 flex items-center justify-center hover:bg-[#39ff14]/30 rounded transition-colors">
               <span className={`material-symbols-outlined text-[16px] ${compiling ? 'animate-spin opacity-50' : ''}`}>sync</span>
             </button>
           </div>
@@ -1020,12 +1029,12 @@ ${sections}
           )}
         </div>
 
-        <div className="bg-white border-t-4 border-black p-4 flex gap-4 shrink-0 shadow-[0px_-4px_0px_0px_#000000] z-10 sticky bottom-0">
-          <button onClick={handleSave} className="flex-1 bg-black text-[#39ff14] font-bold uppercase tracking-widest py-3 border-2 border-transparent hover:bg-[#39ff14] hover:text-black hover:border-black transition-colors flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined">save</span> UPDATE DATABASE
+        <div className="bg-white border-t border-gray-200 p-3 flex gap-3 shrink-0 z-10">
+          <button onClick={handleSave} className="flex-1 bg-black text-[#39ff14] font-bold uppercase tracking-wider py-2.5 text-xs border-2 border-black hover:bg-[#39ff14] hover:text-black transition-colors flex items-center justify-center gap-2 font-mono">
+            <span className="material-symbols-outlined text-lg">save</span> SAVE
           </button>
-          <button onClick={downloadPDF} disabled={compiling} className="flex-1 bg-white text-black font-bold uppercase tracking-widest py-3 border-2 border-black hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-            <span className="material-symbols-outlined">download</span> {compiling ? 'BUSY' : 'DOWNLOAD'}
+          <button onClick={downloadPDF} disabled={compiling} className="flex-1 bg-white text-black font-bold uppercase tracking-wider py-2.5 text-xs border-2 border-black hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-mono">
+            <span className="material-symbols-outlined text-lg">download</span> {compiling ? 'BUSY' : 'DOWNLOAD'}
           </button>
         </div>
       </div>
