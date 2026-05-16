@@ -108,6 +108,7 @@ Start at 100%. The atsScore MUST equal 100% minus the sum of all logged penaltie
 
 2. DYNAMIC PENALTIES: Search for ANY other flaws and add them to the log with a custom deduction (-1% to -5%):
 - SPELLING/GRAMMAR: Act as a professional proofreader. Detect typos, capitalization errors (e.g. "java" instead of "Java"), or broken English. CITE the specific word and what it should be. (-2% per major typo).
+  -> EXCEPTION: Do NOT flag technical terms, library names, proper nouns, or brand names (e.g. "LangChain4j", "PostgreSQL") as spelling mistakes.
 - DATE INCONSISTENCY: Overlapping dates without explanation or weird formatting. (-2%).
 - UNPROFESSIONAL CONTENT: Irrelevant info (hobbies, age, marital status) or informal phrasing. (-2%).
 - FORMATTING GLITCHES: Missing spaces between sections or inconsistent bullet symbols. (-2%).

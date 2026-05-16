@@ -287,18 +287,27 @@ public class AtsScoreServiceImpl implements AtsScoreService {
             }
         }
 
-        // Check for summary section (line starts with summary-related heading)
+        // Check for common sections (line starts with related heading)
         boolean hasSummary = false;
+        boolean hasEducation = false;
+        boolean hasExperience = false;
+        boolean hasSkills = false;
+        boolean hasProjects = false;
+        
         for (String line : resumeText.split("\\n")) {
             String trimLower = line.trim().toLowerCase();
-            if (trimLower.length() < 50 && (
-                    trimLower.startsWith("summary") ||
-                    trimLower.startsWith("objective") ||
-                    trimLower.startsWith("profile") ||
-                    trimLower.startsWith("about me") ||
-                    trimLower.startsWith("professional summary"))) {
-                hasSummary = true;
-                break;
+            if (trimLower.length() < 50) {
+                if (trimLower.startsWith("summary") || trimLower.startsWith("objective") || trimLower.startsWith("profile") || trimLower.startsWith("about me") || trimLower.startsWith("professional summary")) {
+                    hasSummary = true;
+                } else if (trimLower.startsWith("education") || trimLower.startsWith("academic background") || trimLower.startsWith("academics")) {
+                    hasEducation = true;
+                } else if (trimLower.startsWith("experience") || trimLower.startsWith("work history") || trimLower.startsWith("employment") || trimLower.startsWith("work experience")) {
+                    hasExperience = true;
+                } else if (trimLower.startsWith("skills") || trimLower.startsWith("technical skills") || trimLower.startsWith("core competencies") || trimLower.startsWith("technologies")) {
+                    hasSkills = true;
+                } else if (trimLower.startsWith("projects") || trimLower.startsWith("academic projects") || trimLower.startsWith("personal projects")) {
+                    hasProjects = true;
+                }
             }
         }
 
@@ -313,16 +322,26 @@ public class AtsScoreServiceImpl implements AtsScoreService {
 
                 boolean shouldRemove = false;
 
-                if (hasPhone && hasEmail && reason.contains("missing") &&
+                boolean isMissingPenalty = reason.contains("missing") || reason.contains("no ") || reason.startsWith("no");
+
+                if (hasPhone && hasEmail && isMissingPenalty &&
                         (reason.contains("phone") || reason.contains("email") || reason.contains("contact"))) {
                     shouldRemove = true;
-                } else if (hasPhone && reason.contains("missing") && reason.contains("phone")) {
+                } else if (hasPhone && isMissingPenalty && reason.contains("phone")) {
                     shouldRemove = true;
-                } else if (hasEmail && reason.contains("missing") && reason.contains("email")) {
+                } else if (hasEmail && isMissingPenalty && reason.contains("email")) {
                     shouldRemove = true;
-                } else if (hasSummary && reason.contains("summary")) {
+                } else if (hasSummary && isMissingPenalty && reason.contains("summary")) {
                     shouldRemove = true;
-                } else if (hasSummary && reason.contains("objective") && reason.contains("missing")) {
+                } else if (hasSummary && isMissingPenalty && reason.contains("objective")) {
+                    shouldRemove = true;
+                } else if (hasEducation && isMissingPenalty && reason.contains("education")) {
+                    shouldRemove = true;
+                } else if (hasExperience && isMissingPenalty && reason.contains("experience")) {
+                    shouldRemove = true;
+                } else if (hasSkills && isMissingPenalty && reason.contains("skills")) {
+                    shouldRemove = true;
+                } else if (hasProjects && isMissingPenalty && reason.contains("projects")) {
                     shouldRemove = true;
                 } else if (pageCount == 1 && (reason.contains("length") || reason.contains("pages") || reason.contains("page count"))) {
                     shouldRemove = true;
@@ -354,43 +373,73 @@ public class AtsScoreServiceImpl implements AtsScoreService {
                 log.info("Score corrected: {}% → {}% (removed {} false deductions)",
                         currentScore, newScore, removedDeductions);
             }
+        }
 
-            // Scrub "weaknesses" list
-            List<String> weaknesses = (List<String>) dataMap.get("weaknesses");
-            if (weaknesses != null) {
-                List<String> fixedWeaknesses = new java.util.ArrayList<>();
-                for (String w : weaknesses) {
-                    String wLower = w.toLowerCase();
-                    boolean falseWeakness = false;
-                    if (hasPhone && hasEmail && wLower.contains("contact")) falseWeakness = true;
-                    else if (hasPhone && wLower.contains("phone")) falseWeakness = true;
-                    else if (hasEmail && wLower.contains("email")) falseWeakness = true;
-                    else if (hasSummary && wLower.contains("summary")) falseWeakness = true;
-                    else if (hasSummary && wLower.contains("objective")) falseWeakness = true;
-                    else if (pageCount == 1 && (wLower.contains("length") || wLower.contains("page count"))) falseWeakness = true;
+        // Scrub "weaknesses" list (DO THIS REGARDLESS of removedDeductions)
+        List<String> weaknesses = (List<String>) dataMap.get("weaknesses");
+        if (weaknesses != null) {
+            List<String> fixedWeaknesses = new java.util.ArrayList<>();
+            for (String w : weaknesses) {
+                String wLower = w.toLowerCase();
+                boolean falseWeakness = false;
+                if (hasPhone && hasEmail && wLower.contains("contact")) falseWeakness = true;
+                else if (hasPhone && wLower.contains("phone")) falseWeakness = true;
+                else if (hasEmail && wLower.contains("email")) falseWeakness = true;
+                else if (hasSummary && (wLower.contains("summary") || wLower.contains("objective")) && wLower.contains("missing")) falseWeakness = true;
+                else if (hasEducation && wLower.contains("education") && wLower.contains("missing")) falseWeakness = true;
+                else if (hasExperience && wLower.contains("experience") && wLower.contains("missing")) falseWeakness = true;
+                else if (hasSkills && wLower.contains("skills") && wLower.contains("missing")) falseWeakness = true;
+                else if (hasProjects && wLower.contains("projects") && wLower.contains("missing")) falseWeakness = true;
+                else if (pageCount == 1 && (wLower.contains("length") || wLower.contains("page count"))) falseWeakness = true;
 
-                    if (!falseWeakness) fixedWeaknesses.add(w);
-                }
-                dataMap.put("weaknesses", fixedWeaknesses);
+                if (!falseWeakness) fixedWeaknesses.add(w);
             }
+            dataMap.put("weaknesses", fixedWeaknesses);
+        }
 
-            // Scrub "detailedSuggestions" list
-            List<Map<String, Object>> suggestions = (List<Map<String, Object>>) dataMap.get("detailedSuggestions");
-            if (suggestions != null) {
-                List<Map<String, Object>> fixedSuggestions = new java.util.ArrayList<>();
-                for (Map<String, Object> s : suggestions) {
-                    String section = String.valueOf(s.get("section")).toLowerCase();
-                    String suggestion = String.valueOf(s.get("suggestion")).toLowerCase();
-                    boolean falseSuggestion = false;
-                    
-                    if (hasSummary && (section.contains("summary") || suggestion.contains("summary"))) falseSuggestion = true;
-                    else if (pageCount == 1 && suggestion.contains("length")) falseSuggestion = true;
-                    else if (hasEmail && suggestion.contains("email")) falseSuggestion = true;
-                    else if (hasPhone && suggestion.contains("phone")) falseSuggestion = true;
+        // Scrub "detailedSuggestions" list (DO THIS REGARDLESS of removedDeductions)
+        List<Map<String, Object>> suggestions = (List<Map<String, Object>>) dataMap.get("detailedSuggestions");
+        if (suggestions != null) {
+            List<Map<String, Object>> fixedSuggestions = new java.util.ArrayList<>();
+            for (Map<String, Object> s : suggestions) {
+                String section = String.valueOf(s.get("section")).toLowerCase();
+                String suggestion = String.valueOf(s.get("suggestion")).toLowerCase();
+                boolean falseSuggestion = false;
+                
+                boolean isMissingSuggestion = suggestion.contains("missing") || suggestion.contains("no ") || suggestion.startsWith("no") || suggestion.contains("add a") || suggestion.contains("create a");
+                
+                if (hasSummary && (section.contains("summary") || suggestion.contains("summary")) && isMissingSuggestion) falseSuggestion = true;
+                else if (hasEducation && (section.contains("education") || suggestion.contains("education")) && isMissingSuggestion) falseSuggestion = true;
+                else if (hasExperience && (section.contains("experience") || suggestion.contains("experience")) && isMissingSuggestion) falseSuggestion = true;
+                else if (hasSkills && (section.contains("skills") || suggestion.contains("skills")) && isMissingSuggestion) falseSuggestion = true;
+                else if (hasProjects && (section.contains("projects") || suggestion.contains("projects")) && isMissingSuggestion) falseSuggestion = true;
+                else if (pageCount == 1 && suggestion.contains("length")) falseSuggestion = true;
+                else if (hasEmail && suggestion.contains("email") && isMissingSuggestion) falseSuggestion = true;
+                else if (hasPhone && suggestion.contains("phone") && isMissingSuggestion) falseSuggestion = true;
 
-                    if (!falseSuggestion) fixedSuggestions.add(s);
+                if (!falseSuggestion) fixedSuggestions.add(s);
+            }
+            dataMap.put("detailedSuggestions", fixedSuggestions);
+        }
+
+        // Auto-correct sectionCompleteness score if regex proved it is good
+        Object breakdown = dataMap.get("scoreBreakdown");
+        if (breakdown == null) breakdown = dataMap.get("subcategories");
+        if (breakdown instanceof Map) {
+            Map<String, Object> subMap = (Map<String, Object>) breakdown;
+            Object sectionCompletenessObj = subMap.get("sectionCompleteness");
+            if (sectionCompletenessObj instanceof Map) {
+                Map<String, Object> secMap = (Map<String, Object>) sectionCompletenessObj;
+                String currentScore = String.valueOf(secMap.get("score"));
+                
+                // If AI scored it low, but we have the major sections, bump it up
+                if (hasEducation && hasSkills && (hasExperience || hasProjects)) {
+                    if (currentScore.matches("^[0-7]/10.*")) {
+                        log.info("Auto-correcting sectionCompleteness score from {} to 10/10 based on regex verification", currentScore);
+                        secMap.put("score", "10/10");
+                        secMap.put("explanation", "All standard sections (Education, Skills, Experience/Projects) were found and verified.");
+                    }
                 }
-                dataMap.put("detailedSuggestions", fixedSuggestions);
             }
         }
     }
