@@ -22,4 +22,4 @@ ENV LATEX_COMPILER=pdflatex
 ENV LATEX_COMPILER_PATH=pdflatex
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
