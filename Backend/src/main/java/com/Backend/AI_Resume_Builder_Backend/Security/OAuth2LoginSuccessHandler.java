@@ -56,6 +56,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 // Guarantee admin accounts
                 if (email != null && (email.equals("praveensuthar1863@gmail.com") ||
                                 email.equals("sutharaartu1863@gmail.com") ||
+                                email.equals("praveensuthar2105@gmail.com") ||
                                 email.equals("sutharaarti1863@gmail.com"))) {
                         user.setRole(com.Backend.AI_Resume_Builder_Backend.Entity.Role.ADMIN);
                 } else if (user.getRole() == null) {
