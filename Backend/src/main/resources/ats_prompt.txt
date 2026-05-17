@@ -122,12 +122,14 @@ Start at 100%. The atsScore MUST equal 100% minus the sum of all logged penaltie
 | Keyword match penalty (ONLY if JD provided)                | per Step 1  | per Step 1 |
 
 2. DYNAMIC PENALTIES: Search for ANY other flaws and add them to the log with a custom deduction (-1% to -10%):
-- SPELLING/GRAMMAR: Act as a professional proofreader. Detect typos, capitalization errors (e.g. "java" instead of "Java"), or broken English. CITE the specific word and what it should be. (Apply -2% once for pervasive errors, not per instance).
-  -> EXCEPTION: Do NOT flag technical terms, library names, proper nouns, or brand names (e.g. "LangChain4j", "PostgreSQL") as spelling mistakes.
+- SPELLING & GRAMMATICAL ERRORS: Act as a professional proofreader. Detect typos, capitalization errors, wrong verb tenses, run-on sentences, or broken English. CITE the specific word and what it should be. (Apply -2% per major error, up to -6%).
+  -> EXCEPTION: Do NOT flag technical terms, proper nouns, or brand names as mistakes.
+- UNPROFESSIONAL TONE: Use of first-person pronouns ("I", "my", "we"), passive voice, informal phrasing, or irrelevant info (hobbies, age). (-2% per instance, up to -6%).
 - DATE INCONSISTENCY: Overlapping dates without explanation or weird formatting. (-2%).
-- UNPROFESSIONAL CONTENT: Irrelevant info (hobbies, age, marital status) or informal phrasing. (-2%).
 - FORMATTING GLITCHES: Missing spaces between sections or inconsistent bullet symbols. (-2%).
-- WEAK BULLET POINTS: Bullet points that lack metrics, outcomes, or read like a job description. (-3% per weak bullet, up to -10%).
+- WEAK PROJECT DESCRIPTIONS: Projects that just list technologies used without explaining the "how" or the "impact". (-3% per weak project, up to -9%).
+- WEAK BULLET POINTS: Experience bullet points that lack metrics, outcomes, or read like a job description. (-3% per weak bullet, up to -10%).
+- MISSING CRITICAL SKILLS: If the resume lacks an absolute core, high-priority skill essential to the job description (e.g., JD is "React Developer" and resume lacks React) or fundamental industry requirements. (-5% per critical missing skill, up to -15%).
 - POOR READABILITY: Dense text, lack of spacing, or overwhelming layout. (-5%).
 
 ⚠ CRITICAL: Do NOT duplicate entries. Each penalty reason must be unique.
