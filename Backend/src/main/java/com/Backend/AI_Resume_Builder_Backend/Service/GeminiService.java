@@ -25,25 +25,20 @@ public class GeminiService {
             @Value("${gemini.api.key:}") String apiKey,
             @Value("${vertex.project.id:}") String projectId,
             @Value("${vertex.location:us-central1}") String location,
-            @Value("${vertex.model:gemini-2.0-flash}") String model,
+            @Value("${vertex.model:gemini-3.1-flash-lite}") String model,
             RestClient.Builder restClientBuilder) {
 
         if (apiKey == null || apiKey.trim().isEmpty()) {
             throw new IllegalStateException(
                     "Gemini API key is not configured. Please set 'gemini.api.key' in application.properties or environment variables.");
         }
-        if (projectId == null || projectId.trim().isEmpty()) {
-            throw new IllegalStateException(
-                    "Vertex AI Project ID is not configured. Please set 'vertex.project.id' in application.properties or environment variables.");
-        }
-
         this.apiKey = apiKey.trim();
 
-        // Vertex AI endpoint format:
-        // https://{LOCATION}-aiplatform.googleapis.com/v1/projects/{PROJECT}/locations/{LOCATION}/publishers/google/models/{MODEL}:generateContent
+        // Gemini AI Studio endpoint format:
+        // https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent
         String baseUrl = String.format(
-                "https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s",
-                location.trim(), projectId.trim(), location.trim(), model.trim());
+                "https://generativelanguage.googleapis.com/v1beta/models/%s",
+                model.trim());
 
         this.vertexUrl = baseUrl + ":generateContent";
         this.restClient = restClientBuilder.baseUrl(this.vertexUrl).build();
@@ -52,7 +47,7 @@ public class GeminiService {
         String masked = this.apiKey.length() > 10
                 ? this.apiKey.substring(0, 8) + "..." + this.apiKey.substring(this.apiKey.length() - 4)
                 : "***";
-        log.info("GeminiService initialized with Vertex AI — URL: {} | Key: {}", this.vertexUrl, masked);
+        log.info("GeminiService initialized with Gemini API Studio — URL: {} | Key: {}", this.vertexUrl, masked);
     }
 
     public Optional<String> generateContent(String prompt) {
