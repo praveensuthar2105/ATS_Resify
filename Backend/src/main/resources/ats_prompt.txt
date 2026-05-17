@@ -10,6 +10,12 @@ Be accurate and honest, not artificially harsh or artificially generous.
 - Scores above 80% require: strong keywords, clean formatting, complete sections, and demonstrated impact appropriate to the candidate's level.
 - Scores above 90% are reserved for near-perfect resumes only.
 - Never inflate scores to be polite. Never deflate scores to be harsh.
+
+Example scoring anchors:
+- Resume with no metrics, no summary, weak verbs, but all sections present = ~55%
+- Resume with 2 quantified bullets, clean formatting, all sections = ~68%
+- Resume with 4+ metrics, strong verbs, tailored keywords, clean format = ~80%+
+
 - For STUDENT projects: Be extremely strict. If a project description just lists technologies without explaining the "how" or "impact", it is a weak bullet. Do NOT give full points just for having a "Projects" section.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -39,6 +45,13 @@ missing, you MUST search the ENTIRE resume text thoroughly:
 
 Do NOT penalize for missing information that IS present in the text but appears in an
 unexpected location or format. When in doubt, do NOT apply the penalty.
+
+If resume text is so garbled that a section cannot be reliably assessed, 
+set that sub-score to "N/A" and note: "Section unreadable due to PDF extraction issues."
+Do NOT guess or fabricate content.
+
+If {{formatHints}} or {{preAnalysis}} appear as literal placeholders (not substituted),
+treat page count as unknown and skip format-hint references.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STEP 0 — CANDIDATE LEVEL DETECTION (do this FIRST)
@@ -79,11 +92,13 @@ If a job description is provided:
   5. Populate matchedKeywords[] and missingKeywords[] arrays.
 
 If NO job description is provided:
-  - Do NOT apply any keyword match penalty in the penalty table. Skip the keyword penalty row entirely.
-  - The keywordMatch sub-score should still be scored (out of 10) based on how well the resume demonstrates relevant skills for the candidate's apparent field/industry.
-  - Note in the keywordMatch explanation that providing a JD would improve accuracy.
-  - Do NOT cap the atsScore. A great resume without a JD can still score 90%+.
-  - Set keywordAnalysis.matchRate to "N/A", matchedKeywords and missingKeywords to [] when no JD.
+  - Identify the candidate's apparent field/industry based on their summary, experience, and projects.
+  - Mentally generate a list of 10-15 industry-standard keywords and skills expected for a candidate at their level in that field.
+  - Check the resume against these industry-standard keywords.
+  - Calculate: matchRate = matchedKeywords.length / industryStandardKeywords.length
+  - Apply the keyword penalty (using the table above) based on how well they match the industry standard.
+  - Populate matchedKeywords[], missingKeywords[], and keywordAnalysis.totalJDKeywords based on this industry comparison.
+  - Note in the keywordMatch explanation that the score is based on industry standards since no JD was provided.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STEP 2 — PENALTY CALCULATION (Mental Logic)
@@ -106,14 +121,17 @@ Start at 100%. The atsScore MUST equal 100% minus the sum of all logged penaltie
 | No summary/objective section                               | -3%         | -3%     |
 | Keyword match penalty (ONLY if JD provided)                | per Step 1  | per Step 1 |
 
-2. DYNAMIC PENALTIES: Search for ANY other flaws and add them to the log with a custom deduction (-1% to -5%):
-- SPELLING/GRAMMAR: Act as a professional proofreader. Detect typos, capitalization errors (e.g. "java" instead of "Java"), or broken English. CITE the specific word and what it should be. (-2% per major typo).
+2. DYNAMIC PENALTIES: Search for ANY other flaws and add them to the log with a custom deduction (-1% to -10%):
+- SPELLING/GRAMMAR: Act as a professional proofreader. Detect typos, capitalization errors (e.g. "java" instead of "Java"), or broken English. CITE the specific word and what it should be. (Apply -2% once for pervasive errors, not per instance).
   -> EXCEPTION: Do NOT flag technical terms, library names, proper nouns, or brand names (e.g. "LangChain4j", "PostgreSQL") as spelling mistakes.
 - DATE INCONSISTENCY: Overlapping dates without explanation or weird formatting. (-2%).
 - UNPROFESSIONAL CONTENT: Irrelevant info (hobbies, age, marital status) or informal phrasing. (-2%).
 - FORMATTING GLITCHES: Missing spaces between sections or inconsistent bullet symbols. (-2%).
+- WEAK BULLET POINTS: Bullet points that lack metrics, outcomes, or read like a job description. (-3% per weak bullet, up to -10%).
+- POOR READABILITY: Dense text, lack of spacing, or overwhelming layout. (-5%).
 
 ⚠ CRITICAL: Do NOT duplicate entries. Each penalty reason must be unique.
+⚠ CRITICAL: Do NOT apply a dynamic formatting penalty for an issue already covered by a mandatory penalty row. Each flaw should appear in penaltyLog exactly once.
 
 * For STUDENTS: quantified achievements include team size ("team of 5"), data volume ("processed 10K records"), user count ("500+ users"), GPA/CGPA, class rank, competition placements, and project scope metrics. Do NOT require $, revenue, or business KPIs from students.
 
@@ -122,8 +140,9 @@ Start at 100%. The atsScore MUST equal 100% minus the sum of all logged penaltie
 *** Use the actual page count from DOCUMENT METADATA below. For experienced candidates: penalize if > 2 pages. For students: penalize if > 1 page. Do NOT guess page count from text volume. If metadata says "Page count: 1", the resume is NEVER "too long".
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STEP 3 — SECTION-BY-SECTION RUBRICS
+STEP 3 — SECTION-BY-SECTION RUBRICS (Diagnostic Only)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+scoreBreakdown sub-scores are DIAGNOSTIC ONLY. They do NOT mathematically derive atsScore. atsScore comes solely from the penaltyLog deductions.
 
 keywordMatch (score out of 10):
   When JD is provided:
@@ -191,8 +210,8 @@ brevity (score out of 10):
   0     → 3+ pages OR wall-of-text with no structure
   - Use the actual page count from DOCUMENT METADATA below.
 
-experienceFit (score out of 10):
-  ⚠ IF NO JD IS PROVIDED: You MUST set score to "N/A" and explanation to "No job description provided for comparison." Do NOT score 0 — use the literal string "N/A".
+experienceFit (score out of 10 or N/A):
+  ⚠ IF NO JD IS PROVIDED: You MUST set score to the literal string "N/A" and explanation to "No job description provided for comparison." Do NOT default to "0/10" — "0/10" means the candidate is completely irrelevant.
   When a JD IS provided:
     10/10 → Years of experience and seniority exactly match JD requirements
     7–9   → Slight over/under qualification (1–2 years off, or one level difference)
@@ -231,14 +250,30 @@ For each filter, output: requirement (what the JD asks), status (PASS / FAIL / U
 If no JD is provided, set knockoutFilters to an empty array.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SELF-CHECK & ARITHMETIC VERIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SELF-CHECK before outputting JSON:
+- Did I apply student vs experienced column correctly?
+- Is atsScore = 100 - sum(penaltyLog)?
+- Did I set experienceFit to "N/A" if no JD was provided?
+- Are there duplicate entries in penaltyLog?
+
+To force arithmetic verification, you MUST include a "scratchpad" key as the VERY FIRST item in your JSON output.
+Format your scratchpad exactly like this:
+"PENALTY SUM: [list each deduction] = X%. FINAL SCORE: 100 - X = Y%"
+Then set atsScore to "Y%".
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 REQUIRED JSON OUTPUT STRUCTURE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {
+  "scratchpad": "PENALTY SUM: -10% (Dense) + -3% (Weak verbs) = -13%. FINAL SCORE: 100 - 13 = 87%",
   "candidateLevel": "student | experienced",
-  "atsScore": "XX%",
   "penaltyLog": [
     { "reason": "Description of penalty condition found", "deduction": "-X%" }
   ],
+  "penaltySum": "XX%",
+  "atsScore": "XX%",
   "scoreBreakdown": {
     "keywordMatch": {
       "score": "N/10",
@@ -266,7 +301,7 @@ REQUIRED JSON OUTPUT STRUCTURE
       "suggestion": "Specific advice on trimming or restructuring for better scannability."
     },
     "experienceFit": {
-      "score": "N/10 or N/A",
+      "score": "N/A",
       "explanation": "Compare candidate's seniority/years to JD requirements. Cite specific titles and JD level.",
       "suggestion": "Advice on how to frame experience to better match the target role level."
     }
@@ -283,14 +318,14 @@ REQUIRED JSON OUTPUT STRUCTURE
   "weaknesses": [],
   "detailedSuggestions": [
     {
-      "section": "One of: Summary | Experience | Education | Projects | Skills | Certifications | Achievements | Languages | Contact | Formatting | Keywords | General",
+      "section": "One of: Summary | Experience | Education | Projects | Skills | Certifications | Achievements | Contact | Formatting | Keywords | General",
       "priority": "high | medium | low",
       "suggestion": "Actionable and specific improvement suggestion under 240 chars, no bullets or newlines."
     }
   ],
   "rewriteExamples": [
     {
-      "original": "Original weak bullet point quoted from resume",
+      "original": "Original weak bullet point exactly quoted from resume",
       "improved": "Rewritten version with strong verb + metric + outcome"
     }
   ],
@@ -307,16 +342,18 @@ REQUIRED JSON OUTPUT STRUCTURE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FIELD RULES & LIMITS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- scratchpad: MUST be the very first key in the JSON. Show your exact math for penalty deductions here.
 - candidateLevel: must be exactly "student" or "experienced".
-- atsScore: string percentage, no decimals, e.g. "67%". MUST equal 100% minus sum of penaltyLog deductions. Double-check your arithmetic.
+- penaltySum: Calculate the sum of all deductions in penaltyLog.
+- atsScore: MUST equal 100% minus penaltySum. Double-check your arithmetic.
 - penaltyLog: array of ALL penalties applied. Use the correct column (Experienced / Student) from the penalty table. Include 0-deduction items only if condition was checked and passed.
-- scoreBreakdown: all 6 keys required. Use "N/A" for experienceFit score when no JD is provided.
+- scoreBreakdown: all 6 keys required. Use literal "N/A" for experienceFit score when no JD is provided.
 - keywordAnalysis: set all values to 0 / [] / "N/A" if no JD is provided.
-- topMissingKeywords: top 5–8 most critical missing keywords (from JD if provided, else from industry norms).
+- topMissingKeywords: Extract the top 5-8 items from missingKeywords (whether derived from JD or industry standard).
 - strengths: 3–6 items, each ≤140 chars. Be specific — cite actual content from the resume.
 - weaknesses: 3–6 items, each ≤140 chars. Be specific and honest.
 - detailedSuggestions: 5–8 items. Each must have section, priority, and suggestion. No generic advice.
-- rewriteExamples: 2–4 items. Pick the weakest bullet points and rewrite them. For students, pick project descriptions.
+- rewriteExamples: 2–4 items. rewriteExamples.original MUST be an exact verbatim quote from the resume text. Do NOT paraphrase, clean up, or summarize the original. If you cannot find a verbatim quote, skip that rewrite example.
 - knockoutFilters: array of knockout filter checks. Only populate when a JD is provided. If no JD, use empty array []. Each item must have filter, requirement, resumeEvidence, and status.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

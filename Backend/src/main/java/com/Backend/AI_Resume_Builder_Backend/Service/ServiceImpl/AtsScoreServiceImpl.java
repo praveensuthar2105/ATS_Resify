@@ -435,9 +435,9 @@ public class AtsScoreServiceImpl implements AtsScoreService {
                 // If AI scored it low, but we have the major sections, bump it up
                 if (hasEducation && hasSkills && (hasExperience || hasProjects)) {
                     if (currentScore.matches("^[0-7]/10.*")) {
-                        log.info("Auto-correcting sectionCompleteness score from {} to 10/10 based on regex verification", currentScore);
-                        secMap.put("score", "10/10");
-                        secMap.put("explanation", "All standard sections (Education, Skills, Experience/Projects) were found and verified.");
+                        log.info("Auto-correcting sectionCompleteness score from {} to 8/10 based on regex verification", currentScore);
+                        secMap.put("score", "8/10");
+                        secMap.put("explanation", "Basic standard sections (Education, Skills, Experience/Projects) were found, but secondary sections may be missing.");
                     }
                 }
             }
