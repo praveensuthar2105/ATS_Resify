@@ -5,9 +5,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.auth.oauth2.GoogleCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,37 +19,73 @@ public class GeminiService {
     private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private final String apiKey;
     private final RestClient restClient;
     private final String vertexUrl;
 
     public GeminiService(
-            @Value("${gemini.api.key:}") String apiKey,
             @Value("${vertex.project.id:}") String projectId,
             @Value("${vertex.location:us-central1}") String location,
-            @Value("${vertex.model:gemini-3.1-flash-lite}") String model,
+            @Value("${vertex.model:gemini-3.1-pro-preview}") String model,
             RestClient.Builder restClientBuilder) {
 
-        if (apiKey == null || apiKey.trim().isEmpty()) {
-            throw new IllegalStateException(
-                    "Gemini API key is not configured. Please set 'gemini.api.key' in application.properties or environment variables.");
+        if (projectId == null || projectId.trim().isEmpty()) {
+            throw new IllegalStateException("Vertex Project ID is not configured.");
         }
-        this.apiKey = apiKey.trim();
+        if (location == null || location.trim().isEmpty()) {
+            throw new IllegalStateException("Vertex Location is not configured.");
+        }
 
-        // Gemini AI Studio endpoint format:
-        // https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent
+        // Vertex AI endpoint format:
+        // https://{LOCATION}-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL}:generateContent
         String baseUrl = String.format(
-                "https://generativelanguage.googleapis.com/v1beta/models/%s",
+                "https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s",
+                location.trim(),
+                projectId.trim(),
+                location.trim(),
                 model.trim());
 
         this.vertexUrl = baseUrl + ":generateContent";
         this.restClient = restClientBuilder.baseUrl(this.vertexUrl).build();
 
-        // Log config at startup (key masked for security)
-        String masked = this.apiKey.length() > 10
-                ? this.apiKey.substring(0, 8) + "..." + this.apiKey.substring(this.apiKey.length() - 4)
-                : "***";
-        log.info("GeminiService initialized with Gemini API Studio — URL: {} | Key: {}", this.vertexUrl, masked);
+        log.info("GeminiService initialized with Google Cloud Vertex AI — URL: {}", this.vertexUrl);
+    }
+
+    private String getAccessToken() {
+        try {
+            // Log environment for debugging
+            String envVar = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+            if (envVar != null) {
+                log.warn("GOOGLE_APPLICATION_CREDENTIALS is still set to: {}", envVar);
+            }
+            
+            GoogleCredentials credentials;
+            try {
+                credentials = GoogleCredentials.getApplicationDefault();
+            } catch (Exception e) {
+                log.warn("GoogleCredentials.getApplicationDefault() failed: {}. Attempting manual load from AppData...", e.getMessage());
+                
+                // Fallback: manually read from %APPDATA%\gcloud\application_default_credentials.json
+                String appData = System.getenv("APPDATA");
+                if (appData == null) {
+                    throw new RuntimeException("APPDATA environment variable not found.", e);
+                }
+                java.nio.file.Path adcPath = java.nio.file.Paths.get(appData, "gcloud", "application_default_credentials.json");
+                if (!java.nio.file.Files.exists(adcPath)) {
+                    throw new RuntimeException("ADC file not found at " + adcPath, e);
+                }
+                
+                try (java.io.InputStream is = java.nio.file.Files.newInputStream(adcPath)) {
+                    credentials = com.google.auth.oauth2.UserCredentials.fromStream(is);
+                }
+            }
+
+            credentials = credentials.createScoped(java.util.Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"));
+            credentials.refreshIfExpired();
+            return credentials.getAccessToken().getTokenValue();
+        } catch (Exception e) {
+            log.error("Authentication failure", e);
+            throw new RuntimeException("Failed to get Google Cloud credentials. Did you run 'gcloud auth application-default login'?", e);
+        }
     }
 
     public Optional<String> generateContent(String prompt) {
@@ -64,13 +102,13 @@ public class GeminiService {
                             "responseMimeType", "application/json"));
             requestBody = OBJECT_MAPPER.writeValueAsString(request);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to serialize Gemini request", e);
+            throw new RuntimeException("Failed to serialize Vertex AI request", e);
         }
 
         JsonNode response;
         try {
             response = restClient.post()
-                    .uri(uriBuilder -> uriBuilder.queryParam("key", apiKey).build())
+                    .header("Authorization", "Bearer " + getAccessToken())
                     .header("Content-Type", "application/json")
                     .body(requestBody)
                     .retrieve()
