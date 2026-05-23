@@ -7,6 +7,21 @@ if ($processId) {
     Start-Sleep -Seconds 2
 }
 
+# Load .env file if it exists in the current directory
+$envFile = Join-Path (Get-Location) ".env"
+if (Test-Path $envFile) {
+    Write-Host "Loading environment variables from .env file..." -ForegroundColor Cyan
+    Get-Content $envFile | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -and -not $line.StartsWith("#") -and $line.Contains("=")) {
+            $key, $value = $line.Split("=", 2)
+            $key = $key.Trim()
+            $value = $value.Trim()
+            $env:$key = $value
+        }
+    }
+}
+
 # Set environment variables (use your own values or set them in your environment)
 # IMPORTANT: Do NOT commit real secrets to version control.
 # Set these in your system environment or create a .env file that is gitignored.

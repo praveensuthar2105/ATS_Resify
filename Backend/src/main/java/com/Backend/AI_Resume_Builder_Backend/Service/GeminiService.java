@@ -25,7 +25,7 @@ public class GeminiService {
     public GeminiService(
             @Value("${vertex.project.id:}") String projectId,
             @Value("${vertex.location:us-central1}") String location,
-            @Value("${vertex.model:gemini-3.1-pro-preview}") String model,
+            @Value("${vertex.model:gemini-2.0-flash-001}") String model,
             RestClient.Builder restClientBuilder) {
 
         if (projectId == null || projectId.trim().isEmpty()) {
