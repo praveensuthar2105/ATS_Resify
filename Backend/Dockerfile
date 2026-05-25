@@ -1,9 +1,23 @@
+# Stage 1: Build the application
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /app
+
+# Copy maven wrapper and pom.xml
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+# Download dependencies first (caching layer)
+RUN ./mvnw dependency:go-offline
+
+# Copy source code and build
+COPY src ./src
+RUN ./mvnw clean package -DskipTests
+
+# Stage 2: Setup the Runtime environment
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
-# Install TeX Live and required fonts/packages
+# Install TeX Live and required fonts/packages for resume generation
 # Using --no-install-recommends saves over 1GB of disk space
-# Removed texlive-fonts-extra because it causes "No space left on device" errors on t3.small instances
 RUN apt-get update && \
     export DEBIAN_FRONTEND=noninteractive && \
     apt-get install -y --no-install-recommends \
@@ -12,11 +26,10 @@ RUN apt-get update && \
     texlive-latex-extra \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the pre-built JAR from the GitHub Actions context
-# Note we specify target directory explicitly assuming it is included in deploy.zip
-COPY target/app.jar /app/app.jar
+# Copy the built JAR from Stage 1
+COPY --from=build /app/target/*.jar /app/app.jar
 
-# Cloud Run injects PORT=8080 at runtime; fallback to 8080 for local testing
+# Expose port and set environment variables
 ENV PORT=8080
 ENV LATEX_COMPILER=pdflatex
 ENV LATEX_COMPILER_PATH=pdflatex
