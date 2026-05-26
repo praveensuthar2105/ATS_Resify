@@ -85,7 +85,7 @@ public class LatexServiceImpl implements LatexService {
                 getStringValue(personalInfo, "email"));
         template = replacePlaceholder(template, "PHONE_NUMBER",
                 getStringValue(personalInfo, "phoneNumber"));
-        template = replacePlaceholder(template, "LOCATION",
+        template = handleOptionalSection(template, "LOCATION",
                 getStringValue(personalInfo, "location"));
 
         // Handle optional links
@@ -268,7 +268,7 @@ public class LatexServiceImpl implements LatexService {
                 for (String point : points) {
                     String trimmedPoint = point.trim();
                     if (!trimmedPoint.isEmpty()) {
-                        if ("minimal".equals(templateType)) {
+                        if ("minimal".equals(templateType) || "ats".equals(templateType)) {
                             responsibilityItems.append("  \\item ").append(escapeLatexSpecialChars(trimmedPoint))
                                     .append("\n");
                         } else {
@@ -282,7 +282,11 @@ public class LatexServiceImpl implements LatexService {
 
             // If no items were created, add a placeholder item to avoid empty list
             if (responsibilityItems.length() == 0) {
-                responsibilityItems.append("      \\resumeItem{Responsibility details pending}\n");
+                if ("minimal".equals(templateType) || "ats".equals(templateType)) {
+                    responsibilityItems.append("  \\item Responsibility details pending\n");
+                } else {
+                    responsibilityItems.append("      \\resumeItem{Responsibility details pending}\n");
+                }
             }
 
             // Replace placeholder with items (don't trim the content as it contains
@@ -387,6 +391,8 @@ public class LatexServiceImpl implements LatexService {
                     escapeLatexSpecialChars(getStringValue(edu, "location")));
             eduEntry = eduEntry.replace("{{GRADUATION_YEAR}}",
                     escapeLatexSpecialChars(getStringValue(edu, "graduationYear")));
+            eduEntry = handleOptionalSection(eduEntry, "GPA",
+                    getStringValue(edu, "gpa"));
             eduContent.append(eduEntry);
         }
 
@@ -414,8 +420,8 @@ public class LatexServiceImpl implements LatexService {
                     escapeLatexSpecialChars(getStringValue(cert, "title")));
             certEntry = certEntry.replace("{{ISSUING_ORG}}",
                     escapeLatexSpecialChars(getStringValue(cert, "issuingOrganization")));
-            certEntry = certEntry.replace("{{CERT_YEAR}}",
-                    escapeLatexSpecialChars(getStringValue(cert, "year")));
+            certEntry = handleOptionalSection(certEntry, "CERT_YEAR",
+                    getStringValue(cert, "year"));
             certContent.append(certEntry);
         }
 
@@ -441,8 +447,10 @@ public class LatexServiceImpl implements LatexService {
             String achEntry = achTemplate;
             achEntry = achEntry.replace("{{ACH_TITLE}}",
                     escapeLatexSpecialChars(getStringValue(ach, "title")));
-            achEntry = achEntry.replace("{{ACH_YEAR}}",
-                    escapeLatexSpecialChars(getStringValue(ach, "year")));
+            achEntry = handleOptionalSection(achEntry, "ACH_DESCRIPTION",
+                    getStringValue(ach, "description"));
+            achEntry = handleOptionalSection(achEntry, "ACH_YEAR",
+                    getStringValue(ach, "year"));
             achContent.append(achEntry);
         }
 
@@ -592,16 +600,8 @@ public class LatexServiceImpl implements LatexService {
             }
             String content = result.toString().trim();
             return content;
-        } else if ("ats".equals(templateType)) {
-            // For ATS template, use simple bullet points as text
-            StringBuilder result = new StringBuilder();
-            for (String point : points) {
-                result.append("• ").append(escapeLatexSpecialChars(point)).append("\n");
-            }
-            String content = result.toString().trim();
-            return content;
-        } else if ("minimal".equals(templateType)) {
-            // For minimal template, use \item
+        } else if ("ats".equals(templateType) || "minimal".equals(templateType)) {
+            // For ATS and minimal templates, use \item
             StringBuilder result = new StringBuilder();
             for (String point : points) {
                 result.append("  \\item ").append(escapeLatexSpecialChars(point)).append("\n");
@@ -717,12 +717,16 @@ public class LatexServiceImpl implements LatexService {
                 result.append("\\textbullet~").append(escapeLatexSpecialChars(point)).append("\n\n");
             }
             return result.toString().trim();
-        } else if ("ats".equals(templateType)) {
+        } else if ("ats".equals(templateType) || "minimal".equals(templateType)) {
             StringBuilder result = new StringBuilder();
             for (String point : points) {
-                result.append("• ").append(escapeLatexSpecialChars(point)).append("\n");
+                result.append("  \\item ").append(escapeLatexSpecialChars(point)).append("\n");
             }
-            return result.toString().trim();
+            String content = result.toString();
+            if (content.endsWith("\n")) {
+                content = content.substring(0, content.length() - 1);
+            }
+            return content;
         } else {
             // Professional template
             StringBuilder result = new StringBuilder();

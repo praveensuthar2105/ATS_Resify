@@ -65,9 +65,9 @@ public class AtsScoreServiceImpl implements AtsScoreService {
         PdfExtractionResult extraction = extractFromPdf(resumeFile);
         String resumeText = extraction.text();
 
-        // Pre-analyze the resume text to detect contact info, sections, metrics
+        // Pre-analyze the resume text to detect contact info, sections, metrics, and keywords
         // so the AI cannot falsely claim things are missing
-        String preAnalysis = buildPreAnalysis(resumeText);
+        String preAnalysis = buildPreAnalysis(resumeText, jobDescription);
 
         String promptTemplate = resumeService.loadPromptFromFile("ats_prompt.txt");
 
@@ -711,7 +711,7 @@ public class AtsScoreServiceImpl implements AtsScoreService {
      *   - Quantified metrics (count-based: 5+ = strong, 3-4 = moderate, 1-2 = weak)
      *   - Action verbs (count-based: same thresholds)
      */
-    private String buildPreAnalysis(String text) {
+    private String buildPreAnalysis(String text, String jobDescription) {
         StringBuilder analysis = new StringBuilder();
         String textLower = text.toLowerCase();
         String[] textLines = text.split("\\n");
@@ -799,8 +799,66 @@ public class AtsScoreServiceImpl implements AtsScoreService {
             }
         }
 
+        // ===== KEYWORD PRE-MATCHING (NLP/Regex grounded keyword match) =====
+        List<String> matchedJdKeywords = new java.util.ArrayList<>();
+        List<String> missingJdKeywords = new java.util.ArrayList<>();
+        boolean jdProvided = (jobDescription != null && !jobDescription.trim().isEmpty());
+        if (jdProvided) {
+            // Core technical vocab/skills commonly looked for in resume screening (no duplicate "typescript")
+            String[] techLexicon = {
+                "java", "python", "javascript", "typescript", "c++", "c#", "ruby", "golang", "rust", "php", "sql", "nosql",
+                "react", "angular", "vue", "next.js", "nuxt", "svelte", "node", "express", "django", "flask", "spring boot",
+                "docker", "kubernetes", "aws", "gcp", "azure", "ci/cd", "jenkins", "git", "redis", "mongodb", "postgresql",
+                "mysql", "oracle", "elasticsearch", "kafka", "rabbitmq", "rest api", "graphql", "grpc", "microservices",
+                "html", "css", "tailwind", "bootstrap", "sass", "webpack", "vite", "terraform", "ansible",
+                "maven", "gradle", "junit", "mockito", "selenium", "cypress", "agile", "scrum", "jira", "machine learning",
+                "deep learning", "nlp", "tensorflow", "pytorch", "pandas", "numpy", "scikit-learn", "data science"
+            };
+            
+            String jdLower = jobDescription.toLowerCase();
+            List<String> targetKeywords = new java.util.ArrayList<>();
+            for (String kw : techLexicon) {
+                // Compile case-insensitive custom boundary regex to correctly handle c++, c#, next.js etc.
+                java.util.regex.Pattern p = java.util.regex.Pattern.compile("(?<![a-zA-Z0-9])" + java.util.regex.Pattern.quote(kw) + "(?![a-zA-Z0-9])", java.util.regex.Pattern.CASE_INSENSITIVE);
+                if (p.matcher(jdLower).find()) {
+                    targetKeywords.add(kw);
+                }
+            }
+            
+            // Check resume matches for extracted JD keywords
+            for (String kw : targetKeywords) {
+                java.util.regex.Pattern p = java.util.regex.Pattern.compile("(?<![a-zA-Z0-9])" + java.util.regex.Pattern.quote(kw) + "(?![a-zA-Z0-9])", java.util.regex.Pattern.CASE_INSENSITIVE);
+                if (p.matcher(textLower).find()) {
+                    matchedJdKeywords.add(kw);
+                } else {
+                    // Check soft semantic variants (ReactJS vs React, Node.js vs Node)
+                    boolean variantFound = false;
+                    String kwLower = kw.toLowerCase();
+                    if ("react".equals(kwLower) && (textLower.contains("reactjs") || textLower.contains("react.js"))) variantFound = true;
+                    else if ("node".equals(kwLower) && (textLower.contains("nodejs") || textLower.contains("node.js"))) variantFound = true;
+                    else if ("spring boot".equals(kwLower) && (textLower.contains("springboot") || textLower.contains("spring-boot"))) variantFound = true;
+                    else if ("next.js".equals(kwLower) && (textLower.contains("nextjs") || textLower.contains("next-js"))) variantFound = true;
+                    else if ("ci/cd".equals(kwLower) && (textLower.contains("cicd") || textLower.contains("ci-cd"))) variantFound = true;
+                    else if ("c++".equals(kwLower) && (textLower.contains("cplusplus") || textLower.contains("cpp"))) variantFound = true;
+                    else if ("c#".equals(kwLower) && (textLower.contains("csharp") || textLower.contains("c-sharp"))) variantFound = true;
+                    else if ("rest api".equals(kwLower) && (textLower.contains("restful") || textLower.contains("rest-api"))) variantFound = true;
+                    else if ("microservices".equals(kwLower) && (textLower.contains("micro-services") || textLower.contains("micro services"))) variantFound = true;
+                    
+                    if (variantFound) {
+                        matchedJdKeywords.add(kw);
+                    } else {
+                        missingJdKeywords.add(kw);
+                    }
+                }
+            }
+        }
+
         // ===== BUILD ANALYSIS STRING =====
         analysis.append("CONTENT VERIFICATION (by our regex parser):\n\n");
+        analysis.append("⚠️ CRITICAL GROUND TRUTH RULES:\n");
+        analysis.append("- The sections, contact details, and keywords verified below are GROUND TRUTH.\n");
+        analysis.append("- Do NOT claim a section or contact info is missing if it is verified below.\n");
+        analysis.append("- Do NOT re-derive keyword matches; use the GROUND TRUTH keywords matched list below directly.\n\n");
 
         // Contact info — HARD FACTS
         analysis.append("── CONTACT INFO (Verified Facts — AI must not contradict) ──\n");
@@ -817,13 +875,28 @@ public class AtsScoreServiceImpl implements AtsScoreService {
             analysis.append("❌ NO PHONE DETECTED (Status: APPLY missing phone penalty)\n");
         }
 
-        // Sections — GUIDANCE
-        analysis.append("\n── SECTIONS (Detected — Judge QUALITY strictly) ──\n");
+        // Sections — GROUND TRUTH
+        analysis.append("\n── SECTIONS (Ground Truth — Do NOT claim missing) ──\n");
         if (!detectedSections.isEmpty()) {
             analysis.append("Sections found: ").append(String.join(", ", detectedSections)).append("\n");
             analysis.append("→ DO NOT claim these sections are missing. Instead, judge if their CONTENT is strong and professional.\n");
         } else {
             analysis.append("No clear section headings detected. Judge based on text flow.\n");
+        }
+
+        // Keywords — GROUND TRUTH
+        analysis.append("\n── KEYWORD MATCH DATA (Ground Truth — Do NOT override) ──\n");
+        if (jdProvided) {
+            analysis.append("✅ GROUND TRUTH MATCHED KEYWORDS: ").append(String.join(", ", matchedJdKeywords)).append("\n");
+            analysis.append("❌ GROUND TRUTH MISSING KEYWORDS: ").append(String.join(", ", missingJdKeywords)).append("\n");
+            double matchRate = 1.0;
+            if (!matchedJdKeywords.isEmpty() || !missingJdKeywords.isEmpty()) {
+                matchRate = (double) matchedJdKeywords.size() / (matchedJdKeywords.size() + missingJdKeywords.size());
+            }
+            int percentVal = (int) Math.round(matchRate * 100);
+            analysis.append("→ Calculated Keyword Match Rate: ").append(percentVal).append("%\n");
+        } else {
+            analysis.append("No job description provided; keyword evaluation falls back to industry-standards.\n");
         }
 
         // Metrics — SIGNALS

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AgentChat from '../components/AgentChat';
 import { decodeToken, getAuthToken } from '../utils/auth';
 import { API_BASE_URL } from '../services/api';
@@ -7,6 +7,7 @@ import { parseLatexToResumeData } from '../utils/latexParser';
 import SEO from '../components/SEO';
 import { Helmet } from 'react-helmet-async';
 import SectionHeader from '../components/SectionHeader';
+import FeedbackPopup from '../components/FeedbackPopup';
 
 const FormItem = ({ label, value, onChange, placeholder, type = "text", colspan = 1 }) => (
   <div className={`flex flex-col gap-1.5 ${colspan > 1 ? `col-span-${colspan} sm:col-span-${colspan}` : ''}`}>
@@ -49,7 +50,18 @@ const SectionCard = ({ icon, title, subtitle, children, buttonText, onAdd }) => 
 
 const EditResume = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.triggerFeedback) {
+      setShowFeedback(true);
+      // Clean up navigation state
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
+
   const [saving, setSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [editMode, setEditMode] = useState('form');
@@ -1066,6 +1078,8 @@ ${sections}
           </div>
         </div>
       )}
+
+      <FeedbackPopup isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
     </div>
   );
 };

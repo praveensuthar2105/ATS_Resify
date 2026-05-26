@@ -6,16 +6,13 @@ const SEO = ({
     description,
     type = 'website',
     name = 'ATS Resify',
+    image = 'https://atsresify.me/og-image.png',
     href
 }) => {
     // Use the provided href or fallback to the current URL if running in browser
     const canonicalUrl = href || (typeof window !== 'undefined' ? window.location.href : 'https://atsresify.me/');
     const fullTitle = title ? `${title} | ATS Resify` : 'ATS Resify — Free AI Resume Builder & ATS Checker';
     const metaDescription = description || "Build professional, ATS-optimized resumes with AI in minutes. Check your ATS score, edit with a live LaTeX editor, and export PDF resumes for free.";
-
-    // Temporarily disabled due to npm network errors preventing react-helmet-async installation
-
-
 
     return (
         <Helmet>
@@ -28,11 +25,14 @@ const SEO = ({
             <meta property="og:url" content={canonicalUrl} />
             <meta property="og:title" content={fullTitle} />
             <meta property="og:description" content={metaDescription} />
+            <meta property="og:image" content={image} />
             <meta property="og:site_name" content={name} />
 
+            <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:url" content={canonicalUrl} />
             <meta name="twitter:title" content={fullTitle} />
             <meta name="twitter:description" content={metaDescription} />
+            <meta name="twitter:image" content={image} />
         </Helmet>
     );
 

@@ -12,6 +12,7 @@ import java.util.List;
 public class AiResumeBuilderBackendApplication {
 
 	public static void main(String[] args) {
+		System.setProperty("java.net.preferIPv4Stack", "true");
 		loadDotEnv();
 		SpringApplication.run(AiResumeBuilderBackendApplication.class, args);
 	}

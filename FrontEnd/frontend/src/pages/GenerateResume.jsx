@@ -2,9 +2,32 @@ import React, { useState } from 'react';
 import { resumeAPI } from '../services/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 import SEO from '../components/SEO';
 import AgentChat from '../components/AgentChat';
 import './GenerateResume.css';
+
+const FaqItem = ({ q, a }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="brutal-border bg-brutal-black">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full text-left p-5 flex justify-between items-center font-mono font-bold text-sm hover:bg-neon-green hover:text-black transition-colors cursor-pointer group"
+      >
+        <span>{q.toUpperCase()}</span>
+        <span className="material-symbols-outlined transition-transform duration-200 group-hover:scale-110">
+          {isOpen ? 'remove' : 'add'}
+        </span>
+      </button>
+      {isOpen && (
+        <div className="p-5 border-t-2 border-dashed border-brutal-white text-xs leading-relaxed text-slate-300 bg-black/30">
+          {a}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const GenerateResume = () => {
   const [description, setDescription] = useState('');
@@ -93,7 +116,7 @@ const GenerateResume = () => {
           }
           showToast('RESUME EXTRACTED SUCCESSFULLY!', 'success');
 
-          setTimeout(() => navigate('/edit-resume'), 1000);
+          setTimeout(() => navigate('/edit-resume', { state: { triggerFeedback: true } }), 1000);
         } else {
           showToast(result.error || 'FAILED TO PARSE RESUME PDF.', 'error');
         }
@@ -126,7 +149,7 @@ const GenerateResume = () => {
       }
       showToast('RESUME GENERATED SUCCESSFULLY!', 'success');
 
-      setTimeout(() => navigate('/edit-resume'), 1000);
+      setTimeout(() => navigate('/edit-resume', { state: { triggerFeedback: true } }), 1000);
     } catch (error) {
       console.error('Error generating resume:', error);
       showToast(error.response?.data?.message || 'FAILED TO GENERATE RESUME.', 'error');
@@ -194,6 +217,48 @@ const GenerateResume = () => {
         description="Generate a complete, ATS-optimized resume from scratch using AI. Paste your experience, import your LinkedIn PDF, and get a polished resume ready to apply with — free, no templates to fill."
         href="https://atsresify.me/generate"
       />
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Is ATS Resify completely free?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes! ATS Resify is 100% free to build, optimize, scan, and download your resumes as PDFs. There are no hidden fees, premium paywalls, or credit card requirements."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Which PDF format is best for importing?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "For standard document parsing, upload a PDF exported directly from LinkedIn. Select 'Save to PDF' on your LinkedIn profile, then drop it into our engine. We also accept standard resume PDFs."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does the AI optimize my resume for ATS scanners?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Our engine maps your skills against industry standards, eliminates layout vulnerabilities that cause parser errors (like tables or text boxes), and tailors the wording to rank high for targeted recruitment algorithms."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I edit the template formatting afterward?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Absolutely! Once compiled, you are redirected to our interactive editor where you can live-edit details, adjust sections, choose fonts, and customize layouts before exporting."
+                }
+              }
+            ]
+          })}
+        </script>
+      </Helmet>
       <div className="scanline"></div>
 
       {/* ═══ HERO SECTION ═══ */}
@@ -209,6 +274,27 @@ const GenerateResume = () => {
             &gt; Import data via LinkedIn PDF or Raw Text.
             Our engine will compile an ATS-optimized document measured for success.
           </p>
+        </div>
+      </section>
+
+      {/* ═══ HOW IT WORKS SECTION ═══ */}
+      <section className="border-b-2 border-brutal-white bg-black/20 py-8 px-6">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="brutal-border p-5 bg-brutal-black relative overflow-hidden flex flex-col gap-2">
+            <div className="text-[10px] font-black font-mono text-neon-green">STEP_01 // INPUT</div>
+            <h3 className="text-md font-bold font-mono uppercase">PROVIDE CAREER DATA</h3>
+            <p className="text-xs text-slate-400">Paste your raw profile details or upload a LinkedIn PDF to feed the engine.</p>
+          </div>
+          <div className="brutal-border p-5 bg-brutal-black relative overflow-hidden flex flex-col gap-2">
+            <div className="text-[10px] font-black font-mono text-neon-green">STEP_02 // OPTIMIZE</div>
+            <h3 className="text-md font-bold font-mono uppercase">SELECT TARGET TEMPLATE</h3>
+            <p className="text-xs text-slate-400">Choose between the high-accuracy ATS layout or a polished Minimalist design.</p>
+          </div>
+          <div className="brutal-border p-5 bg-brutal-black relative overflow-hidden flex flex-col gap-2">
+            <div className="text-[10px] font-black font-mono text-neon-green">STEP_03 // COMPILE</div>
+            <h3 className="text-md font-bold font-mono uppercase">EDIT & EXPORT</h3>
+            <p className="text-xs text-slate-400">Review AI suggestions, refine formatting, and export a clean PDF instantly.</p>
+          </div>
         </div>
       </section>
 
@@ -277,7 +363,7 @@ const GenerateResume = () => {
                   <div
                     key={key}
                     onClick={() => setSelectedTemplate(key)}
-                    className={`p-4 border-2 transition-all cursor-pointer group flex flex-col justify-between min-h-[100px] relative overflow-hidden ${selectedTemplate === key
+                    className={`p-4 border-2 transition-all cursor-pointer group flex flex-col justify-between min-h-[180px] relative overflow-hidden ${selectedTemplate === key
                       ? 'bg-neon-green border-brutal-white text-black brutal-shadow-white translate-x-1 translate-y-1 shadow-none'
                       : 'border-slate-800 bg-transparent text-slate-400 hover:border-slate-600 hover:bg-white/5'
                       }`}
@@ -299,6 +385,41 @@ const GenerateResume = () => {
                       <p className={`text-xs leading-relaxed ${selectedTemplate === key ? 'text-black/80 font-medium' : 'text-slate-300'}`}>
                         {description}
                       </p>
+                      
+                      {key === 'ats' ? (
+                        /* ATS layout mockup */
+                        <div className="mt-3 w-full h-16 border border-current opacity-40 group-hover:opacity-80 flex flex-col p-1.5 gap-1 bg-black/30 font-mono text-[6px]">
+                          <div className="h-1.5 w-12 bg-current rounded-sm"></div>
+                          <div className="h-1 w-16 bg-current opacity-60 rounded-sm"></div>
+                          <div className="h-0.5 w-full bg-current opacity-30 mt-1"></div>
+                          <div className="grid grid-cols-3 gap-1 mt-1">
+                            <div className="col-span-1 flex flex-col gap-0.5">
+                              <div className="h-1 w-full bg-current opacity-50 rounded-sm"></div>
+                              <div className="h-0.5 w-8 bg-current opacity-30 rounded-sm"></div>
+                            </div>
+                            <div className="col-span-2 flex flex-col gap-0.5">
+                              <div className="h-1 w-full bg-current opacity-50 rounded-sm"></div>
+                              <div className="h-0.5 w-full bg-current opacity-30 rounded-sm"></div>
+                              <div className="h-0.5 w-full bg-current opacity-30 rounded-sm"></div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Minimalist layout mockup */
+                        <div className="mt-3 w-full h-16 border border-current opacity-40 group-hover:opacity-80 flex p-1.5 gap-1.5 bg-black/30 font-serif text-[6px]">
+                          <div className="w-1/3 flex flex-col gap-1 border-r border-current/30 pr-1.5">
+                            <div className="w-4 h-4 rounded-full bg-current opacity-50 mx-auto"></div>
+                            <div className="h-1 w-full bg-current rounded-sm mt-0.5"></div>
+                            <div className="h-0.5 w-full bg-current opacity-30 rounded-sm"></div>
+                          </div>
+                          <div className="w-2/3 flex flex-col gap-0.5">
+                            <div className="h-1.5 w-16 bg-current rounded-sm"></div>
+                            <div className="h-0.5 w-full bg-current opacity-30 rounded-sm"></div>
+                            <div className="h-1 w-12 bg-current opacity-50 rounded-sm mt-0.5"></div>
+                            <div className="h-0.5 w-full bg-current opacity-30 rounded-sm"></div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -345,6 +466,13 @@ const GenerateResume = () => {
                   </button>
                 ))}
               </div>
+
+              {/* Dynamic Help Description */}
+              <p className="text-[11px] text-slate-400 mb-6 font-mono italic">
+                {inputMode === 'text' && "> PASTE OR WRITE PROFILE DESCRIPTION (MINIMUM 50 CHARS)."}
+                {inputMode === 'pdf' && "> DROP A STANDARD RESUME PDF. OUR PARSER EXTRACTS THE CORE FIELDS."}
+                {inputMode === 'linkedin' && "> EXPORT PROFILE AS PDF FROM LINKEDIN AND DRAG IT HERE FOR BEST RESULTS."}
+              </p>
 
               {/* Text Area */}
               {inputMode === 'text' && (
@@ -443,6 +571,33 @@ const GenerateResume = () => {
           </div>
         </div>
       </main>
+
+      {/* ═══ FAQ SECTION ═══ */}
+      <section className="py-16 px-6 border-t-2 border-brutal-white bg-black/10">
+        <div className="max-w-[1400px] mx-auto">
+          <h2 className="text-2xl md:text-3xl font-black font-mono uppercase mb-8 text-center">
+            FREQUENTLY ASKED <span className="text-neon-green">QUESTIONS //</span>
+          </h2>
+          <div className="max-w-3xl mx-auto flex flex-col gap-4">
+            <FaqItem
+              q="Is ATS Resify completely free?"
+              a="Yes! ATS Resify is 100% free to build, optimize, scan, and download your resumes as PDFs. There are no hidden fees, premium paywalls, or credit card requirements."
+            />
+            <FaqItem
+              q="Which PDF format is best for importing?"
+              a="For standard document parsing, upload a PDF exported directly from LinkedIn. Select 'Save to PDF' on your LinkedIn profile, then drop it into our engine. We also accept standard resume PDFs."
+            />
+            <FaqItem
+              q="How does the AI optimize my resume for ATS scanners?"
+              a="Our engine maps your skills against industry standards, eliminates layout vulnerabilities that cause parser errors (like tables or text boxes), and tailors the wording to rank high for targeted recruitment algorithms."
+            />
+            <FaqItem
+              q="Can I edit the template formatting afterward?"
+              a="Absolutely! Once compiled, you are redirected to our interactive editor where you can live-edit details, adjust sections, choose fonts, and customize layouts before exporting."
+            />
+          </div>
+        </div>
+      </section>
 
       {/* Brutalist Custom Toast/Snackbar */}
       {snack.open && (

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import AgentChat from '../components/AgentChat';
 import SEO from '../components/SEO';
 import { Helmet } from 'react-helmet-async';
+import FeedbackPopup from '../components/FeedbackPopup';
 import './AtsChecker.css';
 
 const AtsChecker = () => {
@@ -21,6 +22,7 @@ const AtsChecker = () => {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
   const [usageCount, setUsageCount] = useState(() => parseInt(localStorage.getItem('freeUsageCount') || '0', 10));
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const showToast = (text, type = 'success') => {
     setSnack({ open: true, text, type });
@@ -49,6 +51,9 @@ const AtsChecker = () => {
         localStorage.setItem('freeUsageCount', newCount.toString());
       }
       showToast('ATS ANALYSIS COMPLETE!', 'success');
+      setTimeout(() => {
+        setShowFeedback(true);
+      }, 1500);
     } catch (error) {
       console.error('Error calculating ATS score:', error);
       showToast(error.response?.data?.message || 'FAILED TO ANALYZE RESUME. PLEASE TRY AGAIN.', 'error');
@@ -117,7 +122,8 @@ const AtsChecker = () => {
       scoreStr = val.score || val.value;
       details = {
         explanation: val.explanation || '',
-        suggestion: val.suggestion || ''
+        suggestion: val.suggestion || '',
+        confidence: val.confidence || ''
       };
     }
     if (typeof scoreStr === 'number') return { num: scoreStr, den: 10, ...details };
@@ -461,6 +467,18 @@ const AtsChecker = () => {
                                 {s.suggestion && (
                                   <div><strong className="text-neon-green uppercase text-[10px]">SUGGESTION:</strong> {s.suggestion}</div>
                                 )}
+                                {s.confidence && (
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <strong className="text-blue-400 uppercase text-[10px]">CONFIDENCE:</strong>
+                                    <span className={`px-1.5 py-0.5 text-[9px] uppercase font-bold tracking-wider rounded-sm ${
+                                      s.confidence.toLowerCase().includes('high') ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                                      s.confidence.toLowerCase().includes('medium') ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                      'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                    }`}>
+                                      {s.confidence}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
@@ -733,6 +751,8 @@ const AtsChecker = () => {
           </div>
         </div>
       )}
+
+      <FeedbackPopup isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
     </div>
   );
 };
