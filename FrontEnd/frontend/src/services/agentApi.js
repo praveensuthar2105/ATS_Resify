@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api';
+import { API_BASE_URL } from './api';
 
 const agentClient = axios.create({
   baseURL: `${API_BASE_URL}/agent`,
@@ -10,9 +9,36 @@ const agentClient = axios.create({
   },
 });
 
+agentClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+agentClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userRole');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const agentAPI = {
   // ==================== Main Chat ====================
-  
+
   /**
    * Send a message to the AI agent
    * @param {Object} params

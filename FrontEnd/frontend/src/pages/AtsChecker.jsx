@@ -1,149 +1,168 @@
-import React, { useState } from 'react';
-import { CircularProgress, Snackbar, Alert } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { resumeAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import AgentChat from '../components/AgentChat';
+import SEO from '../components/SEO';
+import { Helmet } from 'react-helmet-async';
+import FeedbackPopup from '../components/FeedbackPopup';
 import './AtsChecker.css';
-
-// Donut Chart Component
-const DonutChart = ({ value = 0, size = 180, thickness = 14 }) => {
-  const radius = (size - thickness) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const clamped = Math.max(0, Math.min(100, value));
-  const dash = (clamped / 100) * circumference;
-  
-  const getColor = (score) => {
-    if (score >= 80) return '#22c55e';
-    if (score >= 60) return '#3b82f6';
-    if (score >= 40) return '#f59e0b';
-    return '#ef4444';
-  };
-
-  return (
-    <div className="donut-chart" style={{ width: size, height: size }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size/2} cy={size/2} r={radius} stroke="#e5e7eb" strokeWidth={thickness} fill="none" />
-        <circle
-          cx={size/2} cy={size/2} r={radius}
-          stroke={getColor(clamped)} strokeWidth={thickness} strokeLinecap="round" fill="none"
-          strokeDasharray={`${dash} ${circumference - dash}`}
-          style={{ transition: 'stroke-dasharray 0.8s ease' }}
-        />
-      </svg>
-      <div className="donut-content">
-        <span className="donut-value">{clamped}</span>
-        <span className="donut-percent">%</span>
-      </div>
-    </div>
-  );
-};
-
-// Mini Score Ring for breakdown items
-const MiniRing = ({ value = 0, max = 10, size = 44, thickness = 4 }) => {
-  const radius = (size - thickness) / 2;
-  const circumference = 2 * Math.PI * radius;
-  // Guard against division by zero
-  const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
-  const dash = (pct / 100) * circumference;
-
-  const getColor = (p) => {
-    if (p >= 80) return '#22c55e';
-    if (p >= 60) return '#3b82f6';
-    if (p >= 40) return '#f59e0b';
-    return '#ef4444';
-  };
-
-  return (
-    <div className="mini-ring" style={{ width: size, height: size }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size/2} cy={size/2} r={radius} stroke="#e5e7eb" strokeWidth={thickness} fill="none" />
-        <circle
-          cx={size/2} cy={size/2} r={radius}
-          stroke={getColor(pct)} strokeWidth={thickness} strokeLinecap="round" fill="none"
-          strokeDasharray={`${dash} ${circumference - dash}`}
-          style={{ transition: 'stroke-dasharray 0.6s ease' }}
-        />
-      </svg>
-      <span className="mini-ring-value">{value}</span>
-    </div>
-  );
-};
 
 const AtsChecker = () => {
   const [uploading, setUploading] = useState(false);
   const [atsResult, setAtsResult] = useState(null);
-  const [rawResponse, setRawResponse] = useState(null);
   const [jobDescription, setJobDescription] = useState('');
-  const [showRaw, setShowRaw] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [snack, setSnack] = useState({ open: false, type: 'success', text: '' });
+  const [rawResponse, setRawResponse] = useState(null);
+  const [expandedMetric, setExpandedMetric] = useState(null);
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  const [usageCount, setUsageCount] = useState(() => parseInt(localStorage.getItem('freeUsageCount') || '0', 10));
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  const showToast = (text, type = 'success') => {
+    setSnack({ open: true, text, type });
+    setTimeout(() => {
+      setSnack(s => ({ ...s, open: false }));
+    }, 4000);
+  };
 
   const handleUpload = async (file) => {
     setUploading(true);
     setAtsResult(null);
-    setRawResponse(null);
-    
+
     try {
       const response = await resumeAPI.calculateAtsScore(file, jobDescription);
-      console.log('Backend ATS response:', response);
       setRawResponse(response);
       const normalized = normalizeAtsResponse(response);
-      console.log('Normalized ATS result:', normalized);
+      if (!normalized.hasContent) {
+        setAtsResult(null);
+        showToast(normalized.error || 'NO ATS DATA RETURNED. PLEASE TRY AGAIN.', 'error');
+        return;
+      }
       setAtsResult(normalized);
-      setSnack({ open: true, type: 'success', text: 'ATS analysis complete!' });
+      if (!isAuthenticated) {
+        const newCount = usageCount + 1;
+        setUsageCount(newCount);
+        localStorage.setItem('freeUsageCount', newCount.toString());
+      }
+      showToast('ATS ANALYSIS COMPLETE!', 'success');
+      setTimeout(() => {
+        setShowFeedback(true);
+      }, 1500);
     } catch (error) {
       console.error('Error calculating ATS score:', error);
-      setSnack({ open: true, type: 'error', text: error.response?.data?.message || 'Failed to analyze resume. Please try again.' });
+      showToast(error.response?.data?.message || 'FAILED TO ANALYZE RESUME. PLEASE TRY AGAIN.', 'error');
     } finally {
       setUploading(false);
     }
   };
 
+  const validateAndSelect = (file) => {
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      showToast('PLEASE UPLOAD A PDF FILE.', 'error');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('FILE MUST BE SMALLER THAN 5MB.', 'error');
+      return;
+    }
+    setSelectedFile(file);
+  };
+
+  const handleSubmit = () => {
+    if (!isAuthenticated) {
+      const usageCount = parseInt(localStorage.getItem('freeUsageCount') || '0', 10);
+      if (usageCount >= 2) {
+        showToast('FREE LIMIT REACHED. PLEASE SIGN IN TO CONTINUE.', 'info');
+        setTimeout(() => navigate('/login', { state: { from: location } }), 1500);
+        return;
+      }
+    }
+
+    if (!selectedFile) {
+      showToast('PLEASE SELECT A RESUME FILE FIRST.', 'error');
+      return;
+    }
+    handleUpload(selectedFile);
+    setSelectedFile(null);
+  };
+
   const onPickFile = (event) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-    
-    if (file.type !== 'application/pdf') {
-      setSnack({ open: true, type: 'error', text: 'Please upload a PDF file!' });
-      event.target.value = '';
-      return;
-    }
-    
-    if (file.size > 5 * 1024 * 1024) {
-      setSnack({ open: true, type: 'error', text: 'File must be smaller than 5MB!' });
-      event.target.value = '';
-      return;
-    }
-    
-    handleUpload(file);
+    validateAndSelect(file);
     event.target.value = '';
   };
 
-  // Parse "7/10" → { num: 7, den: 10 }
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
+    else if (e.type === 'dragleave') setDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    const file = e.dataTransfer?.files?.[0];
+    validateAndSelect(file);
+  };
+
   const parseScore = (val) => {
     if (!val) return null;
-    if (typeof val === 'number') return { num: val, den: 10 };
-    const match = String(val).match(/(\d+)\s*\/\s*(\d+)/);
-    if (match) return { num: parseInt(match[1], 10), den: parseInt(match[2], 10) || 10 };
-    const numOnly = parseInt(String(val).replace(/[^\d]/g, ''), 10);
-    return isNaN(numOnly) ? null : { num: numOnly, den: 10 };
+    let scoreStr = val;
+    let details = {};
+    if (typeof val === 'object' && val !== null) {
+      scoreStr = val.score || val.value;
+      details = {
+        explanation: val.explanation || '',
+        suggestion: val.suggestion || '',
+        confidence: val.confidence || ''
+      };
+    }
+    if (typeof scoreStr === 'number') return { num: scoreStr, den: 10, ...details };
+    const match = String(scoreStr).match(/(\d+)\s*\/\s*(\d+)/);
+    if (match) return { num: parseInt(match[1], 10), den: parseInt(match[2], 10) || 10, ...details };
+    const numOnly = parseInt(String(scoreStr).replace(/[^\d]/g, ''), 10);
+    return isNaN(numOnly) ? null : { num: numOnly, den: 10, ...details };
   };
 
   const normalizeAtsResponse = (res) => {
-    // Backend returns { data: { atsScore, scoreBreakdown, ... }, think: ... }
-    const payload = res?.data ?? res ?? {};
-    const rawScore = payload?.atsScore ?? payload?.overallScore ?? payload?.score;
+    const core = res?.data ?? res ?? {};
+    const rawScore = core?.atsScore ?? core?.overallScore ?? core?.score;
     const percent = typeof rawScore === 'string'
       ? parseInt(String(rawScore).replace(/[^\d]/g, ''), 10)
       : (typeof rawScore === 'number' ? rawScore : null);
 
-    const breakdown = payload?.scoreBreakdown ?? payload?.breakdown ?? {};
-    const strengths = Array.isArray(payload?.strengths) ? payload.strengths : [];
-    const weaknesses = Array.isArray(payload?.weaknesses) ? payload.weaknesses : [];
-    const suggestions = Array.isArray(payload?.detailedSuggestions)
-      ? payload.detailedSuggestions.map(s => typeof s === 'string' ? { section: 'General', suggestion: s } : s)
-      : (Array.isArray(payload?.suggestions)
-        ? payload.suggestions.map(s => typeof s === 'string' ? { section: 'General', suggestion: s } : s)
+    const breakdown = core?.scoreBreakdown ?? core?.breakdown ?? {};
+    const strengths = Array.isArray(core?.strengths) ? core.strengths : [];
+    const weaknesses = Array.isArray(core?.weaknesses) ? core.weaknesses : [];
+    const suggestions = Array.isArray(core?.detailedSuggestions)
+      ? core.detailedSuggestions.map(s => typeof s === 'string' ? { section: 'General', suggestion: s } : s)
+      : (Array.isArray(core?.suggestions)
+        ? core.suggestions.map(s => typeof s === 'string' ? { section: 'General', suggestion: s } : s)
         : []);
+
+    const hasContent = Object.keys(core || {}).length > 0;
+
+    const penaltyLog = Array.isArray(core?.penaltyLog)
+      ? core.penaltyLog.filter(p => {
+        if (!p.deduction) return false;
+        // Extract only digits from the deduction string (e.g. "-5%" -> "5")
+        const numericalValue = String(p.deduction).replace(/[^\d]/g, '');
+        // Only keep penalties that have a number greater than 0
+        return numericalValue !== '' && parseInt(numericalValue, 10) > 0;
+      })
+      : [];
+    const keywordAnalysis = core?.keywordAnalysis ?? {};
+    const rewriteExamples = Array.isArray(core?.rewriteExamples) ? core.rewriteExamples : [];
+    const topMissingKeywords = Array.isArray(core?.topMissingKeywords) ? core.topMissingKeywords : [];
 
     return {
       score: Number.isFinite(percent) ? percent : null,
@@ -151,212 +170,524 @@ const AtsChecker = () => {
         keywordMatch: parseScore(breakdown.keywordMatch ?? breakdown.keywords),
         formatting: parseScore(breakdown.formatting ?? breakdown.format),
         sectionCompleteness: parseScore(breakdown.sectionCompleteness ?? breakdown.sections),
+        impactScore: parseScore(breakdown.impactScore ?? breakdown.impact),
+        brevity: parseScore(breakdown.brevity ?? breakdown.readability),
+        experienceFit: parseScore(breakdown.experienceFit),
       },
       strengths,
       weaknesses,
       suggestions,
+      penaltyLog,
+      keywordAnalysis,
+      rewriteExamples,
+      topMissingKeywords,
+      keywords: keywordAnalysis.matchedKeywords || core?.keywords || [],
+      missingKeywords: keywordAnalysis.missingKeywords || core?.missingKeywords || [],
+      feedback: core?.feedback,
+      error: core?.error || res?.error,
+      hasContent,
+      resumeText: core?.resumeText || '',
     };
   };
 
-  const sectionMeta = {
-    Summary: { icon: '📝', color: 'blue' },
-    Experience: { icon: '💼', color: 'purple' },
-    Education: { icon: '🎓', color: 'green' },
-    Projects: { icon: '🚀', color: 'cyan' },
-    Skills: { icon: '⚡', color: 'orange' },
-    Certifications: { icon: '🏆', color: 'green' },
-    Achievements: { icon: '🏅', color: 'purple' },
-    Languages: { icon: '🌐', color: 'blue' },
-    Contact: { icon: '📧', color: 'cyan' },
-    Formatting: { icon: '📐', color: 'red' },
-    Keywords: { icon: '🔑', color: 'orange' },
-    General: { icon: '📋', color: 'blue' },
-  };
-
   const getScoreLabel = (score) => {
-    if (score >= 90) return { text: 'Excellent', cls: 'excellent' };
-    if (score >= 75) return { text: 'Good', cls: 'good' };
-    if (score >= 60) return { text: 'Fair', cls: 'fair' };
-    if (score >= 40) return { text: 'Needs Work', cls: 'needs-work' };
-    return { text: 'Poor', cls: 'poor' };
+    if (score >= 90) return 'EXCELLENT';
+    if (score >= 75) return 'GOOD';
+    if (score >= 60) return 'FAIR';
+    if (score >= 40) return 'NEEDS WORK';
+    return 'POOR';
   };
 
-  const getBarColorClass = (pct) => {
-    if (pct >= 80) return 'bar-green';
-    if (pct >= 60) return 'bar-blue';
-    if (pct >= 40) return 'bar-orange';
-    return 'bar-red';
+  const getScoreTier = (score) => {
+    if (score >= 85) return 'TOP 10%';
+    if (score >= 70) return 'TOP 25%';
+    if (score >= 50) return 'TOP 50%';
+    return 'BELOW AVG';
   };
 
-  const breakdownItems = [
-    { key: 'keywordMatch', label: 'Keyword Match', icon: '🔑' },
-    { key: 'formatting', label: 'Formatting', icon: '📐' },
-    { key: 'sectionCompleteness', label: 'Section Completeness', icon: '📋' },
+  const getScoreColor = (score) => {
+    if (score >= 80) return { hex: '#39ff14', text: 'text-neon-green', bg: 'bg-neon-green', border: 'border-neon-green' };
+    if (score >= 60) return { hex: '#facc15', text: 'text-yellow-400', bg: 'bg-yellow-400', border: 'border-yellow-400' };
+    if (score >= 40) return { hex: '#fb923c', text: 'text-orange-400', bg: 'bg-orange-400', border: 'border-orange-400' };
+    return { hex: '#ef4444', text: 'text-red-500', bg: 'bg-red-500', border: 'border-red-500' };
+  };
+
+  const circleRadius = 42;
+  const circumference = 2 * Math.PI * circleRadius;
+
+  const sectionMeta = {
+    Summary: { icon: 'description', color: 'text-blue-400', border: 'border-blue-400' },
+    Experience: { icon: 'rocket_launch', color: 'text-indigo-400', border: 'border-indigo-400' },
+    Education: { icon: 'school', color: 'text-neon-green', border: 'border-neon-green' },
+    Projects: { icon: 'terminal', color: 'text-cyan-400', border: 'border-cyan-400' },
+    Skills: { icon: 'psychology', color: 'text-orange-400', border: 'border-orange-400' },
+    Certifications: { icon: 'workspace_premium', color: 'text-neon-green', border: 'border-neon-green' },
+    Achievements: { icon: 'emoji_events', color: 'text-purple-400', border: 'border-purple-400' },
+    Languages: { icon: 'translate', color: 'text-blue-400', border: 'border-blue-400' },
+    Contact: { icon: 'contact_page', color: 'text-teal-400', border: 'border-teal-400' },
+    Formatting: { icon: 'view_column', color: 'text-blue-400', border: 'border-blue-400' },
+    Keywords: { icon: 'key', color: 'text-yellow-400', border: 'border-yellow-400' },
+    General: { icon: 'task_alt', color: 'text-neon-green', border: 'border-neon-green' },
+  };
+
+  const breakdownConfig = [
+    { key: 'keywordMatch', label: 'KEYWORD MATCH', icon: 'key' },
+    { key: 'formatting', label: 'FORMATTING', icon: 'view_column' },
+    { key: 'sectionCompleteness', label: 'SECTION COMPLETENESS', icon: 'contact_page' },
+    { key: 'impactScore', label: 'IMPACT & METRICS', icon: 'trending_up' },
+    { key: 'brevity', label: 'BREVITY & READABILITY', icon: 'short_text' },
+    { key: 'experienceFit', label: 'EXPERIENCE FIT', icon: 'work_history' },
   ];
 
   return (
-    <div className="ats-page">
-      {/* Hero */}
-      <section className="ats-hero">
-        {atsResult ? (
-          <>
-            <div className="analysis-badge">
-              <span className="dot"></span>
-              ANALYSIS COMPLETE
-            </div>
-            <h1>Your ATS Score Report</h1>
-            <p>Here's how your resume performs against Applicant Tracking Systems.</p>
-          </>
-        ) : (
-          <>
-            <h1>ATS Resume Checker</h1>
-            <p>Upload your resume to get instant ATS scoring, keyword analysis, and optimization suggestions powered by AI.</p>
-          </>
-        )}
-      </section>
+    <div className="min-h-screen bg-brutal-black text-brutal-white font-sans grid-bg relative selection:bg-neon-green selection:text-black">
+      <SEO
+        title="Free ATS Score Checker — Check Resume ATS Score Online"
+        description="Upload your resume PDF and get an instant ATS score with keyword gap analysis, formatting audit, and AI-powered fix suggestions. Free, no sign-up required."
+        href="https://atsresify.me/ats-checker"
+      />
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "HowTo",
+            "name": "How to Check Your Resume ATS Score",
+            "description": "Check your resume ATS compatibility in 3 simple steps using ATS Resify's free online ATS score checker.",
+            "step": [
+              { "@type": "HowToStep", "name": "Upload Resume", "text": "Upload your resume as a PDF file (max 5MB)." },
+              { "@type": "HowToStep", "name": "Add Job Description", "text": "Optionally paste the target job description for contextual keyword analysis." },
+              { "@type": "HowToStep", "name": "Get ATS Score", "text": "Click 'Execute Scan' to receive your ATS score, keyword report, and AI-powered improvement suggestions." }
+            ],
+            "tool": { "@type": "HowToTool", "name": "ATS Resify — Free ATS Checker" },
+            "totalTime": "PT1M",
+            "supply": { "@type": "HowToSupply", "name": "Resume PDF" }
+          })}
+        </script>
+      </Helmet>
+      <div className="scanline"></div>
 
-      <main className="ats-main">
-        {/* Upload */}
+      <main className="py-12 px-4 relative z-10 flex flex-col min-h-[calc(100vh-64px)] items-center">
+
+        {/* PRE-SCAN UPLOAD VIEW */}
         {!atsResult && !uploading && (
-          <div className="upload-section">
-            <div className="upload-area">
-              <div className="upload-icon">📄</div>
-              <p className="upload-text">Click to select a file</p>
-              <p className="upload-hint">Accepted: PDF • Max 5MB</p>
-              <label className="upload-btn">
-                📁 SELECT FILE
-                <input type="file" accept=".pdf" onChange={onPickFile} />
-              </label>
+          <div className="max-w-[1000px] w-full bg-brutal-black border-2 border-brutal-white relative p-8 md:p-12 mb-12">
+            <div className="absolute -top-4 -left-4 w-8 h-8 bg-neon-green border-2 border-brutal-white"></div>
+            <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-neon-green border-2 border-brutal-white"></div>
+
+            <div className="text-center mb-12">
+              <h1 className="text-4xl md:text-6xl font-black mb-4 text-brutal-white font-mono uppercase">
+                <span className="bg-neon-green px-2 text-black">ATS</span> OPTIMIZATION ENGINE
+              </h1>
+              <p className="text-sm md:text-base text-slate-300 leading-relaxed max-w-2xl mx-auto">
+                &gt; Initialize scan sequence. Upload resume data for algorithmic parsing and compliance verification.
+              </p>
             </div>
-            <div className="jd-section">
-              <label className="jd-label">
-                🎯 Paste Job Description <span className="jd-optional">(optional — improves keyword matching)</span>
-              </label>
-              <textarea
-                className="jd-textarea"
-                placeholder="Paste the job description here to get a targeted analysis with keyword matching..."
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
-                rows={5}
-              />
+
+            <div className="flex flex-col gap-8">
+              {/* Dropzone */}
+              <div
+                className={`border-2 border-dashed p-12 flex flex-col items-center justify-center text-center group transition-colors cursor-pointer min-h-[300px] relative ${dragActive ? 'bg-neon-green/10 border-neon-green' : 'border-brutal-white hover:bg-white/5'
+                  } ${selectedFile ? 'border-neon-green' : ''}`}
+                onDragEnter={handleDrag}
+                onDragOver={handleDrag}
+                onDragLeave={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="absolute top-2 left-2 text-[10px] text-slate-500 font-bold">INPUT_STREAM_01</div>
+
+                <span className={`material-symbols-outlined text-6xl mb-4 transition-transform group-hover:-translate-y-2 ${selectedFile ? 'text-neon-green' : 'text-brutal-white'}`}>
+                  {selectedFile ? 'task' : 'upload_file'}
+                </span>
+
+                <h2 className={`text-2xl font-black mb-2 ${selectedFile ? 'text-neon-green' : 'text-brutal-white'}`}>
+                  {selectedFile ? selectedFile.name : 'DRAG & DROP YOUR RESUME'}
+                </h2>
+
+                <p className="text-sm text-slate-300 mb-6">
+                  {selectedFile ? '[ DATA STREAM LOADED - CLICK TO REPLACE ]' : 'Supported Formats: .PDF (Max 5MB)'}
+                </p>
+
+                <button
+                  className="px-6 py-3 border-2 border-brutal-white text-brutal-white bg-brutal-black font-bold hover:bg-neon-green hover:text-black btn-brutal transition-all font-mono uppercase"
+                  onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                >
+                  BROWSE FILES
+                </button>
+                <input ref={fileInputRef} type="file" accept=".pdf" onChange={onPickFile} className="hidden" />
+              </div>
+
+              {/* Job Description Textarea */}
+              <div className="border-2 border-brutal-white p-6 relative bg-brutal-black">
+                <div className="absolute top-2 right-2 text-[10px] text-slate-500 font-bold">PARAM_TARGET_JOB</div>
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-brutal-white">
+                  <span className="material-symbols-outlined text-slate-400">description</span>
+                  TARGET JOB DESCRIPTION <span className="text-xs text-slate-500">(OPTIONAL)</span>
+                </h3>
+                <textarea
+                  className="w-full h-32 bg-transparent border-2 border-brutal-white text-brutal-white p-4 text-xs font-mono brutal-scrollbar focus:outline-none focus:border-neon-green resize-none"
+                  placeholder="> PASTE JOB DESCRIPTION TEXT HERE FOR CONTEXTUAL ANALYSIS. THIS SIGNIFICANTLY IMPROVES KEYWORD MATCHING SCORING."
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
+                ></textarea>
+              </div>
+
+              {/* Usage Counter for Guest Users */}
+              {!isAuthenticated && (
+                <div className="flex items-center justify-between px-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-neon-green animate-pulse"></span>
+                    <span className="text-[10px] font-bold text-slate-400">GUEST_SESSION_ACTIVE</span>
+                  </div>
+                  <div className={`text-[10px] font-bold px-3 py-1 border-2 ${usageCount >= 2 ? 'border-red-500 text-red-500' : 'border-neon-green text-neon-green bg-neon-green/5'}`}>
+                    FREE USES REMAINING: {Math.max(0, 2 - usageCount)} / 2
+                  </div>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                className={`w-full font-black px-6 py-5 text-xl border-2 flex items-center justify-center gap-3 transition-all btn-brutal font-mono uppercase group ${selectedFile
+                  ? 'bg-neon-green text-black border-brutal-white cursor-pointer'
+                  : 'bg-transparent text-slate-500 border-slate-600 cursor-not-allowed hidden-shadow'
+                  }`}
+                onClick={handleSubmit}
+                disabled={!selectedFile}
+              >
+                <span className="material-symbols-outlined spin-slow opacity-0 group-hover:opacity-100 transition-opacity absolute left-[15%] hidden sm:block">settings</span>
+                <span className="material-symbols-outlined text-2xl">play_arrow</span>
+                EXECUTE SCAN
+                <span className="material-symbols-outlined spin-slow opacity-0 group-hover:opacity-100 transition-opacity absolute right-[15%] hidden sm:block">settings</span>
+              </button>
             </div>
           </div>
         )}
 
-        {/* Loading */}
+        {/* LOADING STATE */}
         {uploading && (
-          <div className="loading-container">
-            <CircularProgress size={48} sx={{ color: '#6366f1' }} />
-            <p>Analyzing your resume with AI...</p>
-            <span className="loading-hint">This may take 10–20 seconds</span>
+          <div className="flex flex-col items-center justify-center min-h-[50vh] flex-grow">
+            <span className="material-symbols-outlined text-7xl text-neon-green spin-slow mb-6">progress_activity</span>
+            <h2 className="text-2xl font-black mb-2 animate-pulse">ANALYZING DATA STREAM <span className="blink-cursor">_</span></h2>
+            <p className="text-xs text-slate-500 lowercase">Running algorithmic parsing and compliance verification (10-20s)...</p>
           </div>
         )}
 
-        {/* ─── Results ─── */}
-        {atsResult && (
-          <>
-            {/* Row 1: Overall Score + Breakdown */}
-            <div className="results-top">
-              <div className="card overall-score-card">
-                <DonutChart value={atsResult.score ?? 0} size={170} thickness={14} />
-                <div className="score-meta">
-                  <span className={`score-label-badge ${getScoreLabel(atsResult.score ?? 0).cls}`}>
-                    {getScoreLabel(atsResult.score ?? 0).text}
-                  </span>
-                  <span className="score-subtitle">Overall ATS Score</span>
+        {/* RESULTS VIEW */}
+        {atsResult && !uploading && (
+          <div className="w-full max-w-[1400px] flex flex-col gap-8 pb-12">
+
+            {/* Header Reset */}
+            <div className="flex justify-between items-end border-b-2 border-brutal-white pb-4 mb-4">
+              <div>
+                <h2 className="text-3xl font-black font-mono uppercase">SCAN_RESULTS</h2>
+                <div className="text-sm text-slate-400">FILE: {selectedFile?.name || 'UNKNOWN_INPUT.PDF'}</div>
+              </div>
+              <button
+                className="px-4 py-2 border-2 border-brutal-white text-xs font-bold hover:bg-neon-green hover:text-black transition-colors btn-brutal font-mono uppercase"
+                onClick={() => { setAtsResult(null); setJobDescription(''); setSelectedFile(null); }}
+              >
+                RESET SCAN
+              </button>
+            </div>
+
+            {/* Top Grid: Score & Verdict */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+              {/* Score breakdown (Left) */}
+              <div className="lg:col-span-8 border-2 border-brutal-white bg-brutal-black p-6 md:p-10 relative">
+                <div className="absolute top-2 left-2 text-[10px] text-slate-500 font-bold">SYS_METRICS_DUMP</div>
+
+                <div className="flex flex-col md:flex-row gap-10 items-center md:items-start mt-4">
+
+                  {/* Circular Score */}
+                  <div className="flex flex-col items-center shrink-0">
+                    <div className="relative w-40 h-40 flex items-center justify-center mb-4">
+                      <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                        <circle cx="50" cy="50" r={circleRadius} stroke="#333" strokeWidth="6" fill="transparent" />
+                        <circle
+                          cx="50" cy="50" r={circleRadius}
+                          stroke={getScoreColor(atsResult.score ?? 0).hex}
+                          strokeWidth="8" fill="transparent"
+                          strokeLinecap="square"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={circumference - (circumference * (atsResult.score ?? 0)) / 100}
+                          className="transition-all duration-1000 ease-out"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className={`text-5xl font-black tracking-tighter ${getScoreColor(atsResult.score ?? 0).text}`}>
+                          {atsResult.score ?? 0}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-bold">/ 100</span>
+                      </div>
+                    </div>
+                    <div className={`px-4 py-1 border-2 font-black text-xs ${getScoreColor(atsResult.score ?? 0).bg} text-black border-brutal-white`}>
+                      {getScoreLabel(atsResult.score ?? 0)}
+                    </div>
+                  </div>
+
+                  {/* Bar Breakdown */}
+                  <div className="flex-1 w-full flex flex-col gap-4">
+                    <div className="flex justify-between border-b border-dashed border-slate-600 pb-2">
+                      <span className="font-bold text-sm">SECTOR ANALYSIS</span>
+                      <span className="font-bold text-sm text-neon-green">[{getScoreTier(atsResult.score ?? 0)}]</span>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                      {breakdownConfig.map(({ key, label, icon }) => {
+                        const s = atsResult.breakdown?.[key];
+                        const pct = s ? Math.round((s.num / s.den) * 100) : 0;
+                        const isExpanded = expandedMetric === key;
+                        const hasDetails = s?.explanation || s?.suggestion;
+                        const barColor = getScoreColor(pct).bg;
+
+                        return (
+                          <div key={key} className="flex flex-col">
+                            <div
+                              className={`flex justify-between items-center mb-1 text-xs font-bold ${hasDetails ? 'cursor-pointer hover:text-neon-green transition-colors' : ''}`}
+                              onClick={() => hasDetails && setExpandedMetric(isExpanded ? null : key)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[14px]">{icon}</span>
+                                {label}
+                                {hasDetails && <span className="text-[10px] text-slate-500">[{isExpanded ? '-' : '+'}]</span>}
+                              </div>
+                              <span>{pct}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-slate-800 border border-slate-700 p-[1px]">
+                              <div className={`h-full ${barColor} transition-all duration-700`} style={{ width: `${pct}%` }}></div>
+                            </div>
+
+                            {/* Expanded details */}
+                            {isExpanded && hasDetails && (
+                              <div className="mt-2 p-3 border border-slate-700 bg-white/5 text-[11px] lowercase leading-relaxed flex flex-col gap-2">
+                                {s.explanation && (
+                                  <div><strong className="text-brutal-white uppercase text-[10px]">ANALYSIS:</strong> {s.explanation}</div>
+                                )}
+                                {s.suggestion && (
+                                  <div><strong className="text-neon-green uppercase text-[10px]">SUGGESTION:</strong> {s.suggestion}</div>
+                                )}
+                                {s.confidence && (
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <strong className="text-blue-400 uppercase text-[10px]">CONFIDENCE:</strong>
+                                    <span className={`px-1.5 py-0.5 text-[9px] uppercase font-bold tracking-wider rounded-sm ${
+                                      s.confidence.toLowerCase().includes('high') ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                                      s.confidence.toLowerCase().includes('medium') ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                      'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                    }`}>
+                                      {s.confidence}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="card breakdown-card">
-                <h3 className="card-title">Score Breakdown</h3>
-                <div className="breakdown-list">
-                  {breakdownItems.map(({ key, label, icon }) => {
-                    const s = atsResult.breakdown?.[key];
-                    const pct = s ? Math.round((s.num / s.den) * 100) : 0;
-                    return (
-                      <div key={key} className="breakdown-row">
-                        <div className="breakdown-left">
-                          <MiniRing value={s?.num ?? 0} max={s?.den ?? 10} />
-                          <div className="breakdown-info">
-                            <span className="breakdown-label">{icon} {label}</span>
-                            <span className="breakdown-score-text">{s ? `${s.num} / ${s.den}` : '—'}</span>
-                          </div>
-                        </div>
-                        <div className="breakdown-bar-wrap">
-                          <div className={`breakdown-bar-fill ${getBarColorClass(pct)}`} style={{ width: `${pct}%` }} />
-                        </div>
-                      </div>
-                    );
-                  })}
+              {/* Verdict Sidebar (Right) */}
+              <div className="lg:col-span-4 flex flex-col gap-6">
+                <div className="border-2 border-brutal-white p-6 bg-brutal-black flex-1 flex flex-col">
+                  <div className="flex items-center gap-2 border-b-2 border-brutal-white pb-3 mb-4">
+                    <span className="material-symbols-outlined text-neon-green">terminal</span>
+                    <h3 className="font-black font-mono uppercase">ENGINE VERDICT</h3>
+                  </div>
+
+                  <p className="text-sm text-slate-300 leading-relaxed mb-6 flex-1">
+                    Your resume demonstrates <strong className={`uppercase ${getScoreColor(atsResult.score ?? 0).text}`}>{getScoreLabel(atsResult.score ?? 0)}</strong> compatibility with algorithmic filters.
+                    {atsResult.score >= 75
+                      ? ' Minor calibrations in keyword density could achieve elite status.'
+                      : atsResult.score >= 50
+                        ? ' Significant structural weaknesses detected. Rectification required.'
+                        : ' Critical parsing failure likely. Redevelop using standard templates.'}
+                  </p>
+
+                  <div className="flex flex-col gap-3 font-mono text-[10px] border-t border-dashed border-slate-600 pt-4 mt-auto">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">PARSER_STATUS:</span>
+                      <span className="text-neon-green font-bold">OPERATIONAL</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">MATCH_RATE:</span>
+                      <span className="text-brutal-white font-bold">{atsResult.keywordAnalysis?.matchRate || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">CATEGORIES_SCANNED:</span>
+                      <span>6</span>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Penalty Log Section */}
+                {atsResult.penaltyLog.length > 0 && (
+                  <div className="border-2 border-red-500/50 p-6 bg-red-500/5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="material-symbols-outlined text-red-500">heart_broken</span>
+                      <h3 className="font-black text-xs text-red-500">PENALTY_LOG_FILE</h3>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {atsResult.penaltyLog.map((p, i) => (
+                        <div key={i} className="flex justify-between text-[10px] lowercase border-b border-red-500/10 pb-1">
+                          <span className="text-slate-400">{p.reason}</span>
+                          <span className="text-red-500 font-bold">{p.deduction}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  className="w-full bg-neon-green text-black font-black py-4 border-2 border-brutal-white btn-brutal transition-all flex items-center justify-center gap-2 text-sm font-mono uppercase"
+                  onClick={() => navigate('/generate')}
+                >
+                  <span className="material-symbols-outlined">auto_fix_high</span>
+                  AUTO-REPAIR RESUME
+                </button>
               </div>
             </div>
 
-            {/* Row 2: Strengths & Weaknesses */}
-            <div className="results-middle">
-              <div className="card sw-card">
-                <h3 className="card-title">
-                  <span className="title-icon green-bg">✅</span>
-                  Strengths
-                  <span className="count-badge green-badge">{atsResult.strengths.length}</span>
+            {/* Strengths & Weaknesses */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Strengths */}
+              <div className="border-2 border-brutal-white p-6 bg-brutal-black">
+                <h3 className="flex items-center gap-2 font-black text-neon-green mb-6 border-b border-dashed border-slate-600 pb-3">
+                  <span className="material-symbols-outlined">check_circle</span>
+                  STRENGTHS [{atsResult.strengths.length}]
                 </h3>
                 {atsResult.strengths.length > 0 ? (
-                  <ul className="sw-list">
+                  <ul className="flex flex-col gap-3">
                     {atsResult.strengths.map((s, i) => (
-                      <li key={i} className="sw-item strength-item">
-                        <span className="sw-bullet strength-bullet">✓</span>
-                        <span>{s}</span>
+                      <li key={i} className="flex gap-3 text-xs lowercase text-slate-300 items-start">
+                        <span className="text-neon-green font-black mt-[2px]">+</span>
+                        <span className="leading-relaxed">{s}</span>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="empty-text">No strengths identified.</p>
+                  <p className="text-xs text-slate-500 lowercase">no notable strengths identified in current scan.</p>
                 )}
               </div>
 
-              <div className="card sw-card">
-                <h3 className="card-title">
-                  <span className="title-icon red-bg">⚠️</span>
-                  Weaknesses
-                  <span className="count-badge red-badge">{atsResult.weaknesses.length}</span>
+              {/* Weaknesses */}
+              <div className="border-2 border-brutal-white p-6 bg-brutal-black">
+                <h3 className="flex items-center gap-2 font-black text-red-500 mb-6 border-b border-dashed border-slate-600 pb-3">
+                  <span className="material-symbols-outlined">warning</span>
+                  WEAKNESSES [{atsResult.weaknesses.length}]
                 </h3>
                 {atsResult.weaknesses.length > 0 ? (
-                  <ul className="sw-list">
+                  <ul className="flex flex-col gap-3">
                     {atsResult.weaknesses.map((w, i) => (
-                      <li key={i} className="sw-item weakness-item">
-                        <span className="sw-bullet weakness-bullet">!</span>
-                        <span>{w}</span>
+                      <li key={i} className="flex gap-3 text-xs lowercase text-slate-300 items-start">
+                        <span className="text-red-500 font-black mt-[2px]">-</span>
+                        <span className="leading-relaxed">{w}</span>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="empty-text">No weaknesses found — great job!</p>
+                  <p className="text-xs text-slate-500 lowercase">no architectural weaknesses found. optimal structure.</p>
                 )}
               </div>
             </div>
 
-            {/* Row 3: Detailed Suggestions */}
-            {atsResult.suggestions.length > 0 && (
-              <div className="card suggestions-card">
-                <div className="suggestions-header">
+            {/* Keyword Analysis Section */}
+            {(atsResult.missingKeywords.length > 0 || atsResult.keywords.length > 0) && (
+              <div className="border-2 border-brutal-white p-6 md:p-10 bg-brutal-black">
+                <div className="flex justify-between items-center mb-8 border-b-2 border-brutal-white pb-4">
                   <div>
-                    <h3 className="card-title" style={{ marginBottom: 4 }}>💡 AI Recommendations</h3>
-                    <p className="suggestions-subtitle">Actionable improvements to boost your ATS score</p>
+                    <h3 className="text-2xl font-black">KEYWORD_DATABANK</h3>
+                    <p className="text-xs text-slate-400 lowercase">frequency mapping and alignment with target parameters.</p>
                   </div>
-                  <span className="count-badge purple-badge">{atsResult.suggestions.length} suggestions</span>
+                  {atsResult.keywordAnalysis?.matchRate && (
+                    <div className="px-4 py-2 bg-neon-green text-black font-black text-sm">
+                      MATCH: {atsResult.keywordAnalysis.matchRate}
+                    </div>
+                  )}
                 </div>
-                <div className="suggestions-list">
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                  <div>
+                    <h4 className="text-xs font-black mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-neon-green"></span> MATCHED_TAGS
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {atsResult.keywords.map((kw, i) => (
+                        <span key={i} className="px-2 py-1 bg-neon-green/10 border border-neon-green/30 text-neon-green text-[10px] font-bold uppercase">
+                          {kw}
+                        </span>
+                      ))}
+                      {atsResult.keywords.length === 0 && <span className="text-xs text-slate-500">ERROR: NO MATCHES_DETECTED</span>}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-red-500"></span> MISSING_PROTOTYPES
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {atsResult.missingKeywords.map((kw, i) => (
+                        <span key={i} className="px-2 py-1 bg-red-500/10 border border-red-500/30 text-red-500 text-[10px] font-bold uppercase">
+                          {kw}
+                        </span>
+                      ))}
+                      {atsResult.missingKeywords.length === 0 && <span className="text-xs text-neon-green">ALL_TARGETS_ACQUIRED</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Rewrite Examples Section */}
+            {atsResult.rewriteExamples.length > 0 && (
+              <div className="border-2 border-neon-green p-6 md:p-10 bg-neon-green/5">
+                <div className="mb-8 border-b-2 border-neon-green pb-4">
+                  <h3 className="text-2xl font-black text-neon-green">BULLET_RECONSTRUCT_V1</h3>
+                  <p className="text-xs text-neon-green/60 lowercase">transforming weak descriptions into quantified high-impact data points.</p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  {atsResult.rewriteExamples.map((ex, i) => (
+                    <div key={i} className="grid grid-cols-1 lg:grid-cols-2 gap-1 overflow-hidden border border-neon-green/20">
+                      <div className="bg-red-500/5 p-4 border-r border-neon-green/20 relative">
+                        <div className="absolute top-0 right-0 text-[8px] bg-red-500 text-white px-2 py-[2px] font-bold">ORIGINAL</div>
+                        <p className="text-xs italic text-slate-400 line-through">"{ex.original}"</p>
+                      </div>
+                      <div className="bg-neon-green/10 p-4 relative">
+                        <div className="absolute top-0 right-0 text-[8px] bg-neon-green text-black px-2 py-[2px] font-bold">IMPROVED</div>
+                        <p className="text-xs text-neon-green font-bold">"{ex.improved}"</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* AI Suggestions (Grid) */}
+            {atsResult.suggestions.length > 0 && (
+              <div className="border-2 border-brutal-white bg-brutal-black p-6 md:p-10">
+                <div className="flex justify-between items-end border-b-2 border-brutal-white pb-4 mb-8">
+                  <div>
+                    <h2 className="text-2xl font-black">CRITICAL OPTIMIZATIONS</h2>
+                    <p className="text-xs text-slate-400 lowercase">algorithmic insight patches recommended for deployment.</p>
+                  </div>
+                  <div className="bg-white/10 px-3 py-1 text-[10px] font-bold">
+                    FOUND: {atsResult.suggestions.length}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {atsResult.suggestions.map((s, idx) => {
                     const section = s.section || 'General';
-                    const meta = sectionMeta[section] || { icon: '📋', color: 'blue' };
+                    const meta = sectionMeta[section] || { icon: 'code', color: 'text-brutal-white', border: 'border-brutal-white' };
                     return (
-                      <div key={idx} className="suggestion-item">
-                        <div className={`suggestion-icon-wrap ${meta.color}`}>{meta.icon}</div>
-                        <div className="suggestion-content">
-                          <span className={`suggestion-section-tag ${meta.color}`}>{section}</span>
-                          <p className="suggestion-text">{s.suggestion}</p>
+                      <div key={idx} className={`p-5 border text-brutal-white bg-white/5 hover:bg-white/10 transition-colors ${meta.border}`}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className={`material-symbols-outlined text-lg ${meta.color}`}>{meta.icon}</span>
+                          <h4 className={`text-xs font-black ${meta.color}`}>{section}</h4>
                         </div>
-                        <span className="suggestion-num">#{idx + 1}</span>
+                        <p className="text-[11px] lowercase text-slate-300 leading-relaxed">{s.suggestion}</p>
                       </div>
                     );
                   })}
@@ -364,41 +695,64 @@ const AtsChecker = () => {
               </div>
             )}
 
-            {/* Raw Response */}
-            <div className="raw-toggle-section">
-              <button className="raw-toggle-btn" onClick={() => setShowRaw(!showRaw)}>
-                {showRaw ? '🔼 Hide' : '🔽 Show'} Raw AI Response
-              </button>
-              {showRaw && rawResponse && (
-                <pre className="raw-response-block">{JSON.stringify(rawResponse, null, 2)}</pre>
-              )}
+            {/* Embedded Agent Chat */}
+            <div className="border-2 border-brutal-white">
+              <AgentChat
+                resumeContext={(() => {
+                  const parts = [];
+                  parts.push(`File: ${selectedFile?.name || 'Unknown'}`);
+                  if (jobDescription) parts.push(`Job Description: ${jobDescription}`);
+                  parts.push(`\nOverall ATS Score: ${atsResult.score}%`);
+
+                  // Score breakdown
+                  const bd = atsResult.breakdown;
+                  if (bd) {
+                    const bdLines = Object.entries(bd)
+                      .filter(([, v]) => v)
+                      .map(([k, v]) => `  ${k}: ${v.num}/${v.den}`);
+                    if (bdLines.length) parts.push(`Score Breakdown:\n${bdLines.join('\n')}`);
+                  }
+
+                  if (atsResult.strengths?.length) parts.push(`Strengths:\n${atsResult.strengths.map(s => `  + ${s}`).join('\n')}`);
+                  if (atsResult.weaknesses?.length) parts.push(`Weaknesses:\n${atsResult.weaknesses.map(w => `  - ${w}`).join('\n')}`);
+                  if (atsResult.missingKeywords?.length) parts.push(`Missing Keywords: ${atsResult.missingKeywords.join(', ')}`);
+                  if (atsResult.keywords?.length) parts.push(`Matched Keywords: ${atsResult.keywords.join(', ')}`);
+                  if (atsResult.resumeText) parts.push(`\nResume Text:\n${atsResult.resumeText}`);
+
+                  return parts.join('\n');
+                })()}
+                userId={isAuthenticated ? 'user' : 'anonymous'}
+              />
             </div>
 
-            {/* CTA */}
-            <div className="cta-section">
-              <h2>Ready to improve your score?</h2>
-              <p>Use our AI resume generator to apply the suggestions above automatically.</p>
-              <div className="cta-buttons">
-                <button className="cta-btn-primary" onClick={() => navigate('/generate')}>
-                  ✨ Generate Optimized Resume
-                </button>
-                <button className="cta-btn-secondary" onClick={() => { setAtsResult(null); setRawResponse(null); setJobDescription(''); }}>
-                  🔄 Analyze Another Resume
-                </button>
-              </div>
-            </div>
-          </>
+          </div>
         )}
       </main>
 
-      <Snackbar
-        open={snack.open}
-        autoHideDuration={4000}
-        onClose={() => setSnack(s => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert severity={snack.type} onClose={() => setSnack(s => ({ ...s, open: false }))}>{snack.text}</Alert>
-      </Snackbar>
+      {/* Brutalist Custom Toast/Snackbar */}
+      {snack.open && (
+        <div className="fixed bottom-6 right-6 z-[9999] toast-slide-in">
+          <div className={`p-4 border-2 brutal-shadow-white flex items-center gap-3 bg-brutal-black ${snack.type === 'error' ? 'border-red-500 text-red-500' :
+            snack.type === 'info' ? 'border-blue-400 text-blue-400' :
+              'border-neon-green text-neon-green'
+            }`}>
+            <span className="material-symbols-outlined flex-shrink-0">
+              {snack.type === 'error' ? 'error' : snack.type === 'info' ? 'info' : 'check_circle'}
+            </span>
+            <span className="text-xs font-black truncate max-w-[280px]">
+              {snack.text}
+            </span>
+            <button
+              onClick={() => setSnack(s => ({ ...s, open: false }))}
+              className="ml-4 bg-transparent border-none text-current cursor-pointer hover:opacity-75"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      <FeedbackPopup isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
     </div>
   );
 };
