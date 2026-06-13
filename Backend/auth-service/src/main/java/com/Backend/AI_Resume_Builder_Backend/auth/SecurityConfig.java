@@ -48,6 +48,7 @@ public class SecurityConfig {
                                                                 "/api/latex/templates",
                                                                 "/",
                                                                 "/favicon.ico",
+                                                                "/error",
                                                                 "/health")
                                                 .permitAll()
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

@@ -2,12 +2,36 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import agentAPI from '../services/agentApi';
 import './AgentChat.css';
 
-const QUICK_ACTIONS = [
-  { text: 'How can I improve my resume?', label: 'General Tips', icon: '💡' },
-  { text: 'Improve my experience bullet points using STAR method', label: 'STAR Method', icon: '⭐' },
-  { text: 'Analyze how well my resume matches the job description', label: 'Match Analysis', icon: '🎯' },
-  { text: 'Generate a professional summary for my target role', label: 'Pro Summary', icon: '📝' }
+// Agent mode configuration
+const AGENT_MODES = [
+  { key: 'GENERAL', label: 'Chat', icon: '💬', desc: 'General resume help' },
+  { key: 'BULLET_IMPROVER', label: 'Bullets', icon: '✨', desc: 'Improve bullet points' },
+  { key: 'JOB_MATCHER', label: 'Match', icon: '🎯', desc: 'Job description matching' },
+  { key: 'CONTENT_GENERATOR', label: 'Generate', icon: '📝', desc: 'Generate content' },
 ];
+
+const QUICK_ACTIONS = {
+  GENERAL: [
+    { text: 'How can I improve my resume?', label: 'General Tips', icon: '💡' },
+    { text: 'What are common resume mistakes?', label: 'Common Mistakes', icon: '⚠️' },
+    { text: 'Help me write a professional summary', label: 'Write Summary', icon: '📋' },
+  ],
+  BULLET_IMPROVER: [
+    { text: 'Improve my experience bullet points using STAR method', label: 'STAR Method', icon: '⭐' },
+    { text: 'Make my bullet points more impactful with metrics', label: 'Add Metrics', icon: '📊' },
+    { text: 'Suggest strong action verbs for my experience section', label: 'Action Verbs', icon: '🔥' },
+  ],
+  JOB_MATCHER: [
+    { text: 'Analyze how well my resume matches the job description', label: 'Match Analysis', icon: '🔍' },
+    { text: 'What keywords am I missing for this job?', label: 'Keyword Gaps', icon: '🏷️' },
+    { text: 'Tailor my experience section for this role', label: 'Tailor Resume', icon: '✂️' },
+  ],
+  CONTENT_GENERATOR: [
+    { text: 'Generate a professional summary for my target role', label: 'Pro Summary', icon: '📝' },
+    { text: 'Create strong bullet points for my latest experience', label: 'Experience Bullets', icon: '💼' },
+    { text: 'Help me describe my projects effectively', label: 'Project Descriptions', icon: '🚀' },
+  ],
+};
 
 // Format timestamp
 const formatTime = (timestamp) => {
@@ -28,6 +52,7 @@ const formatMessage = (text) => {
 
 const AgentChat = ({ resumeContext, formData, userId }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [agentType, setAgentType] = useState('GENERAL');
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -39,12 +64,10 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef({ startX: 0, startY: 0, startRight: 0, startBottom: 0, moved: false });
 
-  // Resizable panel state — use ref for instant reads in mousemove
-  const [panelSize, setPanelSize] = useState({ width: 360, height: 460 });
+  // Resizable panel state
+  const [panelSize, setPanelSize] = useState({ width: 420, height: 580 });
   const [isResizing, setIsResizing] = useState(false);
-  const isResizingRef = useRef(false);
   const resizeRef = useRef({ startX: 0, startY: 0, startW: 0, startH: 0, edge: '' });
-  const resizeRafRef = useRef(null);
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -165,37 +188,27 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
       startH: panelSize.height,
       edge,
     };
-    isResizingRef.current = true;
     setIsResizing(true);
   }, [panelSize]);
 
   useEffect(() => {
+    if (!isResizing) return;
+
     const handleResizeMove = (e) => {
-      if (!isResizingRef.current) return;
-      if (resizeRafRef.current) cancelAnimationFrame(resizeRafRef.current);
-      resizeRafRef.current = requestAnimationFrame(() => {
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        const dx = resizeRef.current.startX - clientX;
-        const dy = resizeRef.current.startY - clientY;
-        const { edge, startW, startH } = resizeRef.current;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const dx = resizeRef.current.startX - clientX;
+      const dy = resizeRef.current.startY - clientY;
+      const { edge, startW, startH } = resizeRef.current;
 
-        let newW = startW, newH = startH;
-        if (edge.includes('left')) newW = Math.max(320, Math.min(800, startW + dx));
-        if (edge.includes('top')) newH = Math.max(350, Math.min(900, startH + dy));
+      let newW = startW, newH = startH;
+      if (edge.includes('left'))  newW = Math.max(320, Math.min(800, startW + dx));
+      if (edge.includes('top'))   newH = Math.max(350, Math.min(900, startH + dy));
 
-        setPanelSize({ width: newW, height: newH });
-      });
+      setPanelSize({ width: newW, height: newH });
     };
 
-    const handleResizeEnd = () => {
-      isResizingRef.current = false;
-      setIsResizing(false);
-      if (resizeRafRef.current) {
-        cancelAnimationFrame(resizeRafRef.current);
-        resizeRafRef.current = null;
-      }
-    };
+    const handleResizeEnd = () => setIsResizing(false);
 
     window.addEventListener('mousemove', handleResizeMove);
     window.addEventListener('mouseup', handleResizeEnd);
@@ -207,7 +220,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
       window.removeEventListener('touchmove', handleResizeMove);
       window.removeEventListener('touchend', handleResizeEnd);
     };
-  }, []);
+  }, [isResizing]);
 
   // Auto-resize textarea
   const handleTextareaChange = useCallback((e) => {
@@ -270,7 +283,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
         message,
         userId: userId || 'anonymous',
         sessionId,
-        agentType: 'GENERAL',
+        agentType,
         context: buildResumeContext(),
       });
 
@@ -296,7 +309,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
       const errorMsg = {
         id: Date.now() + 1,
         role: 'assistant',
-        content: error.response?.data?.message ||
+        content: error.response?.data?.message || 
           'Sorry, I encountered an error. Please make sure the backend server is running and try again.',
         timestamp: new Date().toISOString(),
         isError: true,
@@ -305,7 +318,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, isLoading, sessionId, userId, buildResumeContext]);
+  }, [inputValue, isLoading, sessionId, agentType, userId, buildResumeContext]);
 
   // Handle Enter key
   const handleKeyDown = useCallback((e) => {
@@ -314,6 +327,14 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
       sendMessage();
     }
   }, [sendMessage]);
+
+  // Switch agent mode
+  const switchMode = useCallback((mode) => {
+    setAgentType(mode);
+    // Clear conversation when switching modes
+    setMessages([]);
+    setSessionId(null);
+  }, []);
 
   // Handle quick action
   const handleQuickAction = useCallback((action) => {
@@ -328,19 +349,31 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
 
   // Render welcome screen when no messages
   const renderWelcome = () => {
+    const currentMode = AGENT_MODES.find(m => m.key === agentType);
+    const actions = QUICK_ACTIONS[agentType] || [];
+
     return (
       <div className="agent-welcome">
-        <div className="agent-welcome-icon">🤖</div>
+        <div className="agent-welcome-icon">{currentMode?.icon || '🤖'}</div>
         <h4>Resume AI Agent</h4>
-        <p>I can help you improve your resume, write impactful bullet points, analyze job matches, and generate content!</p>
+        <p>
+          {agentType === 'GENERAL' && 'I can help you improve your resume, write better content, and prepare for your job search.'}
+          {agentType === 'BULLET_IMPROVER' && 'Paste your bullet points and I\'ll make them more impactful using proven techniques.'}
+          {agentType === 'JOB_MATCHER' && 'Share a job description and I\'ll analyze how well your resume matches.'}
+          {agentType === 'CONTENT_GENERATOR' && 'Tell me about your role and I\'ll generate professional resume content.'}
+        </p>
         <div className="agent-quick-actions">
-          {QUICK_ACTIONS.map((action, i) => (
+          {actions.map((action, i) => (
             <button
               key={i}
               className="agent-quick-btn"
               onClick={() => handleQuickAction(action)}
             >
-              <span className="qb-icon">
+              <span className="qb-icon" style={{
+                background: i === 0 ? 'rgba(99,102,241,0.1)' :
+                             i === 1 ? 'rgba(168,85,247,0.1)' :
+                                       'rgba(34,197,94,0.1)'
+              }}>
                 {action.icon}
               </span>
               <span className="qb-text">
@@ -394,11 +427,11 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
             {Object.entries(data.categoryScores).map(([key, val]) => {
               const safeVal = typeof val === 'number' ? `${val}%`
                 : typeof val === 'string' ? val
-                  : val && typeof val === 'object'
-                    ? (val.before != null && val.after != null ? `${val.before} → ${val.after}`
-                      : val.score != null ? `${val.score}%`
-                        : JSON.stringify(val))
-                    : String(val ?? '');
+                : val && typeof val === 'object'
+                  ? (val.before != null && val.after != null ? `${val.before} → ${val.after}`
+                    : val.score != null ? `${val.score}%`
+                    : JSON.stringify(val))
+                  : String(val ?? '');
               return (
                 <div key={key} className="agent-score-cat">
                   <span className="cat-label">{key}</span>
@@ -458,7 +491,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
     // Ensure content is always a string — backend may send an object
     const safeContent = typeof msg.content === 'string' ? msg.content
       : msg.content && typeof msg.content === 'object' ? JSON.stringify(msg.content)
-        : String(msg.content ?? '');
+      : String(msg.content ?? '');
 
     return (
       <div key={msg.id} className={`agent-message ${msg.role}`}>
@@ -488,146 +521,81 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
     );
   };
 
+  // Settings panel UI
   const renderSettingsPanel = () => {
-    if (prefLoading) return (
-      <div className="agent-settings-panel loading">
-        <div className="agent-typing-dots">
-          <span /><span /><span />
-        </div>
-        <p>Loading preferences...</p>
-      </div>
-    );
-    if (prefError) return (
-      <div className="agent-settings-panel error">
-        <span className="error-icon">⚠️</span>
-        <p>{prefError}</p>
-        <button className="settings-btn-primary" onClick={() => loadUserPreferences(userId)}>Retry</button>
-      </div>
-    );
+    if (prefLoading) return <div className="agent-settings-panel">Loading preferences...</div>;
+    if (prefError) return <div className="agent-settings-panel">{prefError}</div>;
     if (!preferences) return null;
-
     return (
       <div className="agent-settings-panel">
-        <div className="settings-header">
-          <h3>
-            <span className="settings-icon">🛠️</span>
-            AGENT_PREFS
-          </h3>
-          <p>Customize how the AI assists you.</p>
-        </div>
-
-        <form className="settings-form" onSubmit={e => { e.preventDefault(); handleSavePreferences(Object.fromEntries(new FormData(e.target))); }}>
-          <div className="settings-grid">
-            {/* Tone & Verbosity */}
-            <div className="settings-group">
-              <label>
-                <span className="label-text">Speaking Tone</span>
-                <select className="settings-input" name="tone" defaultValue={preferences.tone || ''}>
-                  <option value="">(Agent Default)</option>
-                  <option value="professional">Professional</option>
-                  <option value="formal">Formal</option>
-                  <option value="casual">Casual</option>
-                  <option value="creative">Creative</option>
-                  <option value="technical">Technical</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="settings-group">
-              <label>
-                <span className="label-text">Response Length</span>
-                <select className="settings-input" name="verbosity" defaultValue={preferences.verbosity || ''}>
-                  <option value="">(Agent Default)</option>
-                  <option value="concise">Concise</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="detailed">Detailed</option>
-                </select>
-              </label>
-            </div>
-
-            {/* Target Role & Industry */}
-            <div className="settings-group">
-              <label>
-                <span className="label-text">Target Role</span>
-                <input className="settings-input" name="targetRole" defaultValue={preferences.targetRole || ''} placeholder="e.g. Frontend Engineer" />
-              </label>
-            </div>
-
-            <div className="settings-group">
-              <label>
-                <span className="label-text">Target Industry</span>
-                <input className="settings-input" name="targetIndustry" defaultValue={preferences.targetIndustry || ''} placeholder="e.g. Fintech, Healthcare" />
-              </label>
-            </div>
-
-            {/* Experience & Template */}
-            <div className="settings-group">
-              <label>
-                <span className="label-text">Experience Level</span>
-                <select className="settings-input" name="experienceLevel" defaultValue={preferences.experienceLevel || ''}>
-                  <option value="">(Agent Default)</option>
-                  <option value="entry">Entry-Level</option>
-                  <option value="mid">Mid-Level</option>
-                  <option value="senior">Senior</option>
-                  <option value="executive">Executive</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="settings-group">
-              <label>
-                <span className="label-text">Preferred Template</span>
-                <select className="settings-input" name="preferredTemplate" defaultValue={preferences.preferredTemplate || ''}>
-                  <option value="">(Agent Default)</option>
-                  <option value="professional">Professional</option>
-                  <option value="modern">Modern</option>
-                  <option value="creative">Creative</option>
-                  <option value="ats">ATS Optimized</option>
-                </select>
-              </label>
-            </div>
-          </div>
-
-          {/* Additional Notes */}
-          <div className="settings-group full-width">
-            <label>
-              <span className="label-text">Target Companies</span>
-              <input className="settings-input" name="targetCompanies" defaultValue={preferences.targetCompanies || ''} placeholder="e.g. Google, Meta, Stripe" />
-            </label>
-          </div>
-
-          <div className="settings-group full-width">
-            <label>
-              <span className="label-text">Custom Instructions</span>
-              <textarea className="settings-input settings-textarea" name="customNotes" defaultValue={preferences.customNotes || ''} placeholder="Any specific rules the AI should always follow..." rows={2} />
-            </label>
-          </div>
-
-          {/* Toggles */}
-          <div className="settings-toggles">
-            <label className="settings-toggle">
-              <input type="checkbox" name="preferActionVerbs" defaultChecked={preferences.preferActionVerbs} />
-              <span className="toggle-slider"></span>
-              <span className="toggle-text">Prefer Action Verbs</span>
-            </label>
-            <label className="settings-toggle">
-              <input type="checkbox" name="preferMetrics" defaultChecked={preferences.preferMetrics} />
-              <span className="toggle-slider"></span>
-              <span className="toggle-text">Prefer Metrics</span>
-            </label>
-            <label className="settings-toggle">
-              <input type="checkbox" name="atsOptimized" defaultChecked={preferences.atsOptimized} />
-              <span className="toggle-slider"></span>
-              <span className="toggle-text">Strict ATS Mode</span>
-            </label>
-          </div>
-
-          {/* Footer Actions */}
-          <div className="settings-actions">
-            <button type="button" className="settings-btn-secondary" onClick={() => setShowSettings(false)}>Cancel</button>
-            <button type="submit" className="settings-btn-primary" disabled={prefSaving}>
-              {prefSaving ? 'Saving...' : 'Save Preferences'}
-            </button>
+        <h3>User Preferences</h3>
+        <form onSubmit={e => { e.preventDefault(); handleSavePreferences(Object.fromEntries(new FormData(e.target))); }}>
+          <label>Writing Tone:
+            <select name="tone" defaultValue={preferences.tone || ''}>
+              <option value="">(default)</option>
+              <option value="professional">Professional</option>
+              <option value="formal">Formal</option>
+              <option value="casual">Casual</option>
+              <option value="creative">Creative</option>
+              <option value="technical">Technical</option>
+            </select>
+          </label>
+          <label>Verbosity:
+            <select name="verbosity" defaultValue={preferences.verbosity || ''}>
+              <option value="">(default)</option>
+              <option value="concise">Concise</option>
+              <option value="moderate">Moderate</option>
+              <option value="detailed">Detailed</option>
+            </select>
+          </label>
+          <label>Target Role:
+            <input name="targetRole" defaultValue={preferences.targetRole || ''} placeholder="e.g. Software Engineer" />
+          </label>
+          <label>Target Industry:
+            <input name="targetIndustry" defaultValue={preferences.targetIndustry || ''} placeholder="e.g. Tech, Finance" />
+          </label>
+          <label>Experience Level:
+            <select name="experienceLevel" defaultValue={preferences.experienceLevel || ''}>
+              <option value="">(default)</option>
+              <option value="entry">Entry</option>
+              <option value="mid">Mid</option>
+              <option value="senior">Senior</option>
+              <option value="executive">Executive</option>
+            </select>
+          </label>
+          <label>Preferred Template:
+            <select name="preferredTemplate" defaultValue={preferences.preferredTemplate || ''}>
+              <option value="">(default)</option>
+              <option value="professional">Professional</option>
+              <option value="modern">Modern</option>
+              <option value="creative">Creative</option>
+              <option value="ats">ATS</option>
+            </select>
+          </label>
+          <label>Max Pages:
+            <select name="maxPages" defaultValue={preferences.maxPages || 1}>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+            </select>
+          </label>
+          <label>
+            <input type="checkbox" name="preferActionVerbs" defaultChecked={preferences.preferActionVerbs} /> Prefer action verbs
+          </label>
+          <label>
+            <input type="checkbox" name="preferMetrics" defaultChecked={preferences.preferMetrics} /> Prefer metrics
+          </label>
+          <label>
+            <input type="checkbox" name="atsOptimized" defaultChecked={preferences.atsOptimized} /> ATS optimized
+          </label>
+          <label>Target Companies:
+            <input name="targetCompanies" defaultValue={preferences.targetCompanies || ''} placeholder="e.g. Google, Meta" />
+          </label>
+          <label>Custom Notes:
+            <textarea name="customNotes" defaultValue={preferences.customNotes || ''} placeholder="Any extra info for the agent..." />
+          </label>
+          <div style={{ marginTop: 16 }}>
+            <button type="submit" disabled={prefSaving}>Save</button>
+            <button type="button" onClick={() => setShowSettings(false)} style={{ marginLeft: 8 }}>Cancel</button>
           </div>
         </form>
       </div>
@@ -672,8 +640,8 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
           }}
         >
           {/* Resize handles */}
-          <div className="agent-resize-handle top" onMouseDown={(e) => handleResizeStart('top', e)} onTouchStart={(e) => handleResizeStart('top', e)} />
-          <div className="agent-resize-handle left" onMouseDown={(e) => handleResizeStart('left', e)} onTouchStart={(e) => handleResizeStart('left', e)} />
+          <div className="agent-resize-handle top"    onMouseDown={(e) => handleResizeStart('top', e)} onTouchStart={(e) => handleResizeStart('top', e)} />
+          <div className="agent-resize-handle left"   onMouseDown={(e) => handleResizeStart('left', e)} onTouchStart={(e) => handleResizeStart('left', e)} />
           <div className="agent-resize-handle corner" onMouseDown={(e) => handleResizeStart('top-left', e)} onTouchStart={(e) => handleResizeStart('top-left', e)} />
           {/* Header */}
           <div className="agent-chat-header">
@@ -717,7 +685,20 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
             </div>
           </div>
 
-
+          {/* Mode Tabs */}
+          <div className="agent-mode-tabs">
+            {AGENT_MODES.map(mode => (
+              <button
+                key={mode.key}
+                className={`agent-mode-tab ${agentType === mode.key ? 'active' : ''}`}
+                onClick={() => switchMode(mode.key)}
+                title={mode.desc}
+              >
+                <span className="tab-icon">{mode.icon}</span>
+                {mode.label}
+              </button>
+            ))}
+          </div>
 
           {/* Messages */}
           <div className="agent-messages">
@@ -731,7 +712,12 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
                     <div className="agent-typing-dots">
                       <span /><span /><span />
                     </div>
-                    <span className="agent-typing-text">Thinking...</span>
+                    <span className="agent-typing-text">
+                      {agentType === 'BULLET_IMPROVER' ? 'Improving your content...' :
+                       agentType === 'JOB_MATCHER' ? 'Analyzing match...' :
+                       agentType === 'CONTENT_GENERATOR' ? 'Generating content...' :
+                       'Thinking...'}
+                    </span>
                   </div>
                 )}
               </>
@@ -747,7 +733,12 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
                 value={inputValue}
                 onChange={handleTextareaChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask me to rewrite a bullet point, generate a cover letter, or explain your ATS score..."
+                placeholder={
+                  agentType === 'BULLET_IMPROVER' ? 'Paste a bullet point to improve...' :
+                  agentType === 'JOB_MATCHER' ? 'Paste a job description to match...' :
+                  agentType === 'CONTENT_GENERATOR' ? 'Describe what content you need...' :
+                  'Ask me anything about your resume...'
+                }
                 rows={1}
                 disabled={isLoading}
               />

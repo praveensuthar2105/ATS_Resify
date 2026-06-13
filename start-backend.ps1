@@ -7,21 +7,6 @@ if ($processId) {
     Start-Sleep -Seconds 2
 }
 
-# Load .env file if it exists in the current directory
-$envFile = Join-Path (Get-Location) ".env"
-if (Test-Path $envFile) {
-    Write-Host "Loading environment variables from .env file..." -ForegroundColor Cyan
-    Get-Content $envFile | ForEach-Object {
-        $line = $_.Trim()
-        if ($line -and -not $line.StartsWith("#") -and $line.Contains("=")) {
-            $key, $value = $line.Split("=", 2)
-            $key = $key.Trim()
-            $value = $value.Trim()
-            $env:$key = $value
-        }
-    }
-}
-
 # Set environment variables (use your own values or set them in your environment)
 # IMPORTANT: Do NOT commit real secrets to version control.
 # Set these in your system environment or create a .env file that is gitignored.
@@ -47,9 +32,6 @@ if (-not $env:DB_URL) { $env:DB_URL='jdbc:mysql://localhost:3306/resume_builder_
 if (-not $env:DB_USERNAME) { $env:DB_USERNAME='root' }
 if (-not $env:DB_PASSWORD) { Write-Host "WARNING: DB_PASSWORD not set. Set it in your environment." -ForegroundColor Yellow }
 if (-not $env:JAVA_HOME) { $env:JAVA_HOME='C:\Program Files\Java\jdk-22' }
-
-# Configure Java to allow IPv6/dual-stack connectivity
-$env:JAVA_TOOL_OPTIONS = "-Djava.net.preferIPv4Stack=false"
 
 # Change to Backend directory
 Set-Location "R:\Java project\Resume_Builder\AI_Resume_Builder_Backend\Backend"

@@ -72,10 +72,3 @@ temp/
 out/
 bin/
 *.bak
-
-.env
-
-.env
-
-*.pdf
-*.txt

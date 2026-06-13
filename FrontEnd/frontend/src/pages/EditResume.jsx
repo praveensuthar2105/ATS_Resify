@@ -1,75 +1,23 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Snackbar, Alert } from '@mui/material';
 import AgentChat from '../components/AgentChat';
 import { decodeToken, getAuthToken } from '../utils/auth';
-import { API_BASE_URL } from '../services/api';
-import { parseLatexToResumeData } from '../utils/latexParser';
-import SEO from '../components/SEO';
-import { Helmet } from 'react-helmet-async';
-import SectionHeader from '../components/SectionHeader';
-import FeedbackPopup from '../components/FeedbackPopup';
+import './EditResume.css';
 
-const FormItem = ({ label, value, onChange, placeholder, type = "text", colspan = 1 }) => (
-  <div className={`flex flex-col gap-1.5 ${colspan > 1 ? `col-span-${colspan} sm:col-span-${colspan}` : ''}`}>
-    <label className="text-[11px] font-bold uppercase tracking-widest text-gray-600 font-sans">{label}</label>
-    {type === "textarea" ? (
-      <textarea
-        value={value} onChange={onChange} placeholder={placeholder} rows={4}
-        className="border-2 border-gray-300 bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[3px_3px_0px_0px_#39ff14] p-3 text-sm font-sans transition-all rounded-none resize-y"
-      />
-    ) : (
-      <input
-        type={type} value={value} onChange={onChange} placeholder={placeholder}
-        className="border-2 border-gray-300 bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[3px_3px_0px_0px_#39ff14] p-3 text-sm font-sans transition-all h-11 rounded-none"
-      />
-    )}
-  </div>
-);
-
-const SectionCard = ({ icon, title, subtitle, children, buttonText, onAdd }) => (
-  <div className="border-2 border-gray-200 bg-white mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.08)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.12)] transition-shadow">
-    <div className="border-b-2 border-gray-200 p-4 flex items-center gap-3 bg-gray-50">
-      <div className="w-10 h-10 border-2 border-black bg-black text-[#39ff14] flex items-center justify-center">
-        <span className="material-symbols-outlined text-xl">{icon}</span>
-      </div>
-      <div>
-        <h3 className="text-lg font-black uppercase tracking-tight font-mono">{title}</h3>
-        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest font-sans">{subtitle}</p>
-      </div>
-    </div>
-    <div className="p-5">
-      {children}
-      {buttonText && (
-        <button onClick={onAdd} className="mt-4 w-full py-3 border-2 border-dashed border-gray-300 font-bold uppercase hover:bg-[#39ff14] hover:border-solid hover:border-black transition-all text-xs flex items-center justify-center gap-2 font-sans text-gray-500 hover:text-black">
-          <span className="material-symbols-outlined text-lg">add</span> {buttonText}
-        </button>
-      )}
-    </div>
-  </div>
-);
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api';
 
 const EditResume = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [loading, setLoading] = useState(true);
-  const [showFeedback, setShowFeedback] = useState(false);
-
-  useEffect(() => {
-    if (location.state?.triggerFeedback) {
-      setShowFeedback(true);
-      // Clean up navigation state
-      navigate(location.pathname, { replace: true, state: {} });
-    }
-  }, [location, navigate]);
-
   const [saving, setSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
+  // Edit mode: 'form' or 'latex'
   const [editMode, setEditMode] = useState('form');
   const [snack, setSnack] = useState({ open: false, type: 'success', text: '' });
   const [zoom, setZoom] = useState(100);
   const saveTimer = useRef(null);
-  const syncTimer = useRef(null);
-
+  
   // LaTeX & PDF state
   const [latexCode, setLatexCode] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
@@ -79,75 +27,63 @@ const EditResume = () => {
   const [autoCompile, setAutoCompile] = useState(true);
   const [useOnlineCompiler, setUseOnlineCompiler] = useState(false);
   const autoCompileTimer = useRef(null);
-
-  // Resizer state — use ref for the dragging flag so mousemove reads it instantly
-  const [leftWidth, setLeftWidth] = useState(50);
-  const isResizingRef = useRef(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const rafRef = useRef(null);
-
-  const startResizing = useCallback(() => {
-    isResizingRef.current = true;
-    setIsResizing(true);
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  }, []);
-
-  const stopResizing = useCallback(() => {
-    isResizingRef.current = false;
-    setIsResizing(false);
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-  }, []);
-
-  const resize = useCallback((e) => {
-    if (!isResizingRef.current) return;
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      const newWidth = (e.clientX / window.innerWidth) * 100;
-      if (newWidth > 25 && newWidth < 75) {
-        setLeftWidth(newWidth);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    // Always attach listeners — the ref guard inside resize() is instant
-    window.addEventListener('mousemove', resize);
-    window.addEventListener('mouseup', stopResizing);
-    return () => {
-      window.removeEventListener('mousemove', resize);
-      window.removeEventListener('mouseup', stopResizing);
-    };
-  }, [resize, stopResizing]);
+  
+  // Monaco editor state
+  const [monacoAvailable, setMonacoAvailable] = useState(false);
+  const [MonacoEditor, setMonacoEditor] = useState(null);
+  const editorRef = useRef(null);
 
   const [formData, setFormData] = useState({
-    fullName: '', email: '', phoneNumber: '', location: '', linkedIn: '', gitHub: '', summary: '',
-    skills: [], experience: [], education: [], projects: [], certifications: [], achievements: [], languages: [], interests: [],
+    fullName: '',
+    email: '',
+    phoneNumber: '',
+    location: '',
+    linkedIn: '',
+    gitHub: '',
+    portfolio: '',
+    summary: '',
+    skills: [],
+    experience: [],
+    education: [],
+    projects: [],
+    certifications: [],
+    achievements: [],
+    languages: [],
+    interests: [],
   });
 
   const [resumeData, setResumeData] = useState(null);
 
+  // Normalize skills from any format into a consistent array
+  // Backend may send: { languages: [...], frameworks: [...], ... } (categorized object)
+  // Or: [{ title, level }] (array) or ['skill1', 'skill2'] (string array)
   const normalizeSkills = (skills) => {
     if (!skills) return [];
+    
+    // Already an array - return as-is
     if (Array.isArray(skills)) return skills;
+    
+    // Categorized object format: { languages: [...], frameworks: [...], tools: [...], ... }
     if (typeof skills === 'object') {
       const result = [];
       Object.entries(skills).forEach(([category, items]) => {
         if (Array.isArray(items) && items.length > 0) {
+          // Create one entry per category with items joined
           const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-          result.push({ title: categoryName, level: 'Intermediate', items: items });
+          result.push({
+            title: categoryName,
+            level: 'Intermediate',
+            items: items,
+          });
         }
       });
       return result;
     }
+    
     return [];
   };
 
+  // Escape special LaTeX characters
   const escapeLatex = (str) => {
     if (!str) return '';
     const BACKSLASH_PLACEHOLDER = '\x00BACKSLASH\x00';
@@ -165,37 +101,33 @@ const EditResume = () => {
       .replace(new RegExp(BACKSLASH_PLACEHOLDER, 'g'), '\\textbackslash{}');
   };
 
+  // Generate LaTeX from resume data
   const generateLatexFromData = useCallback((data) => {
     const pi = data?.personalInformation || {};
     const name = escapeLatex(pi.fullName || 'Your Name');
     const email = escapeLatex(pi.email || 'email@example.com');
     const phone = escapeLatex(pi.phoneNumber || '+1 234 567 8900');
     const location = escapeLatex(pi.location || '');
-
-    // Ensure URL has https:// so \href produces a working hyperlink in the PDF.
-    // The form blur already normalizes to a full URL; this is just a safety net.
-    const ensureHttps = (url) => {
-      if (!url) return '';
-      const u = url.trim();
-      if (!u) return '';
-      return /^https?:\/\//i.test(u) ? u : `https://${u}`;
-    };
-
-    const linkedin = pi.linkedIn ? escapeLatex(ensureHttps(pi.linkedIn)) : '';
-    const github = pi.gitHub ? escapeLatex(ensureHttps(pi.gitHub)) : '';
+    const linkedin = pi.linkedIn ? escapeLatex(pi.linkedIn) : '';
+    const github = pi.gitHub ? escapeLatex(pi.gitHub) : '';
+    const portfolio = pi.portfolio ? escapeLatex(pi.portfolio) : '';
+    
     let contactParts = [];
     if (phone) contactParts.push(phone);
     if (email) contactParts.push(email);
     if (linkedin) contactParts.push(`\\href{${linkedin}}{LinkedIn}`);
     if (github) contactParts.push(`\\href{${github}}{GitHub}`);
+    if (portfolio) contactParts.push(`\\href{${portfolio}}{Portfolio}`);
     if (location) contactParts.push(location);
     const contactLine = contactParts.length > 0 ? contactParts.join(' $|$ ') : '';
 
+    // Summary section
     let summarySection = '';
     if (data?.summary && data.summary.trim()) {
       summarySection = `\\section*{Summary}\n${escapeLatex(data.summary)}`;
     }
 
+    // Education section
     let educationSection = '';
     if (data?.education && data.education.length > 0) {
       const eduItems = data.education.map(edu => {
@@ -208,7 +140,8 @@ const EditResume = () => {
       }).filter(Boolean).join('\n\n');
       if (eduItems) educationSection = `\\section*{Education}\n${eduItems}`;
     }
-
+    
+    // Experience section
     let experienceSection = '';
     if (data?.experience && data.experience.length > 0) {
       const expItems = data.experience.map(exp => {
@@ -217,10 +150,14 @@ const EditResume = () => {
         const title = escapeLatex(exp.jobTitle || exp.title || '');
         const duration = escapeLatex(exp.duration || '');
         if (!company && !title) return null;
-
+        
         let bullets = '';
         if (exp.responsibility) {
-          const respList = exp.responsibility.split(/\n+/).map(r => r.replace(/^[•\-\*]\s*/, '').trim()).filter(r => r.length > 5);
+          // Split on newlines, or bullet points (• or - at start of line)
+          const respList = exp.responsibility
+            .split(/\n+/)
+            .map(r => r.replace(/^[•\-\*]\s*/, '').trim())
+            .filter(r => r.length > 5);
           if (respList.length > 0) {
             bullets = `\\begin{itemize}\n${respList.map(r => `\\item ${escapeLatex(r)}`).join('\n')}\n\\end{itemize}`;
           }
@@ -229,19 +166,27 @@ const EditResume = () => {
       }).filter(Boolean).join('\n\n');
       if (expItems) experienceSection = `\\section*{Experience}\n${expItems}`;
     }
-
+    
+    // Projects section - limit to 3 bullet points per project
     let projectsSection = '';
     if (data?.projects && data.projects.length > 0) {
       const projItems = data.projects.map(proj => {
         const title = escapeLatex(proj.title || '');
         if (!title) return null;
-        const tech = proj.technologiesUsed ? escapeLatex(Array.isArray(proj.technologiesUsed) ? proj.technologiesUsed.join(', ') : proj.technologiesUsed) : '';
+        const tech = proj.technologiesUsed 
+          ? escapeLatex(Array.isArray(proj.technologiesUsed) ? proj.technologiesUsed.join(', ') : proj.technologiesUsed)
+          : '';
         let headerLine = `\\textbf{${title}}`;
         if (tech) headerLine += ` $|$ \\textit{${tech}}`;
-
+        
         let bullets = '';
         if (proj.description) {
-          const descList = proj.description.split(/\n+/).map(d => d.replace(/^[•\-\*]\s*/, '').trim()).filter(d => d.length > 5);
+          // Split on newlines, then remove leading bullet markers (• or - or *)
+          const descList = proj.description
+            .split(/\n+/)
+            .map(d => d.replace(/^[•\-\*]\s*/, '').trim())
+            .filter(d => d.length > 5);
+          // Limit to maximum 3 bullet points
           const limitedDescList = descList.slice(0, 3);
           if (limitedDescList.length > 0) {
             bullets = `\\begin{itemize}\n${limitedDescList.map(d => `\\item ${escapeLatex(d)}`).join('\n')}\n\\end{itemize}`;
@@ -251,7 +196,8 @@ const EditResume = () => {
       }).filter(Boolean).join('\n\n');
       if (projItems) projectsSection = `\\section*{Projects}\n${projItems}`;
     }
-
+    
+    // Skills section
     let skillsSection = '';
     const normalizedSkills = normalizeSkills(data?.skills);
     if (normalizedSkills.length > 0) {
@@ -267,6 +213,7 @@ const EditResume = () => {
         } else if (s.items && typeof s.items === 'string') {
           items = escapeLatex(s.items);
         }
+        // Skip if no actual skill items
         if (!items) return null;
         return `\\textbf{${category}:} ${items}`;
       }).filter(Boolean);
@@ -275,6 +222,7 @@ const EditResume = () => {
       }
     }
 
+    // Certifications section
     let certificationsSection = '';
     if (data?.certifications && data.certifications.length > 0) {
       const certItems = data.certifications.map(cert => {
@@ -287,6 +235,7 @@ const EditResume = () => {
       if (certItems) certificationsSection = `\\section*{Certifications}\n\\begin{itemize}\n${certItems}\n\\end{itemize}`;
     }
 
+    // Achievements section
     let achievementsSection = '';
     if (data?.achievements && data.achievements.length > 0) {
       const achItems = data.achievements.map(ach => {
@@ -298,7 +247,16 @@ const EditResume = () => {
       if (achItems) achievementsSection = `\\section*{Achievements}\n\\begin{itemize}\n${achItems}\n\\end{itemize}`;
     }
 
-    const sections = [summarySection, educationSection, experienceSection, projectsSection, skillsSection, certificationsSection, achievementsSection].filter(Boolean).join('\n\n');
+    // Build document sections in order
+    const sections = [
+      summarySection,
+      educationSection,
+      experienceSection,
+      projectsSection,
+      skillsSection,
+      certificationsSection,
+      achievementsSection
+    ].filter(Boolean).join('\n\n');
 
     return `\\documentclass[10pt,letterpaper]{article}
 
@@ -331,24 +289,22 @@ ${sections}
 \\end{document}`;
   }, []);
 
+  // Compile LaTeX to PDF (local backend)
   const compileLocal = useCallback(async (latex) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
-
+    
     try {
       const resp = await fetch(`${API_BASE_URL}/latex/compile`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         signal: controller.signal,
         body: JSON.stringify({ latexCode: latex })
       });
-
+      
       clearTimeout(timeoutId);
-
+      
       if (resp.ok) {
         const contentType = resp.headers.get('content-type');
         if (contentType && contentType.includes('application/pdf')) {
@@ -370,10 +326,11 @@ ${sections}
     }
   }, []);
 
+  // Compile LaTeX to PDF (online fallback)
   const compileOnline = useCallback(async (latex) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
-
+    
     try {
       const resp = await fetch('https://latex.ytotech.com/builds/sync', {
         method: 'POST',
@@ -384,9 +341,9 @@ ${sections}
           resources: [{ main: true, content: latex }]
         })
       });
-
+      
       clearTimeout(timeoutId);
-
+      
       if (resp.ok) {
         const blob = await resp.blob();
         if (blob.type === 'application/pdf') {
@@ -407,12 +364,14 @@ ${sections}
     }
   }, []);
 
+  // Main compile function - tries local first, auto-fallback to online on failure
   const compileToPdf = useCallback(async (latex) => {
     if (!latex) return;
     setCompiling(true);
     setCompileError(null);
-
+    
     try {
+      // Try local compiler first
       const blob = await compileLocal(latex);
       setPdfBlob(blob);
       setPdfUrl(prev => {
@@ -422,6 +381,8 @@ ${sections}
       setUseOnlineCompiler(false);
     } catch (localError) {
       console.warn('Local compile failed, trying online:', localError.message);
+      
+      // Auto-fallback to online compiler
       try {
         const blob = await compileOnline(latex);
         setPdfBlob(blob);
@@ -440,17 +401,36 @@ ${sections}
     }
   }, [compileLocal, compileOnline]);
 
+  // Load Monaco editor dynamically
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const mod = await import('@monaco-editor/react');
+        if (!cancelled) {
+          setMonacoEditor(() => mod.default || mod.Editor);
+          setMonacoAvailable(true);
+        }
+      } catch (err) {
+        console.warn('Monaco not available:', err);
+        setMonacoAvailable(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Load resume data from localStorage
   useEffect(() => {
     const storedResume = localStorage.getItem('generatedResume');
-
+    
     if (storedResume) {
       try {
         let data = storedResume;
         if (typeof data === 'string') {
-          try { data = JSON.parse(data); } catch { }
+          try { data = JSON.parse(data); } catch {}
         }
         if (typeof data === 'string') {
-          try { data = JSON.parse(data); } catch { }
+          try { data = JSON.parse(data); } catch {}
         }
 
         const likelyKeys = ['personalInformation', 'summary', 'skills', 'experience'];
@@ -469,14 +449,16 @@ ${sections}
         }
 
         setResumeData(data);
-
+        
         const formProjects = (data.projects || []).map(project => ({
           title: project.title || '',
           description: project.description || '',
-          technologiesUsed: Array.isArray(project.technologiesUsed) ? project.technologiesUsed.join(', ') : (project.technologiesUsed || ''),
+          technologiesUsed: Array.isArray(project.technologiesUsed) 
+            ? project.technologiesUsed.join(', ') 
+            : (project.technologiesUsed || ''),
           githubLink: project.githubLink || ''
         }));
-
+        
         const pi = data.personalInformation || data.personalInfo || {};
         const skillsRaw = normalizeSkills(data.skills);
         const expRaw = Array.isArray(data.experience) ? data.experience : [];
@@ -493,11 +475,16 @@ ${sections}
           location: pi.location || '',
           linkedIn: pi.linkedIn || pi.linkedin || '',
           gitHub: pi.gitHub || pi.github || '',
+          portfolio: pi.portfolio || '',
           summary: data.summary || '',
           skills: skillsRaw.map(skill => (
             typeof skill === 'string'
               ? { title: 'Skills', level: 'Intermediate', items: [skill] }
-              : { title: skill.title || skill.category || '', level: skill.level || 'Intermediate', items: skill.items || null }
+              : { 
+                  title: skill.title || skill.category || '', 
+                  level: skill.level || 'Intermediate',
+                  items: skill.items || null,
+                }
           )),
           experience: expRaw.map(exp => ({
             jobTitle: exp.jobTitle || exp.title || '',
@@ -522,10 +509,16 @@ ${sections}
             title: ach.title || '',
             year: ach.year || ''
           })),
-          languages: langRaw.map(lang => ({ name: typeof lang === 'string' ? lang : (lang.name || '') })),
-          interests: interestsRaw.map(int => (typeof int === 'string' ? { name: int } : { name: int.name || int.title || '' })),
+          languages: langRaw.map(lang => ({
+            name: typeof lang === 'string' ? lang : (lang.name || '')
+          })),
+          interests: interestsRaw.map(int => (
+            typeof int === 'string'
+              ? { name: int }
+              : { name: int.name || int.title || '' }
+          )),
         });
-
+        
         setLoading(false);
       } catch (error) {
         console.error('Error parsing resume data:', error);
@@ -540,19 +533,35 @@ ${sections}
     }
   }, [navigate]);
 
+  // Generate LaTeX when resumeData changes and compile to PDF
   useEffect(() => {
     if (!resumeData) return;
-    if (editMode === 'latex') return;
-
     const latex = generateLatexFromData(resumeData);
     setLatexCode(latex);
-
+    
+    // Auto-compile if enabled
     if (autoCompile && latex) {
       if (autoCompileTimer.current) clearTimeout(autoCompileTimer.current);
-      autoCompileTimer.current = setTimeout(() => compileToPdf(latex), 1000);
+      autoCompileTimer.current = setTimeout(() => {
+        compileToPdf(latex);
+      }, 1000);
     }
-  }, [resumeData, editMode, autoCompile, compileToPdf, generateLatexFromData]);
+  }, [resumeData, generateLatexFromData, autoCompile, compileToPdf]);
 
+  // Handle LaTeX code changes (when in latex edit mode)
+  const handleLatexChange = useCallback((value) => {
+    setLatexCode(value || '');
+    
+    // Auto-compile with debounce
+    if (autoCompile) {
+      if (autoCompileTimer.current) clearTimeout(autoCompileTimer.current);
+      autoCompileTimer.current = setTimeout(() => {
+        compileToPdf(value || '');
+      }, 2000);
+    }
+  }, [autoCompile, compileToPdf]);
+
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -561,50 +570,59 @@ ${sections}
     };
   }, [pdfUrl]);
 
-  useEffect(() => {
-    if (snack.open) {
-      const timer = setTimeout(() => {
-        setSnack(s => ({ ...s, open: false }));
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [snack.open]);
-
   const handleSave = () => {
     setSaving(true);
+    
     const savedProjects = formData.projects?.map(project => ({
       ...project,
-      technologiesUsed: typeof project.technologiesUsed === 'string'
+      technologiesUsed: typeof project.technologiesUsed === 'string' 
         ? project.technologiesUsed.split(',').map(tech => tech.trim()).filter(Boolean)
         : project.technologiesUsed
     })) || [];
-
+    
     const updatedResume = {
       personalInformation: {
-        fullName: formData.fullName, email: formData.email, phoneNumber: formData.phoneNumber,
-        location: formData.location, linkedIn: formData.linkedIn || null, gitHub: formData.gitHub || null,
+        fullName: formData.fullName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        location: formData.location,
+        linkedIn: formData.linkedIn || null,
+        gitHub: formData.gitHub || null,
+        portfolio: formData.portfolio || null,
       },
       summary: formData.summary,
-      skills: formData.skills?.map(s => ({ title: s.title || '', level: s.level || 'Intermediate', items: s.items || null })) || [],
+      skills: formData.skills?.map(s => ({
+        title: s.title || '',
+        level: s.level || 'Intermediate',
+        items: s.items || null,
+      })) || [],
       experience: formData.experience || [],
       education: formData.education || [],
       certifications: formData.certifications || [],
       projects: savedProjects,
       achievements: formData.achievements || [],
-      languages: formData.languages?.map((lang, index) => ({ id: index + 1, name: lang.name })) || [],
-      interests: formData.interests?.map((it, index) => ({ id: index + 1, name: it.name })) || [],
+      languages: formData.languages?.map((lang, index) => ({
+        id: index + 1,
+        name: lang.name
+      })) || [],
+      interests: formData.interests?.map((it, index) => ({
+        id: index + 1,
+        name: it.name
+      })) || [],
     };
-
+    
     setResumeData(updatedResume);
     localStorage.setItem('generatedResume', JSON.stringify(updatedResume));
     setLastSavedAt(new Date());
     setSaving(false);
-    setSnack({ open: true, type: 'success', text: 'SYSTEM: DATA PERSISTED' });
+    setSnack({ open: true, type: 'success', text: 'Resume saved!' });
   };
 
   const handleFieldChange = () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => handleSave(), 1000);
+    saveTimer.current = setTimeout(() => {
+      handleSave();
+    }, 1000);
   };
 
   const updateField = (field, value) => {
@@ -614,6 +632,7 @@ ${sections}
 
   const downloadPDF = async () => {
     if (pdfBlob) {
+      // Use the already compiled PDF
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
@@ -622,9 +641,10 @@ ${sections}
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      setSnack({ open: true, type: 'success', text: 'PDF COMPILATION DOWNLOADED' });
+      setSnack({ open: true, type: 'success', text: 'PDF downloaded!' });
     } else if (latexCode) {
-      setSnack({ open: true, type: 'info', text: 'INITIATING COMPILATION SEQUENCE...' });
+      // Compile first then download
+      setSnack({ open: true, type: 'info', text: 'Compiling PDF...' });
       try {
         const blob = useOnlineCompiler ? await compileOnline(latexCode) : await compileLocal(latexCode);
         setPdfBlob(blob);
@@ -632,7 +652,7 @@ ${sections}
           if (prev) URL.revokeObjectURL(prev);
           return URL.createObjectURL(blob);
         });
-
+        
         const downloadUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = downloadUrl;
@@ -641,18 +661,20 @@ ${sections}
         a.click();
         a.remove();
         URL.revokeObjectURL(downloadUrl);
-        setSnack({ open: true, type: 'success', text: 'PDF COMPILATION DOWNLOADED' });
+        setSnack({ open: true, type: 'success', text: 'PDF downloaded!' });
       } catch (error) {
-        setSnack({ open: true, type: 'error', text: 'PDF CREATION HALTED: ' + error.message });
+        console.error('PDF error:', error);
+        setSnack({ open: true, type: 'error', text: 'Failed to compile PDF: ' + error.message });
       }
     } else {
-      setSnack({ open: true, type: 'error', text: 'NO TARGET DATA. SAVE FIRST.' });
+      setSnack({ open: true, type: 'error', text: 'No resume data. Please save your changes first.' });
     }
   };
 
+  // Download LaTeX source file
   const downloadTex = () => {
     if (!latexCode) {
-      setSnack({ open: true, type: 'error', text: 'NO LaTeX SOURCE ACQUIRED.' });
+      setSnack({ open: true, type: 'error', text: 'No LaTeX code to download.' });
       return;
     }
     const blob = new Blob([latexCode], { type: 'text/x-tex' });
@@ -664,422 +686,724 @@ ${sections}
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    setSnack({ open: true, type: 'success', text: 'SOURCE TEX ACQUIRED' });
+    setSnack({ open: true, type: 'success', text: 'LaTeX file downloaded!' });
   };
 
+  // Manual compile trigger
   const handleManualCompile = () => {
-    if (latexCode) compileToPdf(latexCode);
+    if (latexCode) {
+      compileToPdf(latexCode);
+    }
   };
 
+  // Add/Remove handlers for repeater sections
   const addEducation = () => {
-    setFormData(prev => ({ ...prev, education: [...prev.education, { degree: '', university: '', location: '', graduationYear: '' }] }));
+    setFormData(prev => ({
+      ...prev,
+      education: [...prev.education, { degree: '', university: '', location: '', graduationYear: '' }]
+    }));
     handleFieldChange();
   };
+
   const removeEducation = (index) => {
-    setFormData(prev => ({ ...prev, education: prev.education.filter((_, i) => i !== index) }));
+    setFormData(prev => ({
+      ...prev,
+      education: prev.education.filter((_, i) => i !== index)
+    }));
     handleFieldChange();
   };
 
   const addProject = () => {
-    setFormData(prev => ({ ...prev, projects: [...prev.projects, { title: '', description: '', technologiesUsed: '', githubLink: '' }] }));
+    setFormData(prev => ({
+      ...prev,
+      projects: [...prev.projects, { title: '', description: '', technologiesUsed: '', githubLink: '' }]
+    }));
     handleFieldChange();
   };
+
   const removeProject = (index) => {
-    setFormData(prev => ({ ...prev, projects: prev.projects.filter((_, i) => i !== index) }));
+    setFormData(prev => ({
+      ...prev,
+      projects: prev.projects.filter((_, i) => i !== index)
+    }));
     handleFieldChange();
   };
 
   const addExperience = () => {
-    setFormData(prev => ({ ...prev, experience: [...prev.experience, { jobTitle: '', company: '', location: '', duration: '', responsibility: '' }] }));
+    setFormData(prev => ({
+      ...prev,
+      experience: [...prev.experience, { jobTitle: '', company: '', location: '', duration: '', responsibility: '' }]
+    }));
     handleFieldChange();
   };
+
   const removeExperience = (index) => {
-    setFormData(prev => ({ ...prev, experience: prev.experience.filter((_, i) => i !== index) }));
+    setFormData(prev => ({
+      ...prev,
+      experience: prev.experience.filter((_, i) => i !== index)
+    }));
     handleFieldChange();
   };
 
   const addSkill = () => {
-    setFormData(prev => ({ ...prev, skills: [...prev.skills, { title: '', level: 'Intermediate', items: [] }] }));
+    setFormData(prev => ({
+      ...prev,
+      skills: [...prev.skills, { title: '', level: 'Intermediate', items: [] }]
+    }));
     handleFieldChange();
   };
+
   const removeSkill = (index) => {
-    setFormData(prev => ({ ...prev, skills: prev.skills.filter((_, i) => i !== index) }));
+    setFormData(prev => ({
+      ...prev,
+      skills: prev.skills.filter((_, i) => i !== index)
+    }));
     handleFieldChange();
   };
 
   const addCertification = () => {
-    setFormData(prev => ({ ...prev, certifications: [...prev.certifications, { title: '', issuingOrganization: '', year: '' }] }));
+    setFormData(prev => ({
+      ...prev,
+      certifications: [...prev.certifications, { title: '', issuingOrganization: '', year: '' }]
+    }));
     handleFieldChange();
   };
+
   const removeCertification = (index) => {
-    setFormData(prev => ({ ...prev, certifications: prev.certifications.filter((_, i) => i !== index) }));
+    setFormData(prev => ({
+      ...prev,
+      certifications: prev.certifications.filter((_, i) => i !== index)
+    }));
     handleFieldChange();
   };
-
-
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#ffffff] flex items-center justify-center font-mono selection:bg-[#39ff14] selection:text-black">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-black border-t-[#39ff14] rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="font-bold uppercase tracking-widest animate-pulse">INITIATING DATA_CORE...</p>
+      <div className="edit-resume-page">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading your resume...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 top-[64px] bg-[#ffffff] text-black font-sans selection:bg-[#39ff14] selection:text-black flex flex-col lg:flex-row overflow-hidden z-[1]">
-      <Helmet>
-        <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
-        <style>{`
-          /* Hide scrollbar for cleaner look */
-          ::-webkit-scrollbar { width: 10px; height: 10px; }
-          ::-webkit-scrollbar-track { background: #f0f0f0; border-left: 2px solid #000; }
-          ::-webkit-scrollbar-thumb { background: #000; border: 2px solid #f0f0f0; }
-          ::-webkit-scrollbar-thumb:hover { background: #39ff14; }
-          /* Toast Animation */
-          @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-          .toast-enter { animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        `}</style>
-      </Helmet>
+    <div className="edit-resume-page">
+      <div className="edit-resume-container">
+        {/* Left Panel - Form or LaTeX Editor */}
+        <div className="form-panel">
+          {/* Back Link */}
+          <span className="back-link" onClick={() => navigate('/generate')}>
+            ← Back to Generator
+          </span>
 
-      {/* LEFT PANEL: Form Editor */}
-      <div
-        className="h-full overflow-y-auto border-r-2 border-gray-200 bg-white relative pb-24 lg:pb-0"
-        style={{ width: `${leftWidth}%`, willChange: isResizing ? 'width' : 'auto' }}
-      >
-        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-lg cursor-pointer hover:text-[#39ff14] transition-colors" onClick={() => navigate('/generate')}>arrow_back</span>
-              <h1 className="text-xl font-black uppercase tracking-tight leading-none font-mono">
-                EDIT <span className="text-[#39ff14]">RESUME</span>
-              </h1>
-            </div>
-            <div className="text-[10px] font-medium text-gray-400 uppercase tracking-widest mt-1 flex items-center gap-1.5 font-sans">
-              <span className={`w-1.5 h-1.5 rounded-full ${saving ? 'bg-yellow-500 animate-pulse' : 'bg-[#39ff14]'} inline-block`}></span>
-              {saving ? 'Syncing...' : lastSavedAt ? `Saved ${new Date(lastSavedAt).toLocaleTimeString()}` : 'Awaiting edits'}
-            </div>
-          </div>
-          <button className="px-3 py-2 bg-black text-white font-bold uppercase text-[10px] border border-black hover:bg-[#39ff14] hover:text-black transition-colors lg:hidden flex items-center gap-1.5 font-sans">
-            <span className="material-symbols-outlined text-[14px]">visibility</span> PREVIEW
-          </button>
-        </div>
-
-        <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-8">
-          <SectionCard icon="person" title="BASE IDENTITY" subtitle="CONTACT COMMUNIQUE">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <FormItem label="FULL NAME" value={formData.fullName} onChange={(e) => updateField('fullName', e.target.value)} placeholder="JOHN DOE" />
-              <FormItem label="EMAIL" type="email" value={formData.email} onChange={(e) => updateField('email', e.target.value)} placeholder="USER@DOMAIN.COM" />
-              <FormItem label="PHONE NUMBER" value={formData.phoneNumber} onChange={(e) => updateField('phoneNumber', e.target.value)} placeholder="000-000-0000" />
-              <FormItem label="LOCATION" value={formData.location} onChange={(e) => updateField('location', e.target.value)} placeholder="CITY, NATION" />
-              {/* LinkedIn */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold uppercase tracking-widest">
-                  LINKEDIN <span className="normal-case text-[10px] bg-black text-[#39ff14] px-1 py-0.5 ml-1">🔗 CLICKABLE IN RESUME</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.linkedIn || ''}
-                  onChange={(e) => updateField('linkedIn', e.target.value)}
-                  onBlur={(e) => {
-                    const v = e.target.value.trim();
-                    if (!v) return;
-                    if (/^https?:\/\/(www\.)?linkedin\.com/i.test(v)) return; // already correct
-                    if (/^(www\.)?linkedin\.com/i.test(v)) { updateField('linkedIn', `https://${v}`); return; }
-                    if (/^in\//i.test(v)) { updateField('linkedIn', `https://www.linkedin.com/${v}`); return; }
-                    updateField('linkedIn', `https://www.linkedin.com/in/${v}`);
-                  }}
-                  placeholder="linkedin.com/in/yourname or yourname"
-                  className="border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[4px_4px_0px_0px_#39ff14] p-3 text-sm font-mono transition-all h-12"
-                />
-                {formData.linkedIn && (
-                  <a href={formData.linkedIn} target="_blank" rel="noopener noreferrer"
-                    className="text-[11px] font-bold text-blue-600 hover:text-[#39ff14] hover:underline mt-0.5">
-                    ↗ Preview link
-                  </a>
-                )}
+          {/* Page Header */}
+          <div className="page-header">
+            <div>
+              <div className="page-title">
+                <h1>{editMode === 'latex' ? 'Edit LaTeX Code' : 'Edit Your Resume'}</h1>
+                <span className="edit-icon">{editMode === 'latex' ? '📄' : '✏️'}</span>
               </div>
-              {/* GitHub */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold uppercase tracking-widest">
-                  GITHUB <span className="normal-case text-[10px] bg-black text-[#39ff14] px-1 py-0.5 ml-1">🔗 CLICKABLE IN RESUME</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.gitHub || ''}
-                  onChange={(e) => updateField('gitHub', e.target.value)}
-                  onBlur={(e) => {
-                    const v = e.target.value.trim();
-                    if (!v) return;
-                    if (/^https?:\/\/(www\.)?github\.com/i.test(v)) return; // already correct
-                    if (/^(www\.)?github\.com/i.test(v)) { updateField('gitHub', `https://${v}`); return; }
-                    updateField('gitHub', `https://github.com/${v}`);
-                  }}
-                  placeholder="github.com/yourname or yourname"
-                  className="border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[4px_4px_0px_0px_#39ff14] p-3 text-sm font-mono transition-all h-12"
-                />
-                {formData.gitHub && (
-                  <a href={formData.gitHub} target="_blank" rel="noopener noreferrer"
-                    className="text-[11px] font-bold text-blue-600 hover:text-[#39ff14] hover:underline mt-0.5">
-                    ↗ Preview link
-                  </a>
-                )}
+              <div className="auto-save-badge">
+                <span className="dot"></span>
+                {saving ? 'Saving...' : lastSavedAt ? `Saved at ${new Date(lastSavedAt).toLocaleTimeString()}` : 'No saves yet'}
               </div>
             </div>
-          </SectionCard>
-
-          <SectionCard icon="history_edu" title="MISSION BRIEF" subtitle="EXECUTIVE SUMMARY">
-            <FormItem label="PROFESSIONAL SUMMARY" value={formData.summary} onChange={(e) => updateField('summary', e.target.value)} type="textarea" placeholder="DESCRIBE YOUR OBJECTIVES AND STRENGTHS..." />
-          </SectionCard>
-
-          <SectionCard icon="code" title="SKILL MATRIX" subtitle="CORE COMPETENCIES" buttonText="ADD SKILLSET" onAdd={addSkill}>
-            {formData.skills.map((skill, index) => (
-              <div key={index} className="relative border-l-4 border-black pl-4 py-2 mb-6 group">
-                <button onClick={() => removeSkill(index)} className="absolute -left-[14px] top-4 w-6 h-6 bg-red-600 text-white flex items-center justify-center font-bold text-xs opacity-0 group-hover:opacity-100 transition-opacity"><span className="material-symbols-outlined text-[14px]">close</span></button>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormItem label="CLASS" value={skill.title} onChange={(e) => {
-                    const newSkills = [...formData.skills];
-                    newSkills[index] = { ...newSkills[index], title: e.target.value };
-                    updateField('skills', newSkills);
-                  }} placeholder="LANGUAGES / TOOLS" />
-                  <FormItem label="VARIABLES (COMMA SEPARATED)" value={skill.items ? (Array.isArray(skill.items) ? skill.items.join(', ') : skill.items) : (skill.level || '')} onChange={(e) => {
-                    const newSkills = [...formData.skills];
-                    newSkills[index] = { ...newSkills[index], items: e.target.value.split(',').map(s => s.trim()).filter(Boolean), level: e.target.value };
-                    updateField('skills', newSkills);
-                  }} placeholder="JAVA, RUST, GOLANG" />
-                </div>
-              </div>
-            ))}
-          </SectionCard>
-
-          <SectionCard icon="work" title="CAREER LOG" subtitle="PAST DIRECTIVES" buttonText="ADD DEPLOYMENT" onAdd={addExperience}>
-            {formData.experience.map((exp, index) => (
-              <div key={index} className="relative border-l-4 border-black pl-4 py-4 mb-8 group bg-white shadow-[4px_4px_0px_0px_#f0f0f0] border-t-2 border-r-2 border-b-2">
-                <button onClick={() => removeExperience(index)} className="absolute top-2 right-2 p-1 text-red-600 hover:bg-black transition-colors"><span className="material-symbols-outlined">delete</span></button>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  <FormItem label="RANK / DESIGNATION" value={exp.jobTitle} onChange={(e) => {
-                    const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], jobTitle: e.target.value }; updateField('experience', newExp);
-                  }} placeholder="SOFTWARE ARCHITECT" />
-                  <FormItem label="CORPORATION" value={exp.company} onChange={(e) => {
-                    const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], company: e.target.value }; updateField('experience', newExp);
-                  }} placeholder="CYBERDYNE" />
-                  <FormItem label="SECTOR" value={exp.location} onChange={(e) => {
-                    const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], location: e.target.value }; updateField('experience', newExp);
-                  }} placeholder="SILICON VALLEY" />
-                  <FormItem label="TIMEFRAME" value={exp.duration} onChange={(e) => {
-                    const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], duration: e.target.value }; updateField('experience', newExp);
-                  }} placeholder="2020 - 2024" />
-                </div>
-                <FormItem label="OPERATIONAL MANIFEST" type="textarea" value={exp.responsibility} onChange={(e) => {
-                  const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], responsibility: e.target.value }; updateField('experience', newExp);
-                }} placeholder="DETAILED LOG OF ACTIONS AND IMPACT..." colspan={2} />
-              </div>
-            ))}
-          </SectionCard>
-
-          <SectionCard icon="school" title="ACADEMIC RECORDS" subtitle="KNOWLEDGE ACQUISITION" buttonText="ADD INSTITUTE" onAdd={addEducation}>
-            {formData.education.map((edu, index) => (
-              <div key={index} className="relative border-l-4 border-black pl-4 py-2 mb-6 group">
-                <button onClick={() => removeEducation(index)} className="absolute -left-[14px] top-4 w-6 h-6 bg-red-600 text-white flex items-center justify-center font-bold text-xs opacity-0 group-hover:opacity-100 transition-opacity"><span className="material-symbols-outlined text-[14px]">close</span></button>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormItem label="DEGREE" value={edu.degree} onChange={(e) => {
-                    const newEdu = [...formData.education]; newEdu[index] = { ...newEdu[index], degree: e.target.value }; updateField('education', newEdu);
-                  }} placeholder="B.S. COMPUTER SCIENCE" />
-                  <FormItem label="INSTITUTE" value={edu.university} onChange={(e) => {
-                    const newEdu = [...formData.education]; newEdu[index] = { ...newEdu[index], university: e.target.value }; updateField('education', newEdu);
-                  }} placeholder="MIT" />
-                  <FormItem label="REGION" value={edu.location} onChange={(e) => {
-                    const newEdu = [...formData.education]; newEdu[index] = { ...newEdu[index], location: e.target.value }; updateField('education', newEdu);
-                  }} placeholder="BOSTON, MA" />
-                  <FormItem label="GRADUATION CYCLE" value={edu.graduationYear} onChange={(e) => {
-                    const newEdu = [...formData.education]; newEdu[index] = { ...newEdu[index], graduationYear: e.target.value }; updateField('education', newEdu);
-                  }} placeholder="2024" />
-                </div>
-              </div>
-            ))}
-          </SectionCard>
-
-          <SectionCard icon="folder_open" title="PROJECT ARCHIVE" subtitle="BUILT ASSETS" buttonText="NEW PROJECT MODULE" onAdd={addProject}>
-            {formData.projects.map((project, index) => (
-              <div key={index} className="relative border-l-4 border-black pl-4 py-4 mb-8 group bg-white shadow-[4px_4px_0px_0px_#f0f0f0] border-t-2 border-r-2 border-b-2">
-                <button onClick={() => removeProject(index)} className="absolute top-2 right-2 p-1 text-red-600 hover:bg-black transition-colors"><span className="material-symbols-outlined">delete</span></button>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  <FormItem label="PROJECT DESIGNATION" value={project.title} onChange={(e) => {
-                    const newProjects = [...formData.projects]; newProjects[index] = { ...newProjects[index], title: e.target.value }; updateField('projects', newProjects);
-                  }} placeholder="NEXUS CORE" />
-                  <FormItem label="STACK" value={project.technologiesUsed} onChange={(e) => {
-                    const newProjects = [...formData.projects]; newProjects[index] = { ...newProjects[index], technologiesUsed: e.target.value }; updateField('projects', newProjects);
-                  }} placeholder="REACT, NODE, MYSQL" />
-                </div>
-                <FormItem label="ARCHITECTURE OVERVIEW" type="textarea" value={project.description} onChange={(e) => {
-                  const newProjects = [...formData.projects]; newProjects[index] = { ...newProjects[index], description: e.target.value }; updateField('projects', newProjects);
-                }} placeholder="DOCUMENT THE BUILD SPECIFICATIONS..." colspan={2} />
-              </div>
-            ))}
-          </SectionCard>
-
-          <SectionCard icon="verified" title="CERTIFICATIONS" subtitle="VALIDATED PROOFS" buttonText="ADD CREDENTIAL" onAdd={addCertification}>
-            {formData.certifications.map((cert, index) => (
-              <div key={index} className="relative border-l-4 border-black pl-4 py-2 mb-6 group">
-                <button onClick={() => removeCertification(index)} className="absolute -left-[14px] top-4 w-6 h-6 bg-red-600 text-white flex items-center justify-center font-bold text-xs opacity-0 group-hover:opacity-100 transition-opacity"><span className="material-symbols-outlined text-[14px]">close</span></button>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <span className="col-span-1 sm:col-span-3">
-                    <FormItem label="CREDENTIAL ID" value={cert.title} onChange={(e) => {
-                      const newCerts = [...formData.certifications]; newCerts[index] = { ...newCerts[index], title: e.target.value }; updateField('certifications', newCerts);
-                    }} placeholder="AWS CLOUD PRACTITIONER" />
-                  </span>
-                  <FormItem label="ISSUING ORG" value={cert.issuingOrganization} onChange={(e) => {
-                    const newCerts = [...formData.certifications]; newCerts[index] = { ...newCerts[index], issuingOrganization: e.target.value }; updateField('certifications', newCerts);
-                  }} placeholder="AMAZON" />
-                  <FormItem label="CYCLE" value={cert.year} onChange={(e) => {
-                    const newCerts = [...formData.certifications]; newCerts[index] = { ...newCerts[index], year: e.target.value }; updateField('certifications', newCerts);
-                  }} placeholder="2023" />
-                </div>
-              </div>
-            ))}
-          </SectionCard>
-        </div>
-
-        {/* Floating Action Bar (Mobile only, hidden on large screens where right panel is visible) */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-black border-t-4 border-[#39ff14] lg:hidden z-20 flex gap-4">
-          <button onClick={handleSave} className="flex-1 bg-[#39ff14] text-black font-bold uppercase py-3 border-2 border-black flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined">save</span> COMMIT
-          </button>
-          <button onClick={downloadPDF} disabled={compiling} className="flex-1 bg-white text-black font-bold uppercase py-3 border-2 border-black flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined">download</span> {compiling ? 'BUSY' : 'EXPORT'}
-          </button>
-        </div>
-      </div>
-
-      {/* DRAGGABLE RESIZER */}
-      <div
-        onMouseDown={startResizing}
-        className={`hidden lg:flex w-2 hover:w-3 cursor-col-resize z-50 h-full items-center justify-center group transition-colors ${isResizing ? 'bg-[#39ff14]' : 'bg-gray-200 hover:bg-[#39ff14]/50'}`}
-      >
-        <div className="flex flex-col gap-1 items-center">
-          <div className="w-0.5 h-1.5 bg-gray-400 group-hover:bg-black rounded-full"></div>
-          <div className="w-0.5 h-1.5 bg-gray-400 group-hover:bg-black rounded-full"></div>
-          <div className="w-0.5 h-1.5 bg-gray-400 group-hover:bg-black rounded-full"></div>
-        </div>
-      </div>
-
-      {/* RIGHT PANEL: PDF Preview */}
-      <div
-        className={`hidden lg:flex flex-col h-full bg-[#f0f0f0] pb-0 relative ${isResizing ? 'pointer-events-none' : ''}`}
-        style={{ width: `${100 - leftWidth}%`, willChange: isResizing ? 'width' : 'auto' }}
-      >
-        <div className="bg-black text-[#39ff14] px-4 py-2.5 flex items-center justify-between z-10 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${compiling ? 'bg-yellow-500 animate-pulse' : pdfUrl ? 'bg-[#39ff14]' : 'bg-red-500'} inline-block`}></span>
-            <span className="font-bold uppercase tracking-widest text-xs text-white font-mono">
-              {compiling ? 'RENDERING...' : 'PDF PREVIEW'}
-            </span>
-            {useOnlineCompiler && <span className="bg-blue-600 text-white text-[8px] px-1.5 py-0.5 font-mono">EXT</span>}
-          </div>
-          <div className="flex items-center gap-1 bg-white/10 text-white p-0.5 rounded">
-            <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded transition-colors"><span className="material-symbols-outlined text-[16px]">remove</span></button>
-            <span className="font-bold text-[10px] w-10 text-center font-mono">{zoom}%</span>
-            <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded transition-colors"><span className="material-symbols-outlined text-[16px]">add</span></button>
-            <div className="w-px h-5 bg-white/20 mx-0.5"></div>
-            <button onClick={handleManualCompile} disabled={compiling} className="w-7 h-7 flex items-center justify-center hover:bg-[#39ff14]/30 rounded transition-colors">
-              <span className={`material-symbols-outlined text-[16px] ${compiling ? 'animate-spin opacity-50' : ''}`}>sync</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="flex-grow bg-[#d1d5db] relative overflow-hidden flex items-center justify-center p-8 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZDFkNWRiIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDBMOCA4Wk04IDBMMCA4WiIgc3Ryb2tlPSIjY2JjY2QwIiBzdHJva2Utd2lkdGg9IjEiPjwvcGF0aD4KPC9zdmc+')]">
-          {compiling ? (
-            <div className="bg-black text-[#39ff14] border-4 border-[#39ff14] p-8 max-w-sm w-full font-mono text-center shadow-[12px_12px_0px_0px_#000]">
-              <div className="w-12 h-12 border-4 border-transparent border-t-[#39ff14] border-l-[#39ff14] rounded-full animate-spin mx-auto mb-4"></div>
-              <div className="uppercase font-bold tracking-widest text-sm">COMPILING LATEX.TEX</div>
-              <div className="text-xs mt-2 text-gray-500 animate-pulse">Running pdflatex...</div>
-            </div>
-          ) : compileError ? (
-            <div className="bg-white border-4 border-black p-8 max-w-md w-full shadow-[12px_12px_0px_0px_#ff0000]">
-              <div className="flex items-center gap-3 border-b-4 border-black pb-4 mb-4">
-                <span className="material-symbols-outlined text-red-600 text-4xl">gavel</span>
-                <h3 className="text-xl font-black uppercase text-red-600">FATAL ERROR</h3>
-              </div>
-              <div className="bg-red-950/10 border-2 border-red-500 p-3 font-mono text-xs text-red-700 h-32 overflow-y-auto mb-6 whitespace-pre-wrap">
-                {compileError}
-              </div>
-              <div className="flex gap-4">
-                <button onClick={handleManualCompile} className="flex-1 bg-black text-white px-4 py-2 font-bold uppercase text-xs border-2 border-black hover:bg-[#39ff14] hover:text-black transition-colors flex items-center justify-center gap-2">
-                  <span className="material-symbols-outlined text-[16px]">restart_alt</span> RETRY
+            <div className="header-actions">
+              {/* Edit Mode Toggle */}
+              <div className="edit-mode-toggle">
+                <button 
+                  className={`mode-btn ${editMode === 'form' ? 'active' : ''}`}
+                  onClick={() => setEditMode('form')}
+                >
+                  📝 Form
                 </button>
-                <button onClick={downloadTex} className="flex-1 bg-white text-black px-4 py-2 font-bold uppercase text-xs border-2 border-black hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2">
-                  <span className="material-symbols-outlined text-[16px]">code</span> EXTRACT .TEX
+                <button 
+                  className={`mode-btn ${editMode === 'latex' ? 'active' : ''}`}
+                  onClick={() => setEditMode('latex')}
+                >
+                  &lt;/&gt; LaTeX
                 </button>
               </div>
             </div>
-          ) : pdfUrl ? (
-            <div className="w-full h-full bg-white border-2 border-black shadow-[16px_16px_0px_0px_rgba(0,0,0,0.3)] flex overflow-hidden">
-              <iframe
-                src={`${pdfUrl}#view=FitH`}
-                className="w-full h-full border-none custom-scrollbar"
-                title="PDF Preview"
-                style={{
-                  transform: `scale(${zoom / 100})`,
-                  transformOrigin: 'top center',
-                  width: `${(100 / (zoom / 100))}%`,
-                  height: `${(100 / (zoom / 100))}%`
-                }}
-              />
+          </div>
+
+          {/* Conditional Rendering: Form or LaTeX Editor */}
+          {editMode === 'latex' ? (
+            /* LaTeX Editor Mode */
+            <div className="latex-editor-panel">
+              <div className="latex-toolbar">
+                <label className="auto-compile-toggle">
+                  <input 
+                    type="checkbox" 
+                    checked={autoCompile} 
+                    onChange={(e) => setAutoCompile(e.target.checked)} 
+                  />
+                  Auto-Compile
+                </label>
+                {useOnlineCompiler && <span className="online-indicator">🌐 Online</span>}
+                <button className="toolbar-btn" onClick={handleManualCompile} disabled={compiling}>
+                  {compiling ? '⏳' : '▶'} Compile
+                </button>
+                <button className="toolbar-btn" onClick={downloadTex}>
+                  📤 Export .TEX
+                </button>
+              </div>
+              <div className="latex-editor-container">
+                {monacoAvailable && MonacoEditor ? (
+                  <MonacoEditor
+                    height="600px"
+                    defaultLanguage="latex"
+                    value={latexCode}
+                    onChange={handleLatexChange}
+                    theme="vs-dark"
+                    onMount={(editor) => { editorRef.current = editor; }}
+                    options={{
+                      minimap: { enabled: false },
+                      wordWrap: 'on',
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      scrollBeyondLastLine: false,
+                      fontFamily: "'Fira Code', 'Consolas', monospace",
+                      padding: { top: 16 },
+                      lineNumbers: 'on',
+                      renderLineHighlight: 'line',
+                      automaticLayout: true,
+                    }}
+                  />
+                ) : (
+                  <textarea
+                    className="latex-textarea"
+                    value={latexCode}
+                    onChange={(e) => handleLatexChange(e.target.value)}
+                    spellCheck={false}
+                    rows={30}
+                  />
+                )}
+              </div>
             </div>
           ) : (
-            <div className="bg-white border-4 border-black p-8 max-w-sm w-full text-center shadow-[12px_12px_0px_0px_#000]">
-              <span className="material-symbols-outlined text-6xl mb-4 opacity-50">description</span>
-              <h3 className="text-lg font-black uppercase mb-2">NO PDF AVAILABLE</h3>
-              <p className="text-xs font-bold text-gray-500 mb-6 uppercase">AWAITING COMPILATION TRIGGER</p>
-              <button onClick={handleManualCompile} className="bg-[#39ff14] text-black px-6 py-3 font-bold uppercase border-2 border-black w-full hover:bg-black hover:text-white transition-colors shadow-[4px_4px_0px_0px_#000]">
-                INITIALIZE RENDER
-              </button>
+            /* Form Editor Mode */
+            <>
+          <div className="section-card">
+            <div className="section-header">
+              <div className="section-icon blue">👤</div>
+              <div className="section-info">
+                <h3>Personal Information</h3>
+                <p>Contact details and profile links</p>
+              </div>
             </div>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Full Name</label>
+                <input
+                  type="text"
+                  value={formData.fullName}
+                  onChange={(e) => updateField('fullName', e.target.value)}
+                  placeholder="John Doe"
+                />
+              </div>
+              <div className="form-group">
+                <label>Email Address</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => updateField('email', e.target.value)}
+                  placeholder="john@example.com"
+                />
+              </div>
+              <div className="form-group">
+                <label>Phone Number</label>
+                <input
+                  type="text"
+                  value={formData.phoneNumber}
+                  onChange={(e) => updateField('phoneNumber', e.target.value)}
+                  placeholder="123-456-7890"
+                />
+              </div>
+              <div className="form-group">
+                <label>Location</label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => updateField('location', e.target.value)}
+                  placeholder="City, Country"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Professional Summary Section */}
+          <div className="section-card">
+            <div className="section-header">
+              <div className="section-icon purple">📝</div>
+              <div className="section-info">
+                <h3>Professional Summary</h3>
+                <p>A concise overview of your impact</p>
+              </div>
+            </div>
+            <div className="form-group full-width">
+              <textarea
+                value={formData.summary}
+                onChange={(e) => updateField('summary', e.target.value)}
+                placeholder="Write a compelling professional summary that highlights your key achievements and career goals..."
+                rows={5}
+              />
+            </div>
+          </div>
+
+          {/* Skills Section */}
+          <div className="section-card">
+            <div className="section-header">
+              <div className="section-icon cyan">⚡</div>
+              <div className="section-info">
+                <h3>Skills</h3>
+                <p>Your technical and soft skills (by category)</p>
+              </div>
+            </div>
+            {formData.skills.map((skill, index) => (
+              <div key={index} className="repeater-item">
+                <button className="delete-btn" onClick={() => removeSkill(index)}>✕</button>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Category</label>
+                    <input
+                      type="text"
+                      value={skill.title}
+                      onChange={(e) => {
+                        const newSkills = [...formData.skills];
+                        newSkills[index] = { ...newSkills[index], title: e.target.value };
+                        updateField('skills', newSkills);
+                      }}
+                      placeholder="e.g., Languages, Frameworks, Tools"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Skills (comma separated)</label>
+                    <input
+                      type="text"
+                      value={
+                        skill.items 
+                          ? (Array.isArray(skill.items) ? skill.items.join(', ') : skill.items)
+                          : (skill.level || '')
+                      }
+                      onChange={(e) => {
+                        const newSkills = [...formData.skills];
+                        newSkills[index] = { 
+                          ...newSkills[index], 
+                          items: e.target.value.split(',').map(s => s.trim()).filter(Boolean),
+                          level: e.target.value 
+                        };
+                        updateField('skills', newSkills);
+                      }}
+                      placeholder="e.g., Java, Python, JavaScript"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button className="add-btn" onClick={addSkill}>
+              + Add Skill Category
+            </button>
+          </div>
+
+          {/* Experience Section */}
+          <div className="section-card">
+            <div className="section-header">
+              <div className="section-icon green">💼</div>
+              <div className="section-info">
+                <h3>Work Experience</h3>
+                <p>Your professional journey</p>
+              </div>
+            </div>
+            {formData.experience.map((exp, index) => (
+              <div key={index} className="repeater-item">
+                <button className="delete-btn" onClick={() => removeExperience(index)}>✕</button>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Job Title</label>
+                    <input
+                      type="text"
+                      value={exp.jobTitle}
+                      onChange={(e) => {
+                        const newExp = [...formData.experience];
+                        newExp[index] = { ...newExp[index], jobTitle: e.target.value };
+                        updateField('experience', newExp);
+                      }}
+                      placeholder="Software Engineer"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Company</label>
+                    <input
+                      type="text"
+                      value={exp.company}
+                      onChange={(e) => {
+                        const newExp = [...formData.experience];
+                        newExp[index] = { ...newExp[index], company: e.target.value };
+                        updateField('experience', newExp);
+                      }}
+                      placeholder="Company Name"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Location</label>
+                    <input
+                      type="text"
+                      value={exp.location}
+                      onChange={(e) => {
+                        const newExp = [...formData.experience];
+                        newExp[index] = { ...newExp[index], location: e.target.value };
+                        updateField('experience', newExp);
+                      }}
+                      placeholder="City, Country"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Duration</label>
+                    <input
+                      type="text"
+                      value={exp.duration}
+                      onChange={(e) => {
+                        const newExp = [...formData.experience];
+                        newExp[index] = { ...newExp[index], duration: e.target.value };
+                        updateField('experience', newExp);
+                      }}
+                      placeholder="Jan 2020 - Present"
+                    />
+                  </div>
+                  <div className="form-group full-width">
+                    <label>Responsibilities</label>
+                    <textarea
+                      value={exp.responsibility}
+                      onChange={(e) => {
+                        const newExp = [...formData.experience];
+                        newExp[index] = { ...newExp[index], responsibility: e.target.value };
+                        updateField('experience', newExp);
+                      }}
+                      placeholder="Describe your key responsibilities and achievements..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button className="add-btn" onClick={addExperience}>
+              + Add Experience
+            </button>
+          </div>
+
+          {/* Education Section */}
+          <div className="section-card">
+            <div className="section-header">
+              <div className="section-icon orange">🎓</div>
+              <div className="section-info">
+                <h3>Education</h3>
+                <p>Your academic qualifications</p>
+              </div>
+            </div>
+            {formData.education.map((edu, index) => (
+              <div key={index} className="repeater-item">
+                <button className="delete-btn" onClick={() => removeEducation(index)}>✕</button>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Degree</label>
+                    <input
+                      type="text"
+                      value={edu.degree}
+                      onChange={(e) => {
+                        const newEdu = [...formData.education];
+                        newEdu[index] = { ...newEdu[index], degree: e.target.value };
+                        updateField('education', newEdu);
+                      }}
+                      placeholder="Bachelor of Technology"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>University/Institution</label>
+                    <input
+                      type="text"
+                      value={edu.university}
+                      onChange={(e) => {
+                        const newEdu = [...formData.education];
+                        newEdu[index] = { ...newEdu[index], university: e.target.value };
+                        updateField('education', newEdu);
+                      }}
+                      placeholder="University Name"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Location</label>
+                    <input
+                      type="text"
+                      value={edu.location}
+                      onChange={(e) => {
+                        const newEdu = [...formData.education];
+                        newEdu[index] = { ...newEdu[index], location: e.target.value };
+                        updateField('education', newEdu);
+                      }}
+                      placeholder="City, Country"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Graduation Year</label>
+                    <input
+                      type="text"
+                      value={edu.graduationYear}
+                      onChange={(e) => {
+                        const newEdu = [...formData.education];
+                        newEdu[index] = { ...newEdu[index], graduationYear: e.target.value };
+                        updateField('education', newEdu);
+                      }}
+                      placeholder="2024"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button className="add-btn" onClick={addEducation}>
+              + Add Education
+            </button>
+          </div>
+
+          {/* Projects Section */}
+          <div className="section-card">
+            <div className="section-header">
+              <div className="section-icon green">📁</div>
+              <div className="section-info">
+                <h3>Projects</h3>
+                <p>Showcase your technical work</p>
+              </div>
+            </div>
+            {formData.projects.map((project, index) => (
+              <div key={index} className="repeater-item">
+                <button className="delete-btn" onClick={() => removeProject(index)}>✕</button>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Project Title</label>
+                    <input
+                      type="text"
+                      value={project.title}
+                      onChange={(e) => {
+                        const newProjects = [...formData.projects];
+                        newProjects[index] = { ...newProjects[index], title: e.target.value };
+                        updateField('projects', newProjects);
+                      }}
+                      placeholder="Project Name"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Technologies</label>
+                    <input
+                      type="text"
+                      value={project.technologiesUsed}
+                      onChange={(e) => {
+                        const newProjects = [...formData.projects];
+                        newProjects[index] = { ...newProjects[index], technologiesUsed: e.target.value };
+                        updateField('projects', newProjects);
+                      }}
+                      placeholder="React, Node.js, MongoDB"
+                    />
+                  </div>
+                  <div className="form-group full-width">
+                    <label>Description</label>
+                    <textarea
+                      value={project.description}
+                      onChange={(e) => {
+                        const newProjects = [...formData.projects];
+                        newProjects[index] = { ...newProjects[index], description: e.target.value };
+                        updateField('projects', newProjects);
+                      }}
+                      placeholder="Describe what you built and the impact it made..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button className="add-btn" onClick={addProject}>
+              + Add Project
+            </button>
+          </div>
+
+          {/* Certifications Section */}
+          <div className="section-card">
+            <div className="section-header">
+              <div className="section-icon yellow">🏆</div>
+              <div className="section-info">
+                <h3>Certifications</h3>
+                <p>Professional certifications and courses</p>
+              </div>
+            </div>
+            {formData.certifications.map((cert, index) => (
+              <div key={index} className="repeater-item">
+                <button className="delete-btn" onClick={() => removeCertification(index)}>✕</button>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Certification Name</label>
+                    <input
+                      type="text"
+                      value={cert.title}
+                      onChange={(e) => {
+                        const newCerts = [...formData.certifications];
+                        newCerts[index] = { ...newCerts[index], title: e.target.value };
+                        updateField('certifications', newCerts);
+                      }}
+                      placeholder="AWS Certified Developer"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Issuing Organization</label>
+                    <input
+                      type="text"
+                      value={cert.issuingOrganization}
+                      onChange={(e) => {
+                        const newCerts = [...formData.certifications];
+                        newCerts[index] = { ...newCerts[index], issuingOrganization: e.target.value };
+                        updateField('certifications', newCerts);
+                      }}
+                      placeholder="Amazon Web Services"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Year</label>
+                    <input
+                      type="text"
+                      value={cert.year}
+                      onChange={(e) => {
+                        const newCerts = [...formData.certifications];
+                        newCerts[index] = { ...newCerts[index], year: e.target.value };
+                        updateField('certifications', newCerts);
+                      }}
+                      placeholder="2024"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button className="add-btn" onClick={addCertification}>
+              + Add Certification
+            </button>
+          </div>
+          </>
           )}
         </div>
 
-        <div className="bg-white border-t border-gray-200 p-3 flex gap-3 shrink-0 z-10">
-          <button onClick={handleSave} className="flex-1 bg-black text-[#39ff14] font-bold uppercase tracking-wider py-2.5 text-xs border-2 border-black hover:bg-[#39ff14] hover:text-black transition-colors flex items-center justify-center gap-2 font-mono">
-            <span className="material-symbols-outlined text-lg">save</span> SAVE
-          </button>
-          <button onClick={downloadPDF} disabled={compiling} className="flex-1 bg-white text-black font-bold uppercase tracking-wider py-2.5 text-xs border-2 border-black hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-mono">
-            <span className="material-symbols-outlined text-lg">download</span> {compiling ? 'BUSY' : 'DOWNLOAD'}
-          </button>
-        </div>
-      </div>
-
-      {/* AI Agent Chat overlay is rendered normally */}
-      <div className="hidden lg:block">
-        <AgentChat
-          formData={formData}
-          resumeContext={latexCode}
-          userId={(() => {
-            const token = getAuthToken();
-            if (token) {
-              const decoded = decodeToken(token);
-              return decoded?.sub || decoded?.email || 'anonymous';
-            }
-            return 'anonymous';
-          })()}
-        />
-      </div>
-
-      {/* Global Snackbar replacement */}
-      {snack.open && (
-        <div className="fixed top-[80px] left-1/2 -translate-x-1/2 z-[100] toast-enter w-[90%] sm:w-auto max-w-md pointer-events-none">
-          <div className={`border-4 border-black p-4 font-bold uppercase text-sm shadow-[8px_8px_0px_0px_#000] flex items-center gap-3 ${snack.type === 'error' ? 'bg-red-600 text-white' : snack.type === 'info' ? 'bg-cyan-400 text-black' : 'bg-[#39ff14] text-black'}`}>
-            <span className="material-symbols-outlined text-[20px]">
-              {snack.type === 'error' ? 'gavel' : snack.type === 'info' ? 'info' : 'task_alt'}
-            </span>
-            <div className="flex-grow">{snack.text}</div>
+        {/* Right Panel - PDF Preview */}
+        <div className="preview-panel">
+          <div className="preview-card">
+            <div className="preview-header">
+              <div className="preview-title">
+                <span className={`live-dot ${compiling ? 'compiling' : pdfUrl ? 'ready' : ''}`}></span>
+                {compiling ? 'Compiling...' : 'PDF Preview'}
+              </div>
+              <div className="preview-actions">
+                {useOnlineCompiler && <span className="online-indicator" title="Using online compiler">🌐</span>}
+                <button 
+                  className="compile-btn" 
+                  onClick={handleManualCompile} 
+                  disabled={compiling}
+                  title="Compile LaTeX to PDF"
+                >
+                  {compiling ? '⏳' : '▶'}
+                </button>
+                <div className="zoom-controls">
+                  <button onClick={() => setZoom(Math.max(50, zoom - 10))}>−</button>
+                  <span>{zoom}%</span>
+                  <button onClick={() => setZoom(Math.min(200, zoom + 10))}>+</button>
+                </div>
+              </div>
+            </div>
+            <div className="preview-content pdf-preview-content">
+              {compiling ? (
+                <div className="pdf-loading">
+                  <div className="loading-spinner"></div>
+                  <p>Compiling LaTeX to PDF...</p>
+                </div>
+              ) : compileError ? (
+                <div className="pdf-error">
+                  <div className="error-icon">⚠️</div>
+                  <h3>Compilation Error</h3>
+                  <p className="error-message">{compileError}</p>
+                  <div className="error-actions">
+                    <button onClick={handleManualCompile}>🔄 Retry</button>
+                    <button onClick={downloadTex}>📤 Download .TEX</button>
+                  </div>
+                  <p className="error-hint">
+                    💡 Download .TEX and use <a href="https://www.overleaf.com" target="_blank" rel="noopener noreferrer">Overleaf</a> to compile
+                  </p>
+                </div>
+              ) : pdfUrl ? (
+                <iframe 
+                  src={pdfUrl} 
+                  className="pdf-iframe"
+                  title="PDF Preview"
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    border: 'none',
+                    transform: `scale(${zoom / 100})`,
+                    transformOrigin: 'top center'
+                  }}
+                />
+              ) : (
+                <div className="pdf-placeholder">
+                  <div className="placeholder-icon">📄</div>
+                  <h3>No PDF Preview</h3>
+                  <p>Make changes to generate PDF preview</p>
+                  <button className="compile-now-btn" onClick={handleManualCompile}>
+                    ▶ Compile Now
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      )}
+      </div>
 
-      <FeedbackPopup isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
+      {/* Floating Save Bar */}
+      <div className="save-bar">
+        <div className="save-status">
+          <span className="dot"></span>
+          {saving ? 'Saving...' : 'All progress saved'}
+        </div>
+        <button className="btn-save" onClick={handleSave}>
+          Save Changes
+        </button>
+        <button className="btn-download" onClick={downloadPDF} disabled={compiling}>
+          {compiling ? '⏳ Compiling...' : '⬇ Download PDF'}
+        </button>
+      </div>
+
+      {/* Snackbar */}
+      {/* AI Agent Chat */}
+      <AgentChat
+        formData={formData}
+        resumeContext={latexCode}
+        userId={(() => {
+          const token = getAuthToken();
+          if (token) {
+            const decoded = decodeToken(token);
+            return decoded?.sub || decoded?.email || 'anonymous';
+          }
+          return 'anonymous';
+        })()}
+      />
+
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={3000}
+        onClose={() => setSnack(s => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          severity={snack.type} 
+          onClose={() => setSnack(s => ({ ...s, open: false }))}
+        >
+          {snack.text}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
