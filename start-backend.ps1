@@ -48,8 +48,8 @@ if (-not $env:DB_USERNAME) { $env:DB_USERNAME='root' }
 if (-not $env:DB_PASSWORD) { Write-Host "WARNING: DB_PASSWORD not set. Set it in your environment." -ForegroundColor Yellow }
 if (-not $env:JAVA_HOME) { $env:JAVA_HOME='C:\Program Files\Java\jdk-22' }
 
-# Force Java to prefer IPv4 stack to prevent socket timeouts on dual-stack IPv6 networks
-$env:JAVA_TOOL_OPTIONS = "-Djava.net.preferIPv4Stack=true"
+# Configure Java to allow IPv6/dual-stack connectivity
+$env:JAVA_TOOL_OPTIONS = "-Djava.net.preferIPv4Stack=false"
 
 # Change to Backend directory
 Set-Location "R:\Java project\Resume_Builder\AI_Resume_Builder_Backend\Backend"

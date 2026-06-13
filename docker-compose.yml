@@ -1,0 +1,167 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build:
+      context: ./Backend/auth-service
+      dockerfile: Dockerfile
+    container_name: resify-auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    networks:
+      - resify-net
+    restart: always
+
+  user-service:
+    build:
+      context: ./Backend/user-service
+      dockerfile: Dockerfile
+    container_name: resify-user-service
+    ports:
+      - "8082:8082"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - resify-net
+    restart: always
+
+  resume-service:
+    build:
+      context: ./Backend/resume-service
+      dockerfile: Dockerfile
+    container_name: resify-resume-service
+    ports:
+      - "8083:8083"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - resify-net
+    restart: always
+
+  ats-service:
+    build:
+      context: ./Backend/ats-service
+      dockerfile: Dockerfile
+    container_name: resify-ats-service
+    ports:
+      - "8085:8085"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    networks:
+      - resify-net
+    restart: always
+
+  agent-service:
+    build:
+      context: ./Backend/agent-service
+      dockerfile: Dockerfile
+    container_name: resify-agent-service
+    ports:
+      - "8086:8086"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    networks:
+      - resify-net
+    restart: always
+
+  admin-service:
+    build:
+      context: ./Backend/admin-service
+      dockerfile: Dockerfile
+    container_name: resify-admin-service
+    ports:
+      - "8087:8087"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - resify-net
+    restart: always
+
+  support-service:
+    build:
+      context: ./Backend/support-service
+      dockerfile: Dockerfile
+    container_name: resify-support-service
+    ports:
+      - "8088:8088"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - resify-net
+    restart: always
+
+  gateway-service:
+    build:
+      context: ./Backend/gateway-service
+      dockerfile: Dockerfile
+    container_name: resify-gateway-service
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      - auth-service
+      - user-service
+      - resume-service
+      - ats-service
+      - agent-service
+      - admin-service
+      - support-service
+    networks:
+      - resify-net
+    restart: always
+
+networks:
+  resify-net:
+    driver: bridge

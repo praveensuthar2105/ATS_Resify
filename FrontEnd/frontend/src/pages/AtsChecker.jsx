@@ -127,6 +127,9 @@ const AtsChecker = () => {
       };
     }
     if (typeof scoreStr === 'number') return { num: scoreStr, den: 10, ...details };
+    if (String(scoreStr).toUpperCase() === 'N/A') {
+      return { isNA: true, num: 0, den: 10, ...details };
+    }
     const match = String(scoreStr).match(/(\d+)\s*\/\s*(\d+)/);
     if (match) return { num: parseInt(match[1], 10), den: parseInt(match[2], 10) || 10, ...details };
     const numOnly = parseInt(String(scoreStr).replace(/[^\d]/g, ''), 10);
@@ -168,9 +171,9 @@ const AtsChecker = () => {
       score: Number.isFinite(percent) ? percent : null,
       breakdown: {
         keywordMatch: parseScore(breakdown.keywordMatch ?? breakdown.keywords),
-        formatting: parseScore(breakdown.formatting ?? breakdown.format),
+        formatting: parseScore(breakdown.formatting ?? breakdown.format ?? breakdown.formattingAndStructure),
         sectionCompleteness: parseScore(breakdown.sectionCompleteness ?? breakdown.sections),
-        impactScore: parseScore(breakdown.impactScore ?? breakdown.impact),
+        impactScore: parseScore(breakdown.impactScore ?? breakdown.impact ?? breakdown.contentImpact),
         brevity: parseScore(breakdown.brevity ?? breakdown.readability),
         experienceFit: parseScore(breakdown.experienceFit),
       },
@@ -436,7 +439,8 @@ const AtsChecker = () => {
                     <div className="flex flex-col gap-4">
                       {breakdownConfig.map(({ key, label, icon }) => {
                         const s = atsResult.breakdown?.[key];
-                        const pct = s ? Math.round((s.num / s.den) * 100) : 0;
+                        const isNA = s?.isNA;
+                        const pct = s && !isNA ? Math.round((s.num / s.den) * 100) : 0;
                         const isExpanded = expandedMetric === key;
                         const hasDetails = s?.explanation || s?.suggestion;
                         const barColor = getScoreColor(pct).bg;
@@ -452,7 +456,7 @@ const AtsChecker = () => {
                                 {label}
                                 {hasDetails && <span className="text-[10px] text-slate-500">[{isExpanded ? '-' : '+'}]</span>}
                               </div>
-                              <span>{pct}%</span>
+                              <span>{isNA ? 'N/A' : `${pct}%`}</span>
                             </div>
                             <div className="h-2 w-full bg-slate-800 border border-slate-700 p-[1px]">
                               <div className={`h-full ${barColor} transition-all duration-700`} style={{ width: `${pct}%` }}></div>
