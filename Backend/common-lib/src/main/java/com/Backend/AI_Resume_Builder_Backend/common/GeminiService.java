@@ -38,7 +38,15 @@ public class GeminiService {
                 "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent",
                 model.trim());
 
-        this.restClient = restClientBuilder.baseUrl(this.geminiUrl).build();
+        org.springframework.http.client.SimpleClientHttpRequestFactory requestFactory = 
+                new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(10000); // 10 seconds
+        requestFactory.setReadTimeout(30000);    // 30 seconds
+
+        this.restClient = restClientBuilder
+                .baseUrl(this.geminiUrl)
+                .requestFactory(requestFactory)
+                .build();
 
         log.info("GeminiService initialized with Google AI Studio — URL: {}", this.geminiUrl);
     }
@@ -107,5 +115,9 @@ public class GeminiService {
         }
         log.warn("Gemini API returned empty or unparseable response");
         return Optional.empty();
+    }
+
+    public boolean isConfigured() {
+        return apiKey != null && !apiKey.trim().isEmpty();
     }
 }

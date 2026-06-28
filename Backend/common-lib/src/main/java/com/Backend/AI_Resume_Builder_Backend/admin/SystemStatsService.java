@@ -26,14 +26,15 @@ public class SystemStatsService {
 
     @Transactional
     public void incrementStat(String key) {
-        Optional<SystemStats> statOpt = systemStatsRepository.findById(key);
-        if (statOpt.isPresent()) {
-            SystemStats stat = statOpt.get();
-            stat.setValue(stat.getValue() + 1);
-            systemStatsRepository.save(stat);
-        } else {
-            SystemStats stat = new SystemStats(key, 1L);
-            systemStatsRepository.save(stat);
+        int updated = systemStatsRepository.incrementValue(key);
+        if (updated == 0) {
+            try {
+                SystemStats stat = new SystemStats(key, 1L);
+                systemStatsRepository.saveAndFlush(stat);
+            } catch (Exception e) {
+                // If another thread inserted it concurrently, run the update again
+                systemStatsRepository.incrementValue(key);
+            }
         }
     }
 

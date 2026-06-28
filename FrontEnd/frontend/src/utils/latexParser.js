@@ -64,7 +64,7 @@ export const parseLatexToResumeData = (latex) => {
 
                 } else if (part.includes('@')) {
                     result.personalInformation.email = unescapeLatex(part.replace(/\\href\{[^}]*\}\{([^}]*)\}/, '$1'));
-                } else if (part.match(/[+\d]{1,3}[-\s\.]?\d{3}[-\s\.]?\d{3,4}/)) {
+                } else if (part.match(/[+\d]{1,3}[-\s.]?\d{3}[-\s.]?\d{3,4}/)) {
                     result.personalInformation.phoneNumber = unescapeLatex(part);
                 } else if (part && !part.startsWith('\\')) {
                     result.personalInformation.location = unescapeLatex(part);

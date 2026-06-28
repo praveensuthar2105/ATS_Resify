@@ -38,15 +38,13 @@ public class CommonSecurityConfig {
                                 "/api/auth/**",
                                 "/api/health/**",
                                 "/actuator/**",
-                                "/api/resume/generate",
-                                "/api/resume/ats-score",
-                                "/api/resume/import/**",
                                 "/api/latex/templates",
                                 "/",
                                 "/favicon.ico",
                                 "/error",
                                 "/health")
                         .permitAll()
+                        .requestMatchers("/api/latex/health", "/api/latex/queue").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex

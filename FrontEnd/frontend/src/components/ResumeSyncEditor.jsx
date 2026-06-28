@@ -8,7 +8,6 @@ const ResumeSyncEditor = () => {
     const [resumeData, setResumeData] = useState(null);
     const [jsonData, setJsonData] = useState('');
     const [latexData, setLatexData] = useState('');
-    const [stompClient, setStompClient] = useState(null);
     const [activeEditor, setActiveEditor] = useState('form'); // 'form', 'json', or 'latex'
 
     useEffect(() => {
@@ -16,24 +15,25 @@ const ResumeSyncEditor = () => {
         const socket = new SockJS(`${API_ROOT_URL}/ws-resume`);
         const client = Stomp.over(socket);
 
-        client.connect({}, () => {
+        const token = getAuthToken();
+        client.connect({
+            Authorization: `Bearer ${token}`
+        }, () => {
             console.log('Connected to WebSocket');
 
-            // Subscribe to resume updates
-            client.subscribe('/topic/resume/data', (message) => {
+            // Subscribe to user-specific resume updates
+            client.subscribe('/user/queue/resume/data', (message) => {
                 setResumeData(JSON.parse(message.body));
             });
 
-            client.subscribe('/topic/resume/json', (message) => {
+            client.subscribe('/user/queue/resume/json', (message) => {
                 setJsonData(message.body);
             });
 
-            client.subscribe('/topic/resume/latex', (message) => {
+            client.subscribe('/user/queue/resume/latex', (message) => {
                 setLatexData(message.body);
             });
         });
-
-        setStompClient(client);
 
         // Load initial data
         fetchResumeData();

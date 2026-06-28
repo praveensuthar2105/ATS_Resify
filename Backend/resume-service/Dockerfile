@@ -11,9 +11,9 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 COPY target/*.jar app.jar
-ENV PORT=8083
+ENV PORT=8082
 ENV LATEX_COMPILER=pdflatex
 ENV LATEX_COMPILER_PATH=pdflatex
 
-EXPOSE 8083
+EXPOSE 8082
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -28,14 +28,11 @@
 
     <modules>
         <module>common-lib</module>
+        <module>discovery-server</module>
         <module>gateway-service</module>
-        <module>auth-service</module>
-        <module>user-service</module>
+        <module>identity-service</module>
         <module>resume-service</module>
-        <module>ats-service</module>
-        <module>agent-service</module>
-        <module>admin-service</module>
-        <module>support-service</module>
+        <module>intelligence-service</module>
     </modules>
 
     <dependencyManagement>

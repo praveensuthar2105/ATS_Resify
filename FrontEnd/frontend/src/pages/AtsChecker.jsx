@@ -15,7 +15,6 @@ const AtsChecker = () => {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [snack, setSnack] = useState({ open: false, type: 'success', text: '' });
-  const [rawResponse, setRawResponse] = useState(null);
   const [expandedMetric, setExpandedMetric] = useState(null);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
@@ -37,7 +36,6 @@ const AtsChecker = () => {
 
     try {
       const response = await resumeAPI.calculateAtsScore(file, jobDescription);
-      setRawResponse(response);
       const normalized = normalizeAtsResponse(response);
       if (!normalized.hasContent) {
         setAtsResult(null);

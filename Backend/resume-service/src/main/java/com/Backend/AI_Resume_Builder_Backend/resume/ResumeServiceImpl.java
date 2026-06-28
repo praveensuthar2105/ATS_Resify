@@ -21,9 +21,15 @@ public class ResumeServiceImpl implements ResumeService {
     private static final Logger log = LoggerFactory.getLogger(ResumeServiceImpl.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final GeminiService geminiService;
+    private final com.Backend.AI_Resume_Builder_Backend.user.UserRepository userRepository;
+    private final ResumeRepository resumeRepository;
 
-    public ResumeServiceImpl(GeminiService geminiService) {
+    public ResumeServiceImpl(GeminiService geminiService, 
+                             com.Backend.AI_Resume_Builder_Backend.user.UserRepository userRepository,
+                             ResumeRepository resumeRepository) {
         this.geminiService = geminiService;
+        this.userRepository = userRepository;
+        this.resumeRepository = resumeRepository;
     }
 
     @Override
@@ -174,5 +180,39 @@ public class ResumeServiceImpl implements ResumeService {
         }
 
         return result;
+    }
+
+    public void saveResumeToDb(String email, String templateType, Map<String, Object> jsonObject) {
+        java.util.Optional<com.Backend.AI_Resume_Builder_Backend.user.User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()) {
+            Resume resume = new Resume(userOpt.get(), templateType);
+            
+            try {
+                Object dataObj = jsonObject.get("data");
+                if (dataObj != null) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    String resumeJson = mapper.writeValueAsString(dataObj);
+                    resume.setResumeJson(resumeJson);
+                    
+                    if (dataObj instanceof Map) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> dataMap = (Map<String, Object>) dataObj;
+                        Object personalInfoObj = dataMap.get("personalInformation");
+                        if (personalInfoObj instanceof Map) {
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> personalInfo = (Map<String, Object>) personalInfoObj;
+                            Object nameObj = personalInfo.get("fullName");
+                            if (nameObj != null) {
+                                resume.setCandidateName(nameObj.toString());
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                log.warn("Failed to serialize resume content for persistence", ex);
+            }
+            
+            resumeRepository.save(resume);
+        }
     }
 }

@@ -1,6 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { decodeToken, getAuthToken } from '../utils/auth';
+import { getAuthToken } from '../utils/auth';
 import { API_BASE_URL } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -168,7 +169,7 @@ export const ResumeProvider = ({ children }) => {
           // Split on newlines, or bullet points (• or - at start of line)
           const respList = exp.responsibility
             .split(/\n+/)
-            .map(r => r.replace(/^[•\-\*]\s*/, '').trim())
+            .map(r => r.replace(/^[•\-*]\s*/, '').trim())
             .filter(r => r.length > 5);
           if (respList.length > 0) {
             bullets = `\\begin{itemize}\n${respList.map(r => `\\item ${escapeLatex(r)}`).join('\n')}\n\\end{itemize}`;
@@ -196,7 +197,7 @@ export const ResumeProvider = ({ children }) => {
           // Split on newlines, then remove leading bullet markers (• or - or *)
           const descList = proj.description
             .split(/\n+/)
-            .map(d => d.replace(/^[•\-\*]\s*/, '').trim())
+            .map(d => d.replace(/^[•\-*]\s*/, '').trim())
             .filter(d => d.length > 5);
           if (descList.length > 0) {
             bullets = `\\begin{itemize}\n${descList.map(d => `\\item ${escapeLatex(d)}`).join('\n')}\n\\end{itemize}`;
@@ -628,10 +629,10 @@ ${sections}
       try {
         let data = storedResume;
         if (typeof data === 'string') {
-          try { data = JSON.parse(data); } catch { }
+          try { data = JSON.parse(data); } catch (e) { void e; }
         }
         if (typeof data === 'string') {
-          try { data = JSON.parse(data); } catch { }
+          try { data = JSON.parse(data); } catch (e) { void e; }
         }
 
         const likelyKeys = ['personalInformation', 'summary', 'skills', 'experience'];

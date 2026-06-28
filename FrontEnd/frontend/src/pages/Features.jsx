@@ -86,11 +86,11 @@ const Features = () => {
             </div>
             <div className="border-2 border-[#39FF14] bg-[#F8F8F8] p-8 group hover:bg-white transition-colors">
               <div className="w-16 h-16 bg-white border-2 border-[#39FF14] flex items-center justify-center mb-6">
-                <span className="material-symbols-outlined text-[#39FF14] text-3xl">lock</span>
+                <span className="material-symbols-outlined text-[#39FF14] text-3xl">analytics</span>
               </div>
-              <h3 className="text-xl font-bold uppercase mb-4 text-[#000000]">Secure Authentication</h3>
+              <h3 className="text-xl font-bold uppercase mb-4 text-[#000000]">Job-Match Gap Analysis</h3>
               <p className="text-[#333333] text-sm leading-relaxed">
-                OAuth 2.0 login with JWT-based authentication and secure one-time authorization code exchange. Your data stays protected.
+                Upload target job descriptions to analyze keyword match rates, identifying formatting issues, critical skill gaps, and missing resume keywords instantly.
               </p>
             </div>
           </div>

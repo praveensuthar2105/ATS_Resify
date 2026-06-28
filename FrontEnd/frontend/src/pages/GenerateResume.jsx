@@ -51,13 +51,13 @@ const GenerateResume = () => {
   const [selectedTemplate, setSelectedTemplate] = useState('ats');
 
   const availableTemplates = {
-    'ats': 'ATS-Engine v2.0 - Stripped of graphical noise to ensure 100% OCR compatibility with enterprise systems.',
+    'ats': 'ATS-Engine v2.0 - Stripped of graphical noise to ensure optimized OCR parsing across major ATS platforms.',
     'minimal': 'Minimal Typographic - Elegant serif-driven design for senior roles and high-impact clarity.'
   };
 
   const writingTips = [
     { num: 1, text: 'Quantify your impact with numbers and percentages.' },
-    { num: 2, text: 'Use strong action verbs like "Spearheaded" or "Optimized".' },
+    { num: 2, text: 'Quantify with numbers you can back up, not buzzwords like "Spearheaded".' },
     { num: 3, text: 'Keep descriptions concise and focused on key achievements.' }
   ];
 
@@ -386,40 +386,62 @@ const GenerateResume = () => {
                         {description}
                       </p>
                       
-                      {key === 'ats' ? (
-                        /* ATS layout mockup */
-                        <div className="mt-3 w-full h-16 border border-current opacity-40 group-hover:opacity-80 flex flex-col p-1.5 gap-1 bg-black/30 font-mono text-[6px]">
-                          <div className="h-1.5 w-12 bg-current rounded-sm"></div>
-                          <div className="h-1 w-16 bg-current opacity-60 rounded-sm"></div>
-                          <div className="h-0.5 w-full bg-current opacity-30 mt-1"></div>
-                          <div className="grid grid-cols-3 gap-1 mt-1">
-                            <div className="col-span-1 flex flex-col gap-0.5">
-                              <div className="h-1 w-full bg-current opacity-50 rounded-sm"></div>
-                              <div className="h-0.5 w-8 bg-current opacity-30 rounded-sm"></div>
-                            </div>
-                            <div className="col-span-2 flex flex-col gap-0.5">
-                              <div className="h-1 w-full bg-current opacity-50 rounded-sm"></div>
-                              <div className="h-0.5 w-full bg-current opacity-30 rounded-sm"></div>
-                              <div className="h-0.5 w-full bg-current opacity-30 rounded-sm"></div>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        /* Minimalist layout mockup */
-                        <div className="mt-3 w-full h-16 border border-current opacity-40 group-hover:opacity-80 flex p-1.5 gap-1.5 bg-black/30 font-serif text-[6px]">
-                          <div className="w-1/3 flex flex-col gap-1 border-r border-current/30 pr-1.5">
-                            <div className="w-4 h-4 rounded-full bg-current opacity-50 mx-auto"></div>
-                            <div className="h-1 w-full bg-current rounded-sm mt-0.5"></div>
-                            <div className="h-0.5 w-full bg-current opacity-30 rounded-sm"></div>
-                          </div>
-                          <div className="w-2/3 flex flex-col gap-0.5">
-                            <div className="h-1.5 w-16 bg-current rounded-sm"></div>
-                            <div className="h-0.5 w-full bg-current opacity-30 rounded-sm"></div>
-                            <div className="h-1 w-12 bg-current opacity-50 rounded-sm mt-0.5"></div>
-                            <div className="h-0.5 w-full bg-current opacity-30 rounded-sm"></div>
-                          </div>
-                        </div>
-                      )}
+                  {key === 'ats' ? (
+                    /* Realistic ATS layout mockup */
+                    <div className="mt-3 w-full bg-[#fcfcfc] text-[#1a1a1a] border border-slate-300 p-2 shadow-md flex flex-col gap-0.5 h-24 overflow-hidden select-none text-left font-sans">
+                      {/* Name & Contact */}
+                      <div className="text-center font-bold text-[7px] leading-tight text-slate-900 uppercase tracking-wider">JOHN DOE</div>
+                      <div className="text-center text-[4px] text-slate-500 leading-none">john.doe@email.com | +1 (555) 0100 | github.com/johndoe</div>
+                      
+                      {/* Education Section */}
+                      <div className="mt-1 flex items-center justify-between border-b-[0.5px] border-slate-300 pb-0.5">
+                        <span className="text-[5px] font-bold text-slate-800 uppercase tracking-wider">Education</span>
+                      </div>
+                      <div className="flex justify-between text-[4px] leading-none mt-0.5">
+                        <span className="font-semibold text-slate-700">BS in Computer Science - State University</span>
+                        <span className="text-slate-400">2020 – 2024</span>
+                      </div>
+
+                      {/* Experience Section */}
+                      <div className="mt-1.5 flex items-center justify-between border-b-[0.5px] border-slate-300 pb-0.5">
+                        <span className="text-[5px] font-bold text-slate-800 uppercase tracking-wider">Experience</span>
+                      </div>
+                      <div className="flex justify-between text-[4px] leading-none mt-0.5">
+                        <span className="font-semibold text-slate-700">Software Engineer - Tech Solutions Inc</span>
+                        <span className="text-slate-400">2024 – Present</span>
+                      </div>
+                      <div className="flex items-start gap-1 text-[3.5px] text-slate-500 pl-1 mt-0.5 leading-tight">
+                        <span>•</span>
+                        <span>Engineered React components driving 40% performance gain.</span>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Realistic Minimalist layout mockup */
+                    <div className="mt-3 w-full bg-[#faf9f6] text-[#222222] border border-slate-300 p-2 shadow-md flex flex-col gap-0.5 h-24 overflow-hidden select-none text-left font-serif">
+                      {/* Serif Header */}
+                      <div className="text-[8px] font-bold leading-tight text-slate-900 tracking-wide font-serif">JANE SMITH</div>
+                      <div className="text-[4px] text-slate-500 italic font-serif leading-none border-b border-slate-200 pb-1 mb-1">
+                        janesmith.design | portland, or | contact@janesmith.me
+                      </div>
+                      
+                      {/* Experience Section */}
+                      <div className="text-[5px] font-bold text-slate-800 tracking-wider font-serif uppercase">Professional Experience</div>
+                      <div className="mt-0.5 flex justify-between text-[4px] leading-none font-serif">
+                        <span className="font-bold text-slate-700">Lead Designer — Creative Studio</span>
+                        <span className="text-slate-400 italic">2023 – Present</span>
+                      </div>
+                      <div className="pl-1 text-[3.5px] text-slate-500 font-serif leading-tight mt-0.5">
+                        Led design systems across three product lines, maintaining brand assets.
+                      </div>
+
+                      {/* Education Section */}
+                      <div className="mt-1.5 text-[5px] font-bold text-slate-800 tracking-wider font-serif uppercase">Academic Background</div>
+                      <div className="mt-0.5 flex justify-between text-[4px] leading-none font-serif">
+                        <span className="font-bold text-slate-700">BFA in Graphic Design — Art Academy</span>
+                        <span className="text-slate-400 italic">2019 – 2023</span>
+                      </div>
+                    </div>
+                  )}
                     </div>
                   </div>
                 ))}

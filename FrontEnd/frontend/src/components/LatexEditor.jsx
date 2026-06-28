@@ -15,7 +15,7 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
   const [pdfBlob, setPdfBlob] = useState(null);
   const [previewSynced, setPreviewSynced] = useState(true);
   const [zoom, setZoom] = useState(100);
-  const [fileName, setFileName] = useState('Software_Engineer_2024.tex');
+  const [fileName] = useState('Software_Engineer_2024.tex');
   const autoTimer = useRef(null);
   const syncTimer = useRef(null);
   const isInitialLoad = useRef(true);
@@ -431,7 +431,7 @@ export default function LatexEditor({ open, onClose, resumeData, templateType = 
             respList = respText;
           } else {
             // Split by newlines, bullets, or sentence boundaries (Safari-compatible, no lookbehind)
-            respList = respText.split(/[\n•\-]/).map(r => r.trim()).filter(r => r.length > 10);
+            respList = respText.split(/[\n•-]/).map(r => r.trim()).filter(r => r.length > 10);
           }
           if (respList.length > 0) {
             bullets = `\\begin{itemize}\n${respList.map(r => `\\item ${escapeLatex(r)}`).join('\n')}\n\\end{itemize}`;
@@ -473,7 +473,7 @@ ${bullets}`;
           } else {
             // Split on newlines, bullets, or sentence boundaries (Safari-safe, no lookbehind)
             descList = proj.description
-              .split(/[\n•\-]/)
+              .split(/[\n•-]/)
               .flatMap(seg => seg.split(/\.\s+(?=[A-Z])/))
               .map(d => d.trim())
               .filter(d => d.length > 10);

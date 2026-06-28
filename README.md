@@ -16,11 +16,24 @@ ATS Resify handles both by using Gemini to write the content and LaTeX to ensure
 - **Google Login**: Secure sign-in with Google OAuth2 and JWTs to keep everything stateless and fast.
 
 ## Tech Stack
-- **Backend**: Java 21 with Spring Boot 3.3.5.
+- **Backend**: Java 21 with Spring Boot 3.5.
 - **Database**: MySQL 8.0 (using Hibernate/JPA).
 - **PDF Engine**: MiKTeX/pdfLaTeX (you'll need this installed on your machine).
 - **AI**: Google Gemini API via Spring's RestClient.
-- **Frontend**: React 18 with Ant Design for the UI and Tailwind for styling.
+- **Frontend**: React 19 with Ant Design, MUI, and Tailwind.
+
+## Backend Architecture
+
+The backend is migrating from eight small services to three coarse-grained domain services:
+
+| Service | Port | Responsibilities |
+|---|---:|---|
+| Identity | 8081 | Authentication, users, roles, admin, support |
+| Resume | 8082 | Editing, persistence, synchronization, LaTeX/PDF |
+| Intelligence | 8083 | ATS analysis, imports, AI agent and generation |
+| Gateway | 8080 | Routing, CORS, rate limiting and tracing |
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for ownership rules, migration phases, and deployment requirements.
 
 ## Getting it running
 
@@ -32,9 +45,23 @@ ATS Resify handles both by using Gemini to write the content and LaTeX to ensure
 - A Gemini API Key
 
 ### Backend
-1. Go into the `Backend` folder.
-2. Copy `application-example.properties` to `application.properties` and fill in your DB credentials, Gemini key, and Google OAuth info.
-3. Run it with `./mvnw spring-boot:run`. It starts on port 8081.
+The architecture migration is currently in progress. Configure the required environment variables, then build the full Maven reactor:
+
+```powershell
+cd Backend
+.\mvnw.cmd test
+```
+
+Run each application from its module during local development:
+
+```powershell
+.\mvnw.cmd -pl identity-service spring-boot:run
+.\mvnw.cmd -pl resume-service spring-boot:run
+.\mvnw.cmd -pl intelligence-service spring-boot:run
+.\mvnw.cmd -pl gateway-service spring-boot:run
+```
+
+The current `docker-compose.yml` still describes the previous service topology and must not be treated as the final deployment definition.
 
 ### Frontend
 1. Go into `FrontEnd/frontend`.

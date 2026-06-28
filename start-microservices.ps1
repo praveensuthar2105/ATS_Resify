@@ -1,7 +1,7 @@
 # PowerShell script to run Ats Resify Microservices locally
 
 # 1. Stop any processes using the microservice ports
-$ports = @(8080, 8081, 8082, 8083, 8085, 8086, 8087, 8088)
+$ports = @(8761, 8080, 8081, 8082, 8083)
 Write-Host "Checking for port conflicts..." -ForegroundColor Cyan
 foreach ($port in $ports) {
     $processId = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess
@@ -32,7 +32,7 @@ if (-not $env:GEMINI_API_KEY) { Write-Host "WARNING: GEMINI_API_KEY not set. Set
 if (-not $env:GOOGLE_CLIENT_ID) { Write-Host "WARNING: GOOGLE_CLIENT_ID not set. OAuth2 redirects will fail." -ForegroundColor Yellow }
 if (-not $env:GOOGLE_CLIENT_SECRET) { Write-Host "WARNING: GOOGLE_CLIENT_SECRET not set. OAuth2 authentication will fail." -ForegroundColor Yellow }
 if (-not $env:JWT_SECRET) {
-    $env:JWT_SECRET='aVeryStrongSecretKeyForJWTThatIsAtLeast256BitsLongAndSecure1234567890'
+    $env:JWT_SECRET='d3f4u1t_jW1_53cr3t_v4lU3_f0r_L0c4l_D3v3l0pm3nt_0nly!'
     Write-Host "JWT_SECRET was not set. Using dev placeholder secret." -ForegroundColor Yellow
 }
 if (-not $env:DB_URL) {
@@ -61,17 +61,14 @@ if ($LASTEXITCODE -ne 0) {
 # 5. Boot services in separate windows
 # Format: ModuleName, Port, TerminalTitle
 $services = @(
-    @("auth-service", 8081, "Auth Service"),
-    @("user-service", 8082, "User Service"),
-    @("resume-service", 8083, "Resume Service"),
-    @("ats-service", 8085, "ATS Service"),
-    @("agent-service", 8086, "Agent Service"),
-    @("admin-service", 8087, "Admin Service"),
-    @("support-service", 8088, "Support Service"),
+    @("discovery-server", 8761, "Discovery Server"),
+    @("identity-service", 8081, "Identity Service"),
+    @("resume-service", 8082, "Resume Service"),
+    @("intelligence-service", 8083, "Intelligence Service"),
     @("gateway-service", 8080, "API Gateway")
 )
 
-Write-Host "`nStarting 8 Microservices in separate windows..." -ForegroundColor Green
+Write-Host "`nStarting 5 Microservices in separate windows..." -ForegroundColor Green
 foreach ($svc in $services) {
     $module = $svc[0]
     $port = $svc[1]
@@ -82,7 +79,13 @@ foreach ($svc in $services) {
     # Start Spring Boot application in a separate PowerShell command window
     $cmd = "`$host.ui.RawUI.WindowTitle = '$title (Port $port)'; .\mvnw.cmd spring-boot:run -pl $module"
     Start-Process powershell -ArgumentList "-NoExit", "-Command", $cmd -WorkingDirectory $backendDir
-    Start-Sleep -Seconds 1.5
+    
+    if ($module -eq "discovery-server") {
+        Write-Host "Waiting 5 seconds for Discovery Server to boot..." -ForegroundColor Yellow
+        Start-Sleep -Seconds 5
+    } else {
+        Start-Sleep -Seconds 1.5
+    }
 }
 
 Write-Host "`nAll microservices are starting up! frontend facing port is 8080 (API Gateway)." -ForegroundColor Green

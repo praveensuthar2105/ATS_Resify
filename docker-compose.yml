@@ -1,17 +1,17 @@
 version: '3.8'
 
 services:
-  auth-service:
+  identity-service:
     build:
-      context: ./Backend/auth-service
+      context: ./Backend/identity-service
       dockerfile: Dockerfile
-    container_name: resify-auth-service
+    container_name: resify-identity-service
     ports:
       - "8081:8081"
     environment:
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - DB_URL=${DB_URL}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -23,120 +23,51 @@ services:
       - resify-net
     restart: always
 
-  user-service:
-    build:
-      context: ./Backend/user-service
-      dockerfile: Dockerfile
-    container_name: resify-user-service
-    ports:
-      - "8082:8082"
-    environment:
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - DB_URL=${DB_URL}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-    networks:
-      - resify-net
-    restart: always
-
   resume-service:
     build:
       context: ./Backend/resume-service
       dockerfile: Dockerfile
     container_name: resify-resume-service
     ports:
+      - "8082:8082"
+    environment:
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    networks:
+      - resify-net
+    depends_on:
+      - rabbitmq
+    restart: always
+
+  intelligence-service:
+    build:
+      context: ./Backend/intelligence-service
+      dockerfile: Dockerfile
+    container_name: resify-intelligence-service
+    ports:
       - "8083:8083"
     environment:
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - DB_URL=${DB_URL}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-    networks:
-      - resify-net
-    restart: always
-
-  ats-service:
-    build:
-      context: ./Backend/ats-service
-      dockerfile: Dockerfile
-    container_name: resify-ats-service
-    ports:
-      - "8085:8085"
-    environment:
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - DB_URL=${DB_URL}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
     networks:
       - resify-net
-    restart: always
-
-  agent-service:
-    build:
-      context: ./Backend/agent-service
-      dockerfile: Dockerfile
-    container_name: resify-agent-service
-    ports:
-      - "8086:8086"
-    environment:
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - DB_URL=${DB_URL}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-    networks:
-      - resify-net
-    restart: always
-
-  admin-service:
-    build:
-      context: ./Backend/admin-service
-      dockerfile: Dockerfile
-    container_name: resify-admin-service
-    ports:
-      - "8087:8087"
-    environment:
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - DB_URL=${DB_URL}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-    networks:
-      - resify-net
-    restart: always
-
-  support-service:
-    build:
-      context: ./Backend/support-service
-      dockerfile: Dockerfile
-    container_name: resify-support-service
-    ports:
-      - "8088:8088"
-    environment:
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - DB_URL=${DB_URL}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-    networks:
-      - resify-net
+    depends_on:
+      - rabbitmq
     restart: always
 
   gateway-service:
@@ -147,17 +78,30 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - IDENTITY_SERVICE_URL=http://identity-service:8081
+      - RESUME_SERVICE_URL=http://resume-service:8082
+      - INTELLIGENCE_SERVICE_URL=http://intelligence-service:8083
     depends_on:
-      - auth-service
-      - user-service
+      - identity-service
       - resume-service
-      - ats-service
-      - agent-service
-      - admin-service
-      - support-service
+      - intelligence-service
+      - rabbitmq
+    networks:
+      - resify-net
+    restart: always
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: resify-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
     networks:
       - resify-net
     restart: always

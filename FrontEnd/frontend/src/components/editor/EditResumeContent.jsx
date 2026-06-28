@@ -20,14 +20,9 @@ const EditResumeContent = () => {
   const navigate = useNavigate();
   const {
     loading,
-    editMode,
-    setEditMode,
     saving,
     lastSavedAt,
     latexCode,
-    parseLatexToData,
-    setResumeData,
-    setFormData,
     handleSave,
     downloadPDF,
     compiling,

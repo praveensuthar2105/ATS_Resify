@@ -16,14 +16,30 @@ const formatTime = (timestamp) => {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-// Simple markdown-like formatting for messages
-const formatMessage = (text) => {
+// Safe markdown-like formatting to prevent XSS
+const renderSafeMessage = (text) => {
   if (!text) return '';
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code>$1</code>')
-    .replace(/\n/g, '<br/>');
+  const lines = text.split('\n');
+  return lines.map((line, lineIdx) => {
+    const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
+    const parts = line.split(regex);
+    const renderedLine = parts.map((part, partIdx) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={partIdx}>{part.slice(2, -2)}</strong>;
+      } else if (part.startsWith('*') && part.endsWith('*')) {
+        return <em key={partIdx}>{part.slice(1, -1)}</em>;
+      } else if (part.startsWith('`') && part.endsWith('`')) {
+        return <code key={partIdx}>{part.slice(1, -1)}</code>;
+      }
+      return part;
+    });
+    return (
+      <React.Fragment key={lineIdx}>
+        {renderedLine}
+        {lineIdx < lines.length - 1 && <br />}
+      </React.Fragment>
+    );
+  });
 };
 
 const AgentChat = ({ resumeContext, formData, userId }) => {
@@ -58,17 +74,23 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
   const [prefSaving, setPrefSaving] = useState(false);
   const [prefError, setPrefError] = useState(null);
 
+  // Load preferences helper
+  const loadUserPreferences = useCallback((uid) => {
+    if (!uid || uid === 'anonymous') return;
+    setPrefLoading(true);
+    setPrefError(null);
+    agentAPI.getPreferences(uid)
+      .then(setPreferences)
+      .catch(() => setPrefError('Failed to load preferences'))
+      .finally(() => setPrefLoading(false));
+  }, []);
+
   // Load preferences on open/settings
   useEffect(() => {
     if (isOpen || showSettings) {
-      if (!userId || userId === 'anonymous') return;
-      setPrefLoading(true);
-      agentAPI.getPreferences(userId)
-        .then(setPreferences)
-        .catch(e => setPrefError('Failed to load preferences'))
-        .finally(() => setPrefLoading(false));
+      loadUserPreferences(userId);
     }
-  }, [isOpen, showSettings, userId]);
+  }, [isOpen, showSettings, userId, loadUserPreferences]);
 
   // Save preferences
   const handleSavePreferences = async (updates) => {
@@ -79,7 +101,8 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
       const updated = await agentAPI.updatePreferences(userId, updates);
       setPreferences(updated);
       setShowSettings(false);
-    } catch (e) {
+    } catch (error) {
+      console.error('Error saving preferences:', error);
       setPrefError('Failed to save preferences');
     } finally {
       setPrefSaving(false);
@@ -469,8 +492,9 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
           <div
             className="msg-content"
             style={msg.isError ? { borderColor: '#fca5a5', background: '#fef2f2' } : {}}
-            dangerouslySetInnerHTML={{ __html: formatMessage(safeContent) }}
-          />
+          >
+            {renderSafeMessage(safeContent)}
+          </div>
           {/* Rich data rendering for assistant messages */}
           {!isUser && msg.data && renderScoreCard(msg.data)}
           {!isUser && msg.data && renderKeywords(msg.data)}

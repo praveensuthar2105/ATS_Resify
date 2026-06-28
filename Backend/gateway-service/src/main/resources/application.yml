@@ -5,47 +5,54 @@ spring:
     name: gateway-service
   cloud:
     gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+              - "http://localhost:5174"
+              - "http://localhost:5175"
+              - "http://localhost:3000"
+              - "https://atsresify.me"
+              - "https://www.atsresify.me"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - HEAD
+              - PATCH
+            allowedHeaders: "*"
+            allowCredentials: true
       server:
         webflux:
           routes:
-            # Auth Service Routes
-            - id: auth-route
-              uri: http://localhost:8081
+            # Identity Service Routes (Auth, User, Admin, Support)
+            - id: identity-route
+              uri: lb://identity-service
               predicates:
-                - Path=/oauth2/**, /login/**, /auth/**, /api/auth/**
+                - Path=/oauth2/**, /login/**, /auth/**, /api/auth/**, /api/user/**, /api/admin/**, /api/public/**
                 
-            # User Service Routes
-            - id: user-route
-              uri: http://localhost:8082
-              predicates:
-                - Path=/api/user/**
-                
-            # Resume Service Routes
+            # Resume Service Routes (Resume Generation, Sync, LaTeX Compile, WebSockets)
             - id: resume-route
-              uri: http://localhost:8083
+              uri: lb://resume-service
               predicates:
-                - Path=/api/resume/generate, /api/latex/**, /ws-sync/**
+                - Path=/api/resume/generate, /api/latex/**, /api/resume-sync/**, /ws-resume/**, /ws-sync/**
                 
-            # ATS Service Routes
-            - id: ats-route
-              uri: http://localhost:8085
+            # Intelligence Service Routes (ATS Score, Agent Chat, Imports)
+            - id: intelligence-route
+              uri: lb://intelligence-service
               predicates:
-                - Path=/api/resume/ats-score
-                
-            # Agent Service Routes
-            - id: agent-route
-              uri: http://localhost:8086
-              predicates:
-                - Path=/api/agent/**, /api/resume/import/**
-                
-            # Admin Service Routes
-            - id: admin-route
-              uri: http://localhost:8087
-              predicates:
-                - Path=/api/admin/**
-                
-            # Support Service Routes
-            - id: support-route
-              uri: http://localhost:8088
-              predicates:
-                - Path=/api/public/**
+                - Path=/api/resume/ats-score, /api/agent/**, /api/resume/import/**
+
+eureka:
+  instance:
+    preferIpAddress: true
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true

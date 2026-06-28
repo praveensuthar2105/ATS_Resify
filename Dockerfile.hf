@@ -4,13 +4,9 @@ WORKDIR /app
 COPY Backend/pom.xml ./Backend/pom.xml
 COPY Backend/common-lib ./Backend/common-lib
 COPY Backend/gateway-service ./Backend/gateway-service
-COPY Backend/auth-service ./Backend/auth-service
-COPY Backend/user-service ./Backend/user-service
+COPY Backend/identity-service ./Backend/identity-service
 COPY Backend/resume-service ./Backend/resume-service
-COPY Backend/ats-service ./Backend/ats-service
-COPY Backend/agent-service ./Backend/agent-service
-COPY Backend/admin-service ./Backend/admin-service
-COPY Backend/support-service ./Backend/support-service
+COPY Backend/intelligence-service ./Backend/intelligence-service
 
 # Build the project
 RUN mvn -f Backend/pom.xml clean install -DskipTests
@@ -30,13 +26,9 @@ RUN apt-get update && \
 
 # Copy built JARs from build stage
 COPY --from=build /app/Backend/gateway-service/target/*.jar ./gateway-service.jar
-COPY --from=build /app/Backend/auth-service/target/*.jar ./auth-service.jar
-COPY --from=build /app/Backend/user-service/target/*.jar ./user-service.jar
+COPY --from=build /app/Backend/identity-service/target/*.jar ./identity-service.jar
 COPY --from=build /app/Backend/resume-service/target/*.jar ./resume-service.jar
-COPY --from=build /app/Backend/ats-service/target/*.jar ./ats-service.jar
-COPY --from=build /app/Backend/agent-service/target/*.jar ./agent-service.jar
-COPY --from=build /app/Backend/admin-service/target/*.jar ./admin-service.jar
-COPY --from=build /app/Backend/support-service/target/*.jar ./support-service.jar
+COPY --from=build /app/Backend/intelligence-service/target/*.jar ./intelligence-service.jar
 
 # Copy startup script
 COPY start-hf.sh ./start-hf.sh

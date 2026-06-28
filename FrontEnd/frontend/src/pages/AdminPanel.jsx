@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend as RechartsLegend, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -137,7 +137,7 @@ const AdminPanel = () => {
 
       setCurrentUserRole('ADMIN');
       setLoading(false);
-    } catch (err) {
+    } catch {
       setError('FAILED TO VERIFY ADMIN STATUS');
       setLoading(false);
     }

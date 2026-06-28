@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import AgentChat from '../components/AgentChat';
 import { decodeToken, getAuthToken } from '../utils/auth';
 import { API_BASE_URL } from '../services/api';
-import { parseLatexToResumeData } from '../utils/latexParser';
 import SEO from '../components/SEO';
 import { Helmet } from 'react-helmet-async';
 import SectionHeader from '../components/SectionHeader';
@@ -64,11 +63,10 @@ const EditResume = () => {
 
   const [saving, setSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
-  const [editMode, setEditMode] = useState('form');
+  const [editMode] = useState('form');
   const [snack, setSnack] = useState({ open: false, type: 'success', text: '' });
   const [zoom, setZoom] = useState(100);
   const saveTimer = useRef(null);
-  const syncTimer = useRef(null);
 
   // LaTeX & PDF state
   const [latexCode, setLatexCode] = useState('');
@@ -76,7 +74,7 @@ const EditResume = () => {
   const [pdfBlob, setPdfBlob] = useState(null);
   const [compiling, setCompiling] = useState(false);
   const [compileError, setCompileError] = useState(null);
-  const [autoCompile, setAutoCompile] = useState(true);
+  const [autoCompile] = useState(true);
   const [useOnlineCompiler, setUseOnlineCompiler] = useState(false);
   const autoCompileTimer = useRef(null);
 
@@ -220,7 +218,7 @@ const EditResume = () => {
 
         let bullets = '';
         if (exp.responsibility) {
-          const respList = exp.responsibility.split(/\n+/).map(r => r.replace(/^[•\-\*]\s*/, '').trim()).filter(r => r.length > 5);
+          const respList = exp.responsibility.split(/\n+/).map(r => r.replace(/^[•\-*]\s*/, '').trim()).filter(r => r.length > 5);
           if (respList.length > 0) {
             bullets = `\\begin{itemize}\n${respList.map(r => `\\item ${escapeLatex(r)}`).join('\n')}\n\\end{itemize}`;
           }
@@ -241,7 +239,7 @@ const EditResume = () => {
 
         let bullets = '';
         if (proj.description) {
-          const descList = proj.description.split(/\n+/).map(d => d.replace(/^[•\-\*]\s*/, '').trim()).filter(d => d.length > 5);
+          const descList = proj.description.split(/\n+/).map(d => d.replace(/^[•\-*]\s*/, '').trim()).filter(d => d.length > 5);
           const limitedDescList = descList.slice(0, 3);
           if (limitedDescList.length > 0) {
             bullets = `\\begin{itemize}\n${limitedDescList.map(d => `\\item ${escapeLatex(d)}`).join('\n')}\n\\end{itemize}`;
@@ -447,10 +445,10 @@ ${sections}
       try {
         let data = storedResume;
         if (typeof data === 'string') {
-          try { data = JSON.parse(data); } catch { }
+          try { data = JSON.parse(data); } catch (e) { void e; }
         }
         if (typeof data === 'string') {
-          try { data = JSON.parse(data); } catch { }
+          try { data = JSON.parse(data); } catch (e) { void e; }
         }
 
         const likelyKeys = ['personalInformation', 'summary', 'skills', 'experience'];

@@ -25,7 +25,7 @@ if (-not $env:JWT_SECRET) {
         Write-Host "Aborted. Set JWT_SECRET in your environment and try again." -ForegroundColor Yellow
         exit 1
     }
-    $env:JWT_SECRET='DEV_PLACEHOLDER_NOT_FOR_PRODUCTION_USE'
+    $env:JWT_SECRET='d3f4u1t_jW1_53cr3t_v4lU3_f0r_L0c4l_D3v3l0pm3nt_0nly!'
     Write-Host "Using dev placeholder. DO NOT use in production!" -ForegroundColor Yellow
 }
 if (-not $env:DB_URL) { $env:DB_URL='jdbc:mysql://localhost:3306/resume_builder_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true' }

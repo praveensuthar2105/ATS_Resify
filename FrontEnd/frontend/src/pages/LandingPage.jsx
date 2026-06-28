@@ -188,68 +188,66 @@ const LandingPage = () => {
       <section className="border-b-2 border-brutal-white">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {/* Header Card */}
-          <div className="p-8 lg:p-12 border-b-2 border-r-0 md:border-r-2 border-brutal-white bg-brutal-white text-brutal-black flex flex-col">
+          <div className="p-8 lg:p-12 border-b-2 border-r-0 md:border-r-2 lg:border-r-2 border-brutal-white bg-brutal-white text-brutal-black flex flex-col justify-center">
             <h2 className="text-3xl font-black mb-4 text-brutal-black font-mono uppercase">ENGINEERED FOR SUCCESS</h2>
             <p className="text-sm font-bold leading-tight text-brutal-black">
-              Powerful tools designed to get your resume in front of real hiring managers.
+              Power utilities designed to bypass filtering algorithms and land developer roles.
             </p>
           </div>
 
           {/* Feature: AI Optimization */}
-          <div className="p-8 lg:p-12 border-b-2 border-r-0 lg:border-r-2 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors text-brutal-white hover:text-black">
+          <div className="p-8 lg:p-12 border-b-2 border-r-0 md:border-r-0 lg:border-r-2 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors text-brutal-white hover:text-black">
             <div className="w-12 h-12 brutal-border flex items-center justify-center mb-8 border-current">
               <span className="material-symbols-outlined text-current">auto_awesome</span>
             </div>
             <h3 className="text-xl font-black mb-4 font-mono uppercase">AI OPTIMIZATION</h3>
             <p className="text-sm leading-relaxed opacity-90 text-slate-300 group-hover:text-black">
-              Leverage cutting-edge AI to tailor your resume for any job description instantly, matching keywords and phrasing precisely.
+              Tailor descriptions and bullets dynamically based on raw skill matches and experience inputs.
             </p>
           </div>
 
-          {/* Feature: Smart Analysis */}
-          <div className="p-8 lg:p-12 border-b-2 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors text-brutal-white hover:text-black">
+          {/* Feature: Monaco LaTeX Editor */}
+          <div className="p-8 lg:p-12 border-b-2 border-r-0 md:border-r-2 lg:border-r-0 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors text-brutal-white hover:text-black">
+            <div className="w-12 h-12 brutal-border flex items-center justify-center mb-8 border-current">
+              <span className="material-symbols-outlined text-current">code</span>
+            </div>
+            <h3 className="text-xl font-black mb-4 font-mono uppercase">MONACO LATEX EDITOR</h3>
+            <p className="text-sm leading-relaxed opacity-90 text-slate-300 group-hover:text-black">
+              Unlock raw typesetting control with direct LaTeX edit capability and instant live PDF compiling.
+            </p>
+          </div>
+
+          {/* Feature: ATS Score Checker */}
+          <div className="p-8 lg:p-12 border-b-2 md:border-b-2 lg:border-b-0 border-r-0 md:border-r-0 lg:border-r-2 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors text-brutal-white hover:text-black">
             <div className="w-12 h-12 brutal-border flex items-center justify-center mb-8 border-current">
               <span className="material-symbols-outlined text-current">query_stats</span>
             </div>
-            <h3 className="text-xl font-black mb-4 font-mono uppercase">SMART ANALYSIS</h3>
+            <h3 className="text-xl font-black mb-4 font-mono uppercase">ATS CHECKER</h3>
             <p className="text-sm leading-relaxed opacity-90 text-slate-300 group-hover:text-black">
-              Get detailed feedback on how your resume performs against ATS algorithms before you hit send on your application.
+              Scan output templates against common ATS parser constraints to flag bad formats and structural issues.
             </p>
           </div>
 
-          {/* Feature: Premium Templates (full-width) */}
-          <div className="p-8 lg:p-12 md:col-span-2 lg:col-span-3 border-r-0 flex flex-col md:flex-row md:items-center gap-8 group hover:bg-neon-green transition-colors text-brutal-white hover:text-black">
-            <div className="w-16 h-16 brutal-border flex items-center justify-center shrink-0 border-current">
-              <span className="material-symbols-outlined text-3xl text-current">description</span>
+          {/* Feature: Job-Match Gap Analysis */}
+          <div className="p-8 lg:p-12 border-b-2 md:border-b-0 lg:border-b-0 border-r-0 md:border-r-2 lg:border-r-2 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors text-brutal-white hover:text-black">
+            <div className="w-12 h-12 brutal-border flex items-center justify-center mb-8 border-current">
+              <span className="material-symbols-outlined text-current">smart_toy</span>
             </div>
-            <div>
-              <h3 className="text-2xl font-black mb-2 font-mono uppercase">PREMIUM TEMPLATES</h3>
-              <p className="text-sm max-w-3xl opacity-90 text-slate-300 group-hover:text-black">
-                Choose from a collection of professionally designed, recruiter-approved templates that look great and scan perfectly.
-              </p>
-            </div>
+            <h3 className="text-xl font-black mb-4 font-mono uppercase">GAP ANALYSIS AGENT</h3>
+            <p className="text-sm leading-relaxed opacity-90 text-slate-300 group-hover:text-black">
+              Compare your resume directly against target job descriptions to identify missing keywords and skills.
+            </p>
           </div>
-        </div>
-      </section>
 
-      {/* ═══ STATS SECTION ═══ */}
-      <section className="bg-brutal-black border-b-2 border-brutal-white overflow-x-hidden">
-        <div className="flex divide-x-2 divide-brutal-white whitespace-nowrap overflow-x-auto py-12">
-          <div className="px-16 text-center flex-shrink-0">
-            <p className="text-6xl font-black text-neon-green mb-2">500K+</p>
-            <p className="text-[10px] font-black tracking-[0.2em]">RESUMES CREATED</p>
-          </div>
-          <div className="px-16 text-center flex-shrink-0">
-            <p className="text-6xl font-black text-neon-green mb-2">92%</p>
-            <p className="text-[10px] font-black tracking-[0.2em]">INTERVIEW RATE</p>
-          </div>
-          <div className="px-16 text-center flex-shrink-0">
-            <p className="text-6xl font-black text-neon-green mb-2">4.9/5</p>
-            <p className="text-[10px] font-black tracking-[0.2em]">USER RATING</p>
-          </div>
-          <div className="px-16 text-center flex-shrink-0">
-            <p className="text-6xl font-black text-neon-green mb-2">200+</p>
-            <p className="text-[10px] font-black tracking-[0.2em]">ATS SYSTEMS</p>
+          {/* Feature: ATS-Tested Layouts */}
+          <div className="p-8 lg:p-12 border-r-0 border-brutal-white flex flex-col group hover:bg-neon-green transition-colors text-brutal-white hover:text-black">
+            <div className="w-12 h-12 brutal-border flex items-center justify-center mb-8 border-current">
+              <span className="material-symbols-outlined text-current">description</span>
+            </div>
+            <h3 className="text-xl font-black mb-4 font-mono uppercase">ATS-TESTED LAYOUTS</h3>
+            <p className="text-sm leading-relaxed opacity-90 text-slate-300 group-hover:text-black">
+              Choose from two ATS-tested layouts designed to maximize readability and parser compatibility.
+            </p>
           </div>
         </div>
       </section>
@@ -263,17 +261,17 @@ const LandingPage = () => {
             READY TO LAND YOUR<br />
             <span className="bg-neon-green text-black px-2">DREAM JOB?</span>
           </h2>
-          <p className="text-slate-300 text-sm mb-12 max-w-xl mx-auto">
-            Join thousands of job seekers who bypassed the bots and secured their spot in the interview room.
+          <p className="text-slate-300 text-sm mb-12 max-w-xl mx-auto font-mono">
+            &gt; INITIALIZE PROTOCOL: TARGET SECURED. RUN COMPILE PROCESS TO BYPASS AUTOMATED BOTS AND ENGAGE DIRECT INTERVIEW CHANNELS.
           </p>
           <button
             onClick={() => navigate('/generate')}
             className="w-full sm:w-auto bg-neon-green text-black font-black px-12 py-6 text-xl btn-brutal border-2 border-brutal-white mb-8 font-mono uppercase"
           >
-            GET STARTED NOW — IT'S FREE
+            EXECUTE GET STARTED PROTOCOL
           </button>
           <p className="text-brutal-white text-[10px] font-bold tracking-widest font-mono uppercase">
-            NO CREDIT CARD REQUIRED. CANCEL ANYTIME.
+            COMPILE CODE: 0.00 USD. SYSTEM STATUS: FULLY OPERATIONAL.
           </p>
         </div>
       </section>

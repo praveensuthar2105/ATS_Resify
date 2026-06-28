@@ -1,74 +1,109 @@
 package com.Backend.AI_Resume_Builder_Backend.resume;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
 
 @Service
 public class ResumeDataSyncService {
+
+    private static final Logger log = LoggerFactory.getLogger(ResumeDataSyncService.class);
+    private static final String DATA_KEY_PREFIX = "sync:resume:data:";
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     private final ResumeDataConverterService converter = new ResumeDataConverterService();
 
     @Autowired
     private UndoRedoService undoRedoService;
 
-    private ResumeData centralModel = new ResumeData();
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     // Get central model
-    public ResumeData getCentralModel() {
-        return centralModel;
+    public ResumeData getCentralModel(String userId) {
+        String key = DATA_KEY_PREFIX + userId;
+        try {
+            Object obj = redisTemplate.opsForValue().get(key);
+            if (obj != null) {
+                return MAPPER.readValue(obj.toString(), ResumeData.class);
+            }
+        } catch (Exception e) {
+            log.error("Failed to read central model for user {}: {}", userId, e.getMessage());
+        }
+        return new ResumeData();
+    }
+
+    // Save central model
+    private void saveCentralModel(String userId, ResumeData data) {
+        String key = DATA_KEY_PREFIX + userId;
+        try {
+            String json = MAPPER.writeValueAsString(data);
+            redisTemplate.opsForValue().set(key, json);
+        } catch (Exception e) {
+            log.error("Failed to save central model for user {}: {}", userId, e.getMessage());
+        }
     }
 
     // Update from JSON - parse JSON, update central model, regenerate LaTeX
-    public void updateFromJson(String json) {
-        centralModel = converter.fromJson(json);
-        undoRedoService.recordState(centralModel, "JSON");
+    public void updateFromJson(String userId, String json) {
+        ResumeData data = converter.fromJson(json);
+        saveCentralModel(userId, data);
+        undoRedoService.recordState(userId, data, "JSON");
     }
 
     // Update from LaTeX - parse LaTeX, update central model, regenerate JSON
-    public void updateFromLatex(String latex) {
-        centralModel = converter.fromLatex(latex);
-        undoRedoService.recordState(centralModel, "LaTeX");
+    public void updateFromLatex(String userId, String latex) {
+        ResumeData data = converter.fromLatex(latex);
+        saveCentralModel(userId, data);
+        undoRedoService.recordState(userId, data, "LaTeX");
     }
 
     // Get current JSON representation
-    public String getCurrentJson() {
-        return converter.toJson(centralModel);
+    public String getCurrentJson(String userId) {
+        ResumeData data = getCentralModel(userId);
+        return converter.toJson(data);
     }
 
     // Get current LaTeX representation
-    public String getCurrentLatex() {
-        return converter.toLatex(centralModel);
+    public String getCurrentLatex(String userId) {
+        ResumeData data = getCentralModel(userId);
+        return converter.toLatex(data);
     }
 
     // Update central model directly
-    public void updateCentralModel(ResumeData data) {
-        this.centralModel = data;
-        undoRedoService.recordState(centralModel, "Form");
+    public void updateCentralModel(String userId, ResumeData data) {
+        saveCentralModel(userId, data);
+        undoRedoService.recordState(userId, data, "Form");
     }
 
     // Undo last change
-    public ResumeData undo() {
-        ResumeData previous = undoRedoService.undo();
+    public ResumeData undo(String userId) {
+        ResumeData previous = undoRedoService.undo(userId);
         if (previous != null) {
-            centralModel = previous;
+            saveCentralModel(userId, previous);
+            return previous;
         }
-        return centralModel;
+        return getCentralModel(userId);
     }
 
     // Redo last undone change
-    public ResumeData redo() {
-        ResumeData next = undoRedoService.redo();
+    public ResumeData redo(String userId) {
+        ResumeData next = undoRedoService.redo(userId);
         if (next != null) {
-            centralModel = next;
+            saveCentralModel(userId, next);
+            return next;
         }
-        return centralModel;
+        return getCentralModel(userId);
     }
 
-    public boolean canUndo() {
-        return undoRedoService.canUndo();
+    public boolean canUndo(String userId) {
+        return undoRedoService.canUndo(userId);
     }
 
-    public boolean canRedo() {
-        return undoRedoService.canRedo();
+    public boolean canRedo(String userId) {
+        return undoRedoService.canRedo(userId);
     }
 }

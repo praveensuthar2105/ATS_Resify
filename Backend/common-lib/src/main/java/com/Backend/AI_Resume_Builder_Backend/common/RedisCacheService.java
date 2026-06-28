@@ -158,12 +158,33 @@ public class RedisCacheService {
         return "jobmatch:" + resumeHash + ":" + jobDescriptionHash;
     }
 
+    private Set<String> scanKeys(String pattern) {
+        Set<String> keys = new java.util.HashSet<>();
+        try {
+            redisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Void>) connection -> {
+                org.springframework.data.redis.core.Cursor<byte[]> cursor = connection.scan(
+                        org.springframework.data.redis.core.ScanOptions.scanOptions().match(pattern).count(1000).build());
+                while (cursor.hasNext()) {
+                    keys.add(new String(cursor.next(), java.nio.charset.StandardCharsets.UTF_8));
+                }
+                try {
+                    cursor.close();
+                } catch (Exception ignored) {
+                }
+                return null;
+            });
+        } catch (Exception e) {
+            logger.error("Failed to scan Redis keys: {}", e.getMessage());
+        }
+        return keys;
+    }
+
     /**
      * Clear all caches for a specific user (for logout/privacy)
      */
     public void clearUserCaches(String userId) {
         try {
-            Set<String> keys = redisTemplate.keys(USER_CONTEXT_PREFIX + userId + ":*");
+            Set<String> keys = scanKeys(USER_CONTEXT_PREFIX + userId + ":*");
             if (keys != null && !keys.isEmpty()) {
                 redisTemplate.delete(keys);
                 logger.info("Cleared {} cache entries for user {}", keys.size(), userId);
@@ -203,7 +224,7 @@ public class RedisCacheService {
     }
 
     private Long countKeys(String pattern) {
-        Set<String> keys = redisTemplate.keys(pattern);
+        Set<String> keys = scanKeys(pattern);
         return keys != null ? (long) keys.size() : 0L;
     }
 

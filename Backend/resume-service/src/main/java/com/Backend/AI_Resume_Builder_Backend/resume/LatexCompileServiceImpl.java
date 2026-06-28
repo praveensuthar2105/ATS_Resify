@@ -30,6 +30,7 @@ public class LatexCompileServiceImpl implements LatexCompileService, Initializin
     private int maxConcurrent;
 
     private Semaphore compileSemaphore;
+    private java.util.Map<String, Object> cachedStatus = null;
 
     @Override
     public void afterPropertiesSet() {
@@ -100,7 +101,10 @@ public class LatexCompileServiceImpl implements LatexCompileService, Initializin
     }
 
     @Override
-    public java.util.Map<String, Object> getCompilerStatus() {
+    public synchronized java.util.Map<String, Object> getCompilerStatus() {
+        if (cachedStatus != null) {
+            return cachedStatus;
+        }
         java.util.Map<String, Object> out = new java.util.HashMap<>();
         String mode = (compilerMode == null || compilerMode.isBlank()) ? "auto" : compilerMode.trim().toLowerCase();
         out.put("mode", mode);
@@ -172,6 +176,7 @@ public class LatexCompileServiceImpl implements LatexCompileService, Initializin
             Files.deleteIfExists(dummyDir);
         } catch (Exception ignored) {
         }
+        cachedStatus = out;
         return out;
     }
 
@@ -212,15 +217,26 @@ public class LatexCompileServiceImpl implements LatexCompileService, Initializin
             throw new IOException(hint.toString(), e);
         }
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        try (InputStream is = process.getInputStream()) {
-            is.transferTo(output);
-        }
+        Thread readerThread = new Thread(() -> {
+            try (InputStream is = process.getInputStream()) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = is.read(buffer)) != -1) {
+                    output.write(buffer, 0, bytesRead);
+                }
+            } catch (IOException ignored) {
+            }
+        });
+        readerThread.setDaemon(true);
+        readerThread.start();
 
         boolean finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
         if (!finished) {
             process.destroyForcibly();
+            readerThread.interrupt();
             throw new IOException("LaTeX compilation timed out after " + timeoutSeconds + "s");
         }
+        readerThread.join(1000);
 
         int exit = process.exitValue();
         if (Files.notExists(pdfFile) || exit != 0) {
@@ -235,6 +251,7 @@ public class LatexCompileServiceImpl implements LatexCompileService, Initializin
         List<String> cmd = new ArrayList<>();
         String exe = compilerPath != null && !compilerPath.isBlank() ? compilerPath : "pdflatex";
         cmd.add(exe);
+        cmd.add("-no-shell-escape");
         cmd.add("-interaction=nonstopmode");
         cmd.add("-halt-on-error");
         cmd.add("-output-directory");

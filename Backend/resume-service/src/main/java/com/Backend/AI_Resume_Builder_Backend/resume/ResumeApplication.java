@@ -11,8 +11,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication(scanBasePackages = "com.Backend.AI_Resume_Builder_Backend")
-@EntityScan("com.Backend.AI_Resume_Builder_Backend")
-@EnableJpaRepositories("com.Backend.AI_Resume_Builder_Backend")
+@EntityScan(basePackages = "com.Backend.AI_Resume_Builder_Backend")
+@EnableJpaRepositories(basePackages = "com.Backend.AI_Resume_Builder_Backend")
 public class ResumeApplication {
 
     public static void main(String[] args) {

@@ -22,6 +22,10 @@ public class JwtValidationConfig {
             throw new IllegalStateException(
                     "JWT secret is not configured. Set the 'jwt.secret' property or JWT_SECRET environment variable.");
         }
+        if (jwtSecret.equals("aVeryStrongSecretKeyForJWTThatIsAtLeast256BitsLongAndSecure1234567890")) {
+            throw new IllegalStateException(
+                    "JWT secret is set to the insecure default fallback. You must configure a unique, secure JWT_SECRET.");
+        }
         if (jwtSecret.length() < 32) {
             throw new IllegalStateException(
                     "JWT secret is too short (" + jwtSecret.length() + " chars). "
