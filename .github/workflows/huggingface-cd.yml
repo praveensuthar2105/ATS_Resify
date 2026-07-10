@@ -26,6 +26,15 @@ jobs:
             echo "Error: HF_TOKEN, HF_USERNAME, or HF_SPACE_NAME secrets are missing in GitHub!"
             exit 1
           fi
-          echo "Syncing repository to Hugging Face Space..."
-          git push --force https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME main
+          
+          # Set git config for the temporary subtree branch creation
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          
+          echo "Splitting Backend directory into a deployable branch..."
+          git subtree split --prefix=Backend -b huggingface-deploy
+          
+          echo "Syncing Backend to Hugging Face Space..."
+          git push --force https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME huggingface-deploy:main
           echo "Sync completed successfully!"
+
