@@ -89,6 +89,9 @@ COMPLETE_INTERVIEW_HANDBOOK.md
 *.sql
 *.pdf
 *.backup
+*.png
+*.jpg
 testParserFinal.js
 start-backend.bat
 stop-backend.bat
+
