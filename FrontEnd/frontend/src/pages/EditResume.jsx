@@ -71,12 +71,22 @@ const EditResume = () => {
   // LaTeX & PDF state
   const [latexCode, setLatexCode] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
+  const [pdfFilename, setPdfFilename] = useState('editr');
   const [pdfBlob, setPdfBlob] = useState(null);
   const [compiling, setCompiling] = useState(false);
   const [compileError, setCompileError] = useState(null);
   const [autoCompile] = useState(true);
   const [useOnlineCompiler, setUseOnlineCompiler] = useState(false);
   const autoCompileTimer = useRef(null);
+
+  useEffect(() => {
+    if (formData.fullName) {
+      const safeName = formData.fullName.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+      if (safeName) {
+        setPdfFilename(safeName);
+      }
+    }
+  }, [formData.fullName]);
 
   // Resizer state — use ref for the dragging flag so mousemove reads it instantly
   const [leftWidth, setLeftWidth] = useState(50);
@@ -615,7 +625,7 @@ ${sections}
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${formData.fullName || 'Resume'}.pdf`;
+      a.download = `${pdfFilename || 'Resume'}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -634,7 +644,7 @@ ${sections}
         const downloadUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = downloadUrl;
-        a.download = `${formData.fullName || 'Resume'}.pdf`;
+        a.download = `${pdfFilename || 'Resume'}.pdf`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -970,11 +980,24 @@ ${sections}
         style={{ width: `${100 - leftWidth}%`, willChange: isResizing ? 'width' : 'auto' }}
       >
         <div className="bg-black text-[#39ff14] px-4 py-2.5 flex items-center justify-between z-10 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${compiling ? 'bg-yellow-500 animate-pulse' : pdfUrl ? 'bg-[#39ff14]' : 'bg-red-500'} inline-block`}></span>
-            <span className="font-bold uppercase tracking-widest text-xs text-white font-mono">
-              {compiling ? 'RENDERING...' : 'PDF PREVIEW'}
-            </span>
+          <div className="flex items-center gap-2 flex-grow mr-4">
+            <span className={`w-2 h-2 rounded-full ${compiling ? 'bg-yellow-500 animate-pulse' : pdfUrl ? 'bg-[#39ff14]' : 'bg-red-500'} inline-block shrink-0`}></span>
+            {compiling ? (
+              <span className="font-bold uppercase tracking-widest text-xs text-white font-mono">
+                RENDERING...
+              </span>
+            ) : (
+              <div className="flex items-center text-xs font-mono font-bold text-white uppercase tracking-widest">
+                <input
+                  type="text"
+                  value={pdfFilename}
+                  onChange={(e) => setPdfFilename(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
+                  className="bg-transparent border-b border-transparent hover:border-[#39ff14] focus:border-[#39ff14] focus:outline-none text-[#39ff14] text-xs font-mono font-bold uppercase tracking-widest px-1 py-0.5 w-32 focus:w-48 transition-all"
+                  placeholder="FILENAME"
+                />
+                <span className="opacity-50 font-sans text-[10px] text-gray-400">.pdf</span>
+              </div>
+            )}
             {useOnlineCompiler && <span className="bg-blue-600 text-white text-[8px] px-1.5 py-0.5 font-mono">EXT</span>}
           </div>
           <div className="flex items-center gap-1 bg-white/10 text-white p-0.5 rounded">

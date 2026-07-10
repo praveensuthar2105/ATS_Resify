@@ -95,3 +95,11 @@ testParserFinal.js
 start-backend.bat
 stop-backend.bat
 
+# Allow images in public/ asset folders
+!**/public/*.png
+!**/public/*.jpg
+!**/public/*.svg
+!**/public/*.ico
+!**/public/*.gif
+
+
