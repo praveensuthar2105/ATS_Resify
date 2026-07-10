@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { API_ROOT_URL } from '../services/api';
 import './Navbar.css';
 
 const Navbar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);

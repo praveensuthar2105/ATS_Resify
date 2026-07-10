@@ -49,6 +49,18 @@ public class RedisConfig {
     @Value("${spring.data.redis.password:}")
     private String redisPassword;
 
+    @Value("${spring.data.redis.lettuce.pool.max-active:10}")
+    private int maxActive;
+
+    @Value("${spring.data.redis.lettuce.pool.max-idle:5}")
+    private int maxIdle;
+
+    @Value("${spring.data.redis.lettuce.pool.min-idle:2}")
+    private int minIdle;
+
+    @Value("${spring.data.redis.lettuce.pool.max-wait:2000ms}")
+    private Duration maxWait;
+
     @Value("${cache.ai.bullet-improvement-ttl:86400000}")
     private long bulletImprovementTtl;
 
@@ -74,8 +86,17 @@ public class RedisConfig {
             redisConfig.setPassword(redisPassword);
         }
 
+        // Configure connection pooling settings
+        @SuppressWarnings("rawtypes")
+        org.apache.commons.pool2.impl.GenericObjectPoolConfig poolConfig = new org.apache.commons.pool2.impl.GenericObjectPoolConfig();
+        poolConfig.setMaxTotal(maxActive);
+        poolConfig.setMaxIdle(maxIdle);
+        poolConfig.setMinIdle(minIdle);
+        poolConfig.setMaxWait(maxWait);
+
         LettuceClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
                 .commandTimeout(Duration.ofMillis(5000))
+                .poolConfig(poolConfig)
                 .build();
 
         return new LettuceConnectionFactory(redisConfig, clientConfig);

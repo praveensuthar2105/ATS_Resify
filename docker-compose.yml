@@ -1,6 +1,17 @@
 version: '3.8'
 
 services:
+  discovery-server:
+    build:
+      context: ./Backend/discovery-server
+      dockerfile: Dockerfile
+    container_name: resify-discovery-server
+    ports:
+      - "8761:8761"
+    networks:
+      - resify-net
+    restart: always
+
   identity-service:
     build:
       context: ./Backend/identity-service
@@ -9,16 +20,19 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - REDIS_HOST=${REDIS_HOST:-redis}
-      - REDIS_PORT=${REDIS_PORT:-6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - DB_URL=${DB_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_URL=${IDENTITY_DB_URL}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - EUREKA_URI=http://discovery-server:8761/eureka/
+    depends_on:
+      - discovery-server
     networks:
       - resify-net
     restart: always
@@ -31,18 +45,20 @@ services:
     ports:
       - "8082:8082"
     environment:
-      - REDIS_HOST=${REDIS_HOST:-redis}
-      - REDIS_PORT=${REDIS_PORT:-6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - DB_URL=${DB_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_URL=${RESUME_DB_URL}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - EUREKA_URI=http://discovery-server:8761/eureka/
     networks:
       - resify-net
     depends_on:
+      - discovery-server
       - rabbitmq
     restart: always
 
@@ -54,19 +70,21 @@ services:
     ports:
       - "8083:8083"
     environment:
-      - REDIS_HOST=${REDIS_HOST:-redis}
-      - REDIS_PORT=${REDIS_PORT:-6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - DB_URL=${DB_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_URL=${INTELLIGENCE_DB_URL}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - EUREKA_URI=http://discovery-server:8761/eureka/
     networks:
       - resify-net
     depends_on:
+      - discovery-server
       - rabbitmq
     restart: always
 
@@ -78,13 +96,12 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - REDIS_HOST=${REDIS_HOST:-redis}
-      - REDIS_PORT=${REDIS_PORT:-6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - IDENTITY_SERVICE_URL=http://identity-service:8081
-      - RESUME_SERVICE_URL=http://resume-service:8082
-      - INTELLIGENCE_SERVICE_URL=http://intelligence-service:8083
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - EUREKA_URI=http://discovery-server:8761/eureka/
     depends_on:
+      - discovery-server
       - identity-service
       - resume-service
       - intelligence-service
