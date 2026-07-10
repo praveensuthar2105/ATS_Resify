@@ -79,4 +79,16 @@ back.sql
 # Interview Preparation
 INTERVIEW_PREP.md
 COMPLETE_INTERVIEW_HANDBOOK.md
+# Large Archives and Executables
+*.zip
+*.exe
 
+# Local developer scripts, database dumps, PDFs, and backup files
+*.ps1
+*.rar
+*.sql
+*.pdf
+*.backup
+testParserFinal.js
+start-backend.bat
+stop-backend.bat
