@@ -2,10 +2,8 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy parent pom and libraries
-COPY pom.xml ./
-COPY common-lib ./common-lib
-COPY resume-service ./resume-service
+# Copy the entire build context (which is the Backend directory on Render)
+COPY . .
 
 # Build only common-lib and resume-service modules
 RUN mvn -pl common-lib,resume-service -am clean install -DskipTests

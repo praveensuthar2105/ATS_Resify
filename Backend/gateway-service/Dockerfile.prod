@@ -2,10 +2,8 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy parent pom and dependencies
-COPY Backend/pom.xml ./Backend/pom.xml
-COPY Backend/common-lib ./Backend/common-lib
-COPY Backend/gateway-service ./Backend/gateway-service
+# Copy the entire Backend directory to satisfy the parent POM modules list
+COPY Backend ./Backend
 
 # Build the module
 RUN mvn -f Backend/pom.xml -pl Backend/common-lib,Backend/gateway-service -am clean install -DskipTests
