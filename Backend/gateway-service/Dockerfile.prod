@@ -1,0 +1,19 @@
+# Stage 1: Build the Maven module
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /app
+
+# Copy parent pom and dependencies
+COPY Backend/pom.xml ./Backend/pom.xml
+COPY Backend/common-lib ./Backend/common-lib
+COPY Backend/gateway-service ./Backend/gateway-service
+
+# Build the module
+RUN mvn -f Backend/pom.xml -pl Backend/common-lib,Backend/gateway-service -am clean install -DskipTests
+
+# Stage 2: Runtime environment
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
+
+COPY --from=build /app/Backend/gateway-service/target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
