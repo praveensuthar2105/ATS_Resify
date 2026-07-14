@@ -1,0 +1,33 @@
+# Stage 1: Build the Maven module and its dependencies
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /app
+
+# Copy parent pom and libraries
+COPY pom.xml ./
+COPY common-lib ./common-lib
+COPY resume-service ./resume-service
+
+# Build only common-lib and resume-service modules
+RUN mvn -pl common-lib,resume-service -am clean install -DskipTests
+
+# Stage 2: Runtime environment
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
+
+# Install TeX Live (LaTeX) for resume generation
+RUN apt-get update && \
+    export DEBIAN_FRONTEND=noninteractive && \
+    apt-get install -y --no-install-recommends \
+    texlive-latex-base \
+    texlive-fonts-recommended \
+    texlive-latex-extra \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy built JAR from Stage 1
+COPY --from=build /app/resume-service/target/*.jar ./app.jar
+
+ENV PORT=8082
+ENV LATEX_COMPILER=pdflatex
+
+EXPOSE 8082
+ENTRYPOINT ["java", "-XX:ActiveProcessorCount=1", "-XX:MaxRAMPercentage=75.0", "-XX:+UseSerialGC", "-Xss256k", "-jar", "app.jar"]

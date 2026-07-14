@@ -1,6 +1,8 @@
 # Step 1: Build all modules
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
+
+# Copy the pom.xml and source code modules
 COPY Backend/pom.xml ./Backend/pom.xml
 COPY Backend/common-lib ./Backend/common-lib
 COPY Backend/discovery-server ./Backend/discovery-server
@@ -33,11 +35,11 @@ COPY --from=build /app/Backend/resume-service/target/*.jar ./resume-service.jar
 COPY --from=build /app/Backend/intelligence-service/target/*.jar ./intelligence-service.jar
 
 # Copy startup script
-COPY start-hf.sh ./start-hf.sh
-RUN chmod +x ./start-hf.sh
+COPY start-prod.sh ./start-prod.sh
+RUN chmod +x ./start-prod.sh
 
-# Expose Hugging Face default port (routes to API Gateway)
-EXPOSE 7860
+# Expose standard container port
+EXPOSE 8080
 
-# Run all services
-ENTRYPOINT ["./start-hf.sh"]
+# Run all services via the production startup script
+ENTRYPOINT ["./start-prod.sh"]

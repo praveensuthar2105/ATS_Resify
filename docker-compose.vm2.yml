@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  identity-service:
+    build:
+      context: ./Backend/identity-service
+      dockerfile: Dockerfile
+    container_name: resify-identity-service
+    ports:
+      - "8081:8081"
+    environment:
+      - EUREKA_URI=http://${VM1_PRIVATE_IP}:8761/eureka/
+      - DB_URL=${IDENTITY_DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=60.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+    networks:
+      - resify-net
+    restart: always
+
+networks:
+  resify-net:
+    driver: bridge

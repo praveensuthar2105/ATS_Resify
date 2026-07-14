@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  discovery-server:
+    build:
+      context: ./Backend/discovery-server
+      dockerfile: Dockerfile
+    container_name: resify-discovery-server
+    ports:
+      - "8761:8761"
+    environment:
+      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=40.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+    networks:
+      - resify-net
+    restart: always
+
+  gateway-service:
+    build:
+      context: ./Backend/gateway-service
+      dockerfile: Dockerfile
+    container_name: resify-gateway-service
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_URI=http://discovery-server:8761/eureka/
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=40.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+    depends_on:
+      - discovery-server
+    networks:
+      - resify-net
+    restart: always
+
+networks:
+  resify-net:
+    driver: bridge

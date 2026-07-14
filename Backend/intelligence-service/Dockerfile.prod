@@ -1,0 +1,23 @@
+# Stage 1: Build the Maven module and its dependencies
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /app
+
+# Copy parent pom and libraries
+COPY pom.xml ./
+COPY common-lib ./common-lib
+COPY intelligence-service ./intelligence-service
+
+# Build only common-lib and intelligence-service modules
+RUN mvn -pl common-lib,intelligence-service -am clean install -DskipTests
+
+# Stage 2: Runtime environment
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
+
+# Copy built JAR from Stage 1
+COPY --from=build /app/intelligence-service/target/*.jar ./app.jar
+
+ENV PORT=8083
+
+EXPOSE 8083
+ENTRYPOINT ["java", "-XX:ActiveProcessorCount=1", "-XX:MaxRAMPercentage=75.0", "-XX:+UseSerialGC", "-Xss256k", "-jar", "app.jar"]

@@ -1,0 +1,155 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: resify-rabbitmq-prod
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS:-guest}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    networks:
+      - resify-net
+    restart: always
+
+  discovery-server:
+    build:
+      context: ./Backend/discovery-server
+      dockerfile: Dockerfile
+    container_name: resify-discovery-server-prod
+    ports:
+      - "8761:8761"
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    networks:
+      - resify-net
+    restart: always
+
+  identity-service:
+    build:
+      context: ./Backend/identity-service
+      dockerfile: Dockerfile
+    container_name: resify-identity-service-prod
+    ports:
+      - "8081:8081"
+    environment:
+      - EUREKA_URI=http://discovery-server:8761/eureka/
+      - DB_URL=${IDENTITY_DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+    depends_on:
+      - discovery-server
+    networks:
+      - resify-net
+    restart: always
+
+  resume-service:
+    build:
+      context: ./Backend/resume-service
+      dockerfile: Dockerfile
+    container_name: resify-resume-service-prod
+    ports:
+      - "8082:8082"
+    environment:
+      - EUREKA_URI=http://discovery-server:8761/eureka/
+      - DB_URL=${RESUME_DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASS=${RABBITMQ_PASS:-guest}
+    deploy:
+      resources:
+        limits:
+          memory: 450M
+    depends_on:
+      - discovery-server
+      - rabbitmq
+    networks:
+      - resify-net
+    restart: always
+
+  intelligence-service:
+    build:
+      context: ./Backend/intelligence-service
+      dockerfile: Dockerfile
+    container_name: resify-intelligence-service-prod
+    ports:
+      - "8083:8083"
+    environment:
+      - EUREKA_URI=http://discovery-server:8761/eureka/
+      - DB_URL=${INTELLIGENCE_DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASS=${RABBITMQ_PASS:-guest}
+    deploy:
+      resources:
+        limits:
+          memory: 450M
+    depends_on:
+      - discovery-server
+      - rabbitmq
+    networks:
+      - resify-net
+    restart: always
+
+  gateway-service:
+    build:
+      context: ./Backend/gateway-service
+      dockerfile: Dockerfile
+    container_name: resify-gateway-service-prod
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_URI=http://discovery-server:8761/eureka/
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    depends_on:
+      - discovery-server
+      - identity-service
+      - resume-service
+      - intelligence-service
+    networks:
+      - resify-net
+    restart: always
+
+networks:
+  resify-net:
+    driver: bridge

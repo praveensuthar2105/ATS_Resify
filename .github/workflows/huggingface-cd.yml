@@ -1,10 +1,11 @@
+# WARNING: Deprecated in favor of generic free container deployment.
+# Hugging Face deployment is disabled to prevent unwanted builds.
+
 name: Deploy to Hugging Face Spaces
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
+
 
 jobs:
   deploy:
