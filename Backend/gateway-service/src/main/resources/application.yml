@@ -38,7 +38,7 @@ spring:
                 
             # Resume Service Routes (Resume Generation, Sync, LaTeX Compile, WebSockets)
             - id: resume-route
-              uri: lb://resume-service
+              uri: ${RESUME_SERVICE_URI:lb://resume-service}
               predicates:
                 - Path=/api/resume/generate, /api/latex/**, /api/resume-sync/**, /ws-resume/**, /ws-sync/**
                 
