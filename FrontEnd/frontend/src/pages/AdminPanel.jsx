@@ -9,15 +9,15 @@ import { API_BASE_URL } from '../services/api';
 const COLORS = ['#39ff14', '#000000', '#333333', '#888888', '#f8f8f8'];
 
 const PRESET_SQL_QUERIES = [
-  { label: "📋 Recent Users (Top 25)", query: "SELECT id, name, email, role, resume_count, created_at FROM users ORDER BY created_at DESC LIMIT 25;" },
-  { label: "📄 Recent Resumes (Top 25)", query: "SELECT id, user_id, title, tier, target_role, created_at FROM resumes ORDER BY created_at DESC LIMIT 25;" },
-  { label: "🔍 Recent ATS Checks (Top 25)", query: "SELECT id, resume_id, overall_score, missing_keywords_count, created_at FROM ats_checks ORDER BY created_at DESC LIMIT 25;" },
+  { label: "📋 Recent Users (Top 25)", query: "SELECT id, name, email, role, provider, created_at, updated_at FROM users ORDER BY created_at DESC LIMIT 25;" },
+  { label: "📄 Recent Resumes (Top 25)", query: "SELECT id, user_id, candidate_name, template_type, created_at FROM resumes ORDER BY created_at DESC LIMIT 25;" },
+  { label: "🔍 Recent ATS Checks (Top 25)", query: "SELECT id, user_id, ats_score, job_description_provided, file_name, created_at FROM ats_checks ORDER BY created_at DESC LIMIT 25;" },
   { label: "🤖 View All AI System Prompts", query: "SELECT id, prompt_key, prompt_name, model_name, temperature, updated_at FROM ai_prompts;" },
   { label: "🎛️ View All Feature Flags", query: "SELECT id, flag_key, flag_name, enabled_global, enabled_pro_only, updated_at FROM feature_flags;" },
   { label: "⚙️ View All Tier Quotas & Limits", query: "SELECT id, tier_name, max_resumes_per_month, max_ats_checks_per_day, ai_model_allowed FROM tier_configs;" },
   { label: "🛡️ Recent Security & Threat Alerts (Top 50)", query: "SELECT id, alert_type, ip_address, severity, details, created_at FROM security_alerts ORDER BY created_at DESC LIMIT 50;" },
   { label: "📊 User Distribution by Role Summary", query: "SELECT role, COUNT(*) as total_users FROM users GROUP BY role;" },
-  { label: "📈 Resume Creation by Tier Summary", query: "SELECT tier, COUNT(*) as total_resumes FROM resumes GROUP BY tier;" },
+  { label: "📈 Resume Creation by Template Summary", query: "SELECT template_type, COUNT(*) as total_resumes FROM resumes GROUP BY template_type;" },
   { label: "💬 Recent Contact & Feedback Messages", query: "SELECT id, name, email, subject, is_read, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 25;" }
 ];
 

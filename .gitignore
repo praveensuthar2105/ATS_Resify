@@ -87,6 +87,8 @@ COMPLETE_INTERVIEW_HANDBOOK.md
 *.ps1
 *.rar
 *.sql
+!**/db/migration/*.sql
+!**/schema.sql
 *.pdf
 *.backup
 *.png

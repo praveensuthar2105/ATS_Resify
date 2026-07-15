@@ -845,8 +845,14 @@ public class AdminController {
         if (!isAdmin(authHeader)) return new ResponseEntity<>(Map.of("error", "Access denied"), HttpStatus.FORBIDDEN);
         
         Map<String, Object> liveStats = new HashMap<>();
-        long resumesToday = resumeRepository.countResumesCreatedToday();
-        long atsChecksToday = atsCheckRepository.countAtsChecksCreatedToday();
+        long resumesToday = 0;
+        long atsChecksToday = 0;
+        try {
+            resumesToday = resumeRepository.countResumesCreatedToday();
+            atsChecksToday = atsCheckRepository.countAtsChecksCreatedToday();
+        } catch (Exception e) {
+            logger.warn("Error fetching live stats counts: " + e.getMessage());
+        }
         
         liveStats.put("resumesToday", resumesToday);
         liveStats.put("atsChecksToday", atsChecksToday);
@@ -1011,7 +1017,12 @@ public class AdminController {
         logEntries.add(Map.of("timestamp", LocalDateTime.now().minusSeconds(5).toString(), "service", "identity-service", "level", "INFO", "message", "Admin health ping received. Memory heap OK."));
         logEntries.add(Map.of("timestamp", LocalDateTime.now().minusSeconds(12).toString(), "service", "gateway-service", "level", "INFO", "message", "Rate limiter check passed for origin https://atsresify.me"));
         logEntries.add(Map.of("timestamp", LocalDateTime.now().minusSeconds(25).toString(), "service", "resume-service", "level", "INFO", "message", "LaTeX compile engine ready (pdflatex/tectonic)."));
-        long todayResumes = resumeRepository.countResumesCreatedToday();
+        long todayResumes = 0;
+        try {
+            todayResumes = resumeRepository.countResumesCreatedToday();
+        } catch (Exception e) {
+            logger.warn("Could not fetch today's resume count: " + e.getMessage());
+        }
         if (todayResumes > 0) {
             logEntries.add(Map.of("timestamp", LocalDateTime.now().minusMinutes(1).toString(), "service", "resume-service", "level", "INFO", "message", "Generated " + todayResumes + " resume(s) today."));
         }
