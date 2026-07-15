@@ -247,9 +247,19 @@ public class LatexCompileServiceImpl implements LatexCompileService, Initializin
         return Files.readAllBytes(pdfFile);
     }
 
+    private String resolveCompilerExe(String defaultExe) {
+        if (compilerPath != null && !compilerPath.isBlank()) {
+            File f = new File(compilerPath.trim());
+            if (f.exists() && f.isFile()) {
+                return f.getAbsolutePath();
+            }
+        }
+        return defaultExe;
+    }
+
     private List<String> buildPdflatexCommand(Path tempDir, Path texFile) {
         List<String> cmd = new ArrayList<>();
-        String exe = compilerPath != null && !compilerPath.isBlank() ? compilerPath : "pdflatex";
+        String exe = resolveCompilerExe("pdflatex");
         cmd.add(exe);
         cmd.add("-no-shell-escape");
         cmd.add("-interaction=nonstopmode");
@@ -262,7 +272,7 @@ public class LatexCompileServiceImpl implements LatexCompileService, Initializin
 
     private List<String> buildTectonicCommand(Path tempDir, Path texFile) {
         List<String> cmd = new ArrayList<>();
-        String exe = compilerPath != null && !compilerPath.isBlank() ? compilerPath : "tectonic";
+        String exe = resolveCompilerExe("tectonic");
         cmd.add(exe);
         cmd.add("-o");
         cmd.add(tempDir.toString());
