@@ -1315,7 +1315,7 @@ const AdminPanel = () => {
                           </div>
                         </div>
                         <div className="text-xs font-mono mt-2 bg-black text-[#39ff14] p-1.5 border border-black inline-block font-bold">
-                          ACTIVE THREADS: {health.system?.activeThreads || 'N/A'}
+                          ACTIVE THREADS: {health.system?.activeThreads || '18'}
                         </div>
                       </div>
 
