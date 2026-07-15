@@ -24,7 +24,7 @@ services:
       dockerfile: Backend/gateway-service/Dockerfile.prod
     container_name: resify-gateway-service
     ports:
-      - "80:8080" # Standard HTTP port 80
+      - "8080:8080" # Run gateway on 8080 so host Nginx can listen on 80/443
     environment:
       - EUREKA_URI=http://discovery-server:8761/eureka/
       - REDIS_HOST=${REDIS_HOST}
