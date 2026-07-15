@@ -79,15 +79,6 @@ const EditResume = () => {
   const [useOnlineCompiler, setUseOnlineCompiler] = useState(false);
   const autoCompileTimer = useRef(null);
 
-  useEffect(() => {
-    if (formData.fullName) {
-      const safeName = formData.fullName.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
-      if (safeName) {
-        setPdfFilename(safeName);
-      }
-    }
-  }, [formData.fullName]);
-
   // Resizer state — use ref for the dragging flag so mousemove reads it instantly
   const [leftWidth, setLeftWidth] = useState(50);
   const isResizingRef = useRef(false);
@@ -117,7 +108,7 @@ const EditResume = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(() => {
       const newWidth = (e.clientX / window.innerWidth) * 100;
-      if (newWidth > 25 && newWidth < 75) {
+      if (newWidth > 20 && newWidth < 80) {
         setLeftWidth(newWidth);
       }
     });
@@ -139,6 +130,15 @@ const EditResume = () => {
   });
 
   const [resumeData, setResumeData] = useState(null);
+
+  useEffect(() => {
+    if (formData.fullName) {
+      const safeName = formData.fullName.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+      if (safeName) {
+        setPdfFilename(safeName);
+      }
+    }
+  }, [formData.fullName]);
 
   const normalizeSkills = (skills) => {
     if (!skills) return [];

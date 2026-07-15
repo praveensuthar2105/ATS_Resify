@@ -30,6 +30,7 @@ services:
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - RESUME_SERVICE_URI=${RESUME_SERVICE_URI}
       - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=40.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
     deploy:
       resources:
