@@ -65,7 +65,7 @@ public class AdminController {
 
     @Autowired
     public AdminController(
-            @Value("${resume.service.url:http://localhost:8082}") String resumeServiceUrl,
+            @Value("${resume.service.url:${RESUME_SERVICE_URL:https://resify-resume-service.onrender.com}}") String resumeServiceUrl,
             RestClient.Builder restClientBuilder) {
         org.springframework.http.client.SimpleClientHttpRequestFactory requestFactory = 
                 new org.springframework.http.client.SimpleClientHttpRequestFactory();
