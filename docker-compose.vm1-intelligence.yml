@@ -3,13 +3,13 @@ version: '3.8'
 services:
   intelligence-service:
     build:
-      context: .
-      dockerfile: Backend/intelligence-service/Dockerfile.prod
+      context: ./Backend # Build from Backend directory so maven projects align
+      dockerfile: intelligence-service/Dockerfile.prod # Relative to Backend context
     container_name: resify-intelligence-service
     ports:
       - "8083:8083"
     environment:
-      - EUREKA_URI=http://130.210.22.94:8761/eureka/ # Points to VM 2's Eureka Server
+      - EUREKA_URI=http://130.210.22.94:8761/eureka/ # VM 2 Eureka IP
       - DB_URL=${INTELLIGENCE_DB_URL}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
