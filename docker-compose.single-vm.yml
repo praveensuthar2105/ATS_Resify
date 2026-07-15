@@ -24,7 +24,7 @@ services:
       dockerfile: Backend/gateway-service/Dockerfile.prod
     container_name: resify-gateway-service
     ports:
-      - "8080:8080"
+      - "80:8080" # Bind container's 8080 to host's port 80 (standard HTTP)
     environment:
       - EUREKA_URI=http://discovery-server:8761/eureka/
       - REDIS_HOST=${REDIS_HOST}
