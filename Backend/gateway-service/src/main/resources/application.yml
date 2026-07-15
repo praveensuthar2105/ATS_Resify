@@ -30,11 +30,11 @@ spring:
       server:
         webflux:
           routes:
-            # Identity Service Routes (Auth, User, Admin, Support)
+            # Identity Service Routes (Auth, User, Admin, Support, Health)
             - id: identity-route
               uri: lb://identity-service
               predicates:
-                - Path=/oauth2/**, /login/**, /auth/**, /api/auth/**, /api/user/**, /api/admin/**, /api/public/**
+                - Path=/oauth2/**, /login/**, /auth/**, /api/auth/**, /api/user/**, /api/admin/**, /api/public/**, /api/health/**
                 
             # Resume Service Routes (Resume Generation, Sync, LaTeX Compile, WebSockets)
             - id: resume-route

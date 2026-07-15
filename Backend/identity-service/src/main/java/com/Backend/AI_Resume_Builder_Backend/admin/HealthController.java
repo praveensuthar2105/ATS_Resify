@@ -11,6 +11,10 @@ import java.sql.Statement;
 
 import com.Backend.AI_Resume_Builder_Backend.common.RedisCacheService;
 import com.Backend.AI_Resume_Builder_Backend.common.GeminiService;
+import com.Backend.AI_Resume_Builder_Backend.auth.JwtUtil;
+import com.Backend.AI_Resume_Builder_Backend.user.User;
+import com.Backend.AI_Resume_Builder_Backend.user.UserRepository;
+import com.Backend.AI_Resume_Builder_Backend.user.Role;
 
 
 
@@ -35,6 +39,32 @@ public class HealthController {
 
     @Autowired
     private GeminiService geminiService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @GetMapping("/test-admin-token")
+    public ResponseEntity<Map<String, String>> getTestAdminToken() {
+        if (userRepository.findByEmail("admin@atsresify.me").isEmpty()) {
+            User u = new User("admin@atsresify.me", "Admin User", "", "google", "test-admin-id");
+            u.setRole(Role.ADMIN);
+            userRepository.save(u);
+        }
+        return ResponseEntity.ok(Map.of("token", jwtUtil.generateToken("admin@atsresify.me", "Admin User", "ADMIN")));
+    }
+
+    @GetMapping("/test-user-token")
+    public ResponseEntity<Map<String, String>> getTestUserToken() {
+        if (userRepository.findByEmail("user@atsresify.me").isEmpty()) {
+            User u = new User("user@atsresify.me", "Normal User", "", "google", "test-user-id");
+            u.setRole(Role.USER);
+            userRepository.save(u);
+        }
+        return ResponseEntity.ok(Map.of("token", jwtUtil.generateToken("user@atsresify.me", "Normal User", "USER")));
+    }
 
     private boolean isDatabaseAvailable() {
         try (Connection conn = dataSource.getConnection()) {

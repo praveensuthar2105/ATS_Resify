@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend as RechartsLegend, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -8,7 +8,21 @@ import { API_BASE_URL } from '../services/api';
 
 const COLORS = ['#39ff14', '#000000', '#333333', '#888888', '#f8f8f8'];
 
+const PRESET_SQL_QUERIES = [
+  { label: "📋 Recent Users (Top 25)", query: "SELECT id, name, email, role, resume_count, created_at FROM users ORDER BY created_at DESC LIMIT 25;" },
+  { label: "📄 Recent Resumes (Top 25)", query: "SELECT id, user_id, title, tier, target_role, created_at FROM resumes ORDER BY created_at DESC LIMIT 25;" },
+  { label: "🔍 Recent ATS Checks (Top 25)", query: "SELECT id, resume_id, overall_score, missing_keywords_count, created_at FROM ats_checks ORDER BY created_at DESC LIMIT 25;" },
+  { label: "🤖 View All AI System Prompts", query: "SELECT id, prompt_key, prompt_name, model_name, temperature, updated_at FROM ai_prompts;" },
+  { label: "🎛️ View All Feature Flags", query: "SELECT id, flag_key, flag_name, enabled_global, enabled_pro_only, updated_at FROM feature_flags;" },
+  { label: "⚙️ View All Tier Quotas & Limits", query: "SELECT id, tier_name, max_resumes_per_month, max_ats_checks_per_day, ai_model_allowed FROM tier_configs;" },
+  { label: "🛡️ Recent Security & Threat Alerts (Top 50)", query: "SELECT id, alert_type, ip_address, severity, details, created_at FROM security_alerts ORDER BY created_at DESC LIMIT 50;" },
+  { label: "📊 User Distribution by Role Summary", query: "SELECT role, COUNT(*) as total_users FROM users GROUP BY role;" },
+  { label: "📈 Resume Creation by Tier Summary", query: "SELECT tier, COUNT(*) as total_resumes FROM resumes GROUP BY tier;" },
+  { label: "💬 Recent Contact & Feedback Messages", query: "SELECT id, name, email, subject, is_read, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 25;" }
+];
+
 const AdminPanel = () => {
+  const tabsContainerRef = useRef(null);
   const [currentUserRole, setCurrentUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -76,11 +90,31 @@ const AdminPanel = () => {
   const [engagementStats, setEngagementStats] = useState(null);
   const [feedbackSummary, setFeedbackSummary] = useState(null);
   const [liveStats, setLiveStats] = useState(null);
+  const [showRawTelemetry, setShowRawTelemetry] = useState(false);
+  const [autoRefreshHealth, setAutoRefreshHealth] = useState(false);
 
+  // Phase 3 Command Center States (ponytail mode)
+  const [aiPrompts, setAiPrompts] = useState([]);
+  const [featureFlags, setFeatureFlags] = useState([]);
+  const [tierConfigs, setTierConfigs] = useState([]);
+  const [securityAlerts, setSecurityAlerts] = useState([]);
+  const [sqlQueryInput, setSqlQueryInput] = useState(PRESET_SQL_QUERIES[0].query);
+  const [sqlResults, setSqlResults] = useState(null);
+  const [sqlError, setSqlError] = useState(null);
+  const [liveLogs, setLiveLogs] = useState([]);
 
   useEffect(() => {
     verifyAdmin();
   }, []);
+
+  useEffect(() => {
+    if (currentUserRole === 'ADMIN' && tabValue === 2 && autoRefreshHealth) {
+      const timer = setInterval(() => {
+        fetchHealth();
+      }, 10000);
+      return () => clearInterval(timer);
+    }
+  }, [currentUserRole, tabValue, autoRefreshHealth]);
 
   useEffect(() => {
     if (currentUserRole === 'ADMIN') {
@@ -93,6 +127,10 @@ const AdminPanel = () => {
       else if (tabValue === 6) { fetchFeedbacks(); fetchFeedbackSummary(); }
       else if (tabValue === 7) fetchContacts();
       else if (tabValue === 8) fetchEngagementStats();
+      else if (tabValue === 9) fetchAiPrompts();
+      else if (tabValue === 10) fetchSecurityAlerts();
+      else if (tabValue === 11) { fetchFeatureFlags(); fetchTierConfigs(); }
+      else if (tabValue === 12) fetchLiveLogs();
     }
   }, [currentUserRole, tabValue, page, rowsPerPage, orderBy, order, auditPage, auditRowsPerPage, feedbackPage, feedbackRowsPerPage, contactPage, contactRowsPerPage, resumePage, resumeRowsPerPage, atsCheckPage, atsCheckRowsPerPage]);
 
@@ -349,6 +387,90 @@ const AdminPanel = () => {
         setFeedbackSummary(data);
       }
     } catch (err) { console.error(err); }
+  };
+
+  // Phase 3 Command Center Fetchers (ponytail mode)
+  const fetchAiPrompts = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/ai-prompts`, { headers: getAuthHeaders() });
+      if (res.ok) setAiPrompts(await res.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const updateAiPrompt = async (id, updatedData) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/ai-prompts/${id}`, {
+        method: 'PUT',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
+      });
+      if (res.ok) fetchAiPrompts();
+    } catch (err) { console.error(err); }
+  };
+
+  const fetchFeatureFlags = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/feature-flags`, { headers: getAuthHeaders() });
+      if (res.ok) setFeatureFlags(await res.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const updateFeatureFlag = async (id, updatedData) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/feature-flags/${id}`, {
+        method: 'PUT',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
+      });
+      if (res.ok) fetchFeatureFlags();
+    } catch (err) { console.error(err); }
+  };
+
+  const fetchTierConfigs = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/tier-configs`, { headers: getAuthHeaders() });
+      if (res.ok) setTierConfigs(await res.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const updateTierConfig = async (id, updatedData) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/tier-configs/${id}`, {
+        method: 'PUT',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
+      });
+      if (res.ok) fetchTierConfigs();
+    } catch (err) { console.error(err); }
+  };
+
+  const fetchSecurityAlerts = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/security/alerts`, { headers: getAuthHeaders() });
+      if (res.ok) setSecurityAlerts(await res.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const fetchLiveLogs = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/logs`, { headers: getAuthHeaders() });
+      if (res.ok) setLiveLogs(await res.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const runSqlQuery = async () => {
+    setSqlError(null);
+    setSqlResults(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/sql-query`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: sqlQueryInput })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to run SQL query');
+      setSqlResults(data);
+    } catch (err) { setSqlError(err.message); }
   };
 
   const handleRequestSort = (property) => {
@@ -872,7 +994,11 @@ const AdminPanel = () => {
     { title: 'ATS CHECKS', icon: 'fact_check' },
     { title: 'FEEDBACK', icon: 'star' },
     { title: 'MESSAGES', icon: 'mail', badge: unreadContacts },
-    { title: 'ENGAGEMENT', icon: 'monitoring' }
+    { title: 'ENGAGEMENT', icon: 'monitoring' },
+    { title: 'AI OPS STUDIO', icon: 'auto_awesome' },
+    { title: 'SECURITY & THREATS', icon: 'shield_lock' },
+    { title: 'FLAGS & QUOTAS', icon: 'tune' },
+    { title: 'SQL & LOGS STUDIO', icon: 'terminal' }
   ];
 
   return (
@@ -920,18 +1046,25 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* TABS NAVIGATION */}
-        <div className="flex overflow-x-auto border border-black bg-white mb-8 shadow-[2px_2px_0px_0px_#000000] hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {/* TABS NAVIGATION WITH BRUTALIST HORIZONTAL SCROLLBAR */}
+        <div
+          ref={tabsContainerRef}
+          className="flex overflow-x-auto border-2 border-black bg-white mb-8 shadow-[4px_4px_0px_0px_#000000] pb-1"
+          style={{
+            scrollbarWidth: 'auto',
+            scrollbarColor: '#39ff14 #000000'
+          }}
+        >
           {tabs.map((tab, idx) => (
             <button
               key={idx}
               onClick={() => setTabValue(idx)}
-              className={`whitespace-nowrap flex-1 min-w-[160px] px-6 py-4 flex items-center justify-center gap-3 font-black uppercase text-sm border-r border-black last:border-r-0 transition-colors ${tabValue === idx ? 'bg-[#39ff14] text-black shadow-[inset_0px_-2px_0px_0px_#000]' : 'bg-[#f8f8f8] hover:bg-black hover:text-[#39ff14]'}`}
+              className={`whitespace-nowrap shrink-0 min-w-[170px] px-6 py-4 flex items-center justify-center gap-2 font-black uppercase text-sm border-r-2 border-black last:border-r-0 transition-all select-none ${tabValue === idx ? 'bg-[#39ff14] text-black shadow-[inset_0px_-3px_0px_0px_#000]' : 'bg-[#f8f8f8] hover:bg-black hover:text-[#39ff14]'}`}
             >
               <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
-              {tab.title}
+              <span>{tab.title}</span>
               {tab.badge > 0 && (
-                <span className="bg-red-600 text-white px-2 py-0.5 text-xs ml-1 border-2 border-black shadow-[2px_2px_0px_0px_#000] animate-pulse">{tab.badge}</span>
+                <span className="bg-red-600 text-white px-2 py-0.5 text-xs ml-1 border border-black shadow-[1px_1px_0px_0px_#000] animate-pulse">{tab.badge}</span>
               )}
             </button>
           ))}
@@ -1113,20 +1246,335 @@ const AdminPanel = () => {
                 </div>
               )}
 
-              {/* SYSTEM HEALTH TAB */}
+              {/* SYSTEM HEALTH TAB (ADVANCED TELEMETRY & DIAGNOSTICS) */}
               {tabValue === 2 && health && (
-                <div className="border border-black bg-white shadow-[2px_2px_0px_0px_#000000]">
-                  <div className="p-6 border-b-2 border-black bg-[#f0f0f0]">
-                    <h2 className="text-xl font-bold uppercase flex items-center gap-2">
-                      <span className="material-symbols-outlined text-2xl">speed</span>
-                      DIAGNOSTICS & TELEMETRY
-                    </h2>
+                <div className="space-y-6">
+                  {/* Top Header & Controls */}
+                  <div className="border border-black bg-white shadow-[4px_4px_0px_0px_#000000] p-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-2 border-black pb-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-3xl text-[#39ff14] bg-black p-1">terminal</span>
+                          <h2 className="text-2xl font-black tracking-wider uppercase">ADVANCED TELEMETRY & DIAGNOSTICS</h2>
+                        </div>
+                        <p className="text-xs font-mono text-gray-600 mt-1 uppercase">
+                          REAL-TIME CLOUD CLUSTER TELEMETRY • LAST SYNC: {health.system?.timestamp ? new Date(health.system.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString()}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button
+                          onClick={() => setAutoRefreshHealth(!autoRefreshHealth)}
+                          className={`px-3 py-1.5 border-2 border-black font-mono text-xs font-bold uppercase transition-all flex items-center gap-1.5 ${
+                            autoRefreshHealth ? 'bg-[#39ff14] text-black shadow-[2px_2px_0px_0px_#000]' : 'bg-gray-100 text-gray-700 hover:bg-black hover:text-white'
+                          }`}
+                        >
+                          <span className={`w-2 h-2 rounded-full border border-black ${autoRefreshHealth ? 'bg-black animate-ping' : 'bg-gray-400'}`}></span>
+                          {autoRefreshHealth ? 'LIVE POLL (10s)' : 'AUTO-POLL: OFF'}
+                        </button>
+                        <button
+                          onClick={fetchHealth}
+                          className="px-4 py-1.5 border-2 border-black bg-black text-[#39ff14] hover:bg-[#39ff14] hover:text-black transition-all font-mono font-bold text-xs uppercase flex items-center gap-1.5 shadow-[2px_2px_0px_0px_#000]"
+                        >
+                          <span className={`material-symbols-outlined text-[16px] ${loading ? 'animate-spin' : ''}`}>sync</span>
+                          SYNC TELEMETRY
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* System Overview Hero Gauge Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                      {/* JVM Memory Gauge */}
+                      <div className="border-2 border-black p-4 bg-[#fcfcfc] flex flex-col justify-between">
+                        <div>
+                          <div className="text-[10px] font-mono font-bold uppercase text-gray-500 tracking-wider">JVM HEAP MEMORY</div>
+                          <div className="text-2xl font-black font-mono mt-1">
+                            {health.system?.memory ? `${health.system.memory.usedMb} MB` : 'N/A'}
+                            <span className="text-xs text-gray-500 font-normal"> / {health.system?.memory ? `${health.system.memory.maxMb} MB` : 'N/A'}</span>
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <div className="w-full bg-gray-200 border border-black h-3 relative">
+                            <div
+                              className="bg-[#39ff14] h-full border-r border-black transition-all duration-500"
+                              style={{ width: `${health.system?.memory?.usagePercent || 0}%` }}
+                            ></div>
+                          </div>
+                          <div className="flex justify-between text-[10px] font-mono mt-1 font-bold">
+                            <span>USAGE: {health.system?.memory?.usagePercent || 0}%</span>
+                            <span>FREE: {health.system?.memory?.freeMb || 0} MB</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Processing Units */}
+                      <div className="border-2 border-black p-4 bg-[#fcfcfc] flex flex-col justify-between">
+                        <div>
+                          <div className="text-[10px] font-mono font-bold uppercase text-gray-500 tracking-wider">HOST CPU & THREADS</div>
+                          <div className="text-2xl font-black font-mono mt-1">
+                            {health.system?.processors || '4'} CORES
+                          </div>
+                        </div>
+                        <div className="text-xs font-mono mt-2 bg-black text-[#39ff14] p-1.5 border border-black inline-block font-bold">
+                          ACTIVE THREADS: {health.system?.activeThreads || 'N/A'}
+                        </div>
+                      </div>
+
+                      {/* Database Pool Count */}
+                      <div className="border-2 border-black p-4 bg-[#fcfcfc] flex flex-col justify-between">
+                        <div>
+                          <div className="text-[10px] font-mono font-bold uppercase text-gray-500 tracking-wider">DATABASE USER POOL</div>
+                          <div className="text-2xl font-black font-mono mt-1 text-[#0066cc]">
+                            {health.database?.userCount ?? '0'} USERS
+                          </div>
+                        </div>
+                        <div className="text-[10px] font-mono mt-2 text-gray-600 truncate">
+                          DIALECT: {health.database?.dialect || 'MySQL (Aiven Cloud)'}
+                        </div>
+                      </div>
+
+                      {/* Diagnostic Latency */}
+                      <div className="border-2 border-black p-4 bg-[#fcfcfc] flex flex-col justify-between">
+                        <div>
+                          <div className="text-[10px] font-mono font-bold uppercase text-gray-500 tracking-wider">DIAGNOSTIC ROUNDTRIP</div>
+                          <div className="text-2xl font-black font-mono mt-1 text-purple-700">
+                            {health.totalCheckDurationMs ?? '0'} ms
+                          </div>
+                        </div>
+                        <div className="text-[10px] font-mono mt-2 text-gray-600">
+                          HOST: {health.system?.osName || 'Linux'}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <StatusIndicator label="LATEX COMPILATION SERVICE" status={health.latex?.ready ? 'UP' : 'DOWN'} details={health.latex} />
-                    <StatusIndicator label="CORE DATABASE (MYSQL)" status={health.database?.status} details={health.database} />
-                    <StatusIndicator label="IN-MEMORY CACHE (REDIS)" status={health.redis?.status} details={health.redis} />
-                    <StatusIndicator label="ASYNC TASK QUEUE" status="UP" details={health.queue} />
+
+                  {/* Microservice Health Architecture Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Identity Service Card */}
+                    <div className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000000] overflow-hidden flex flex-col justify-between">
+                      <div className="p-4 bg-black text-white flex justify-between items-center border-b-2 border-black">
+                        <div className="font-mono font-bold text-sm tracking-wider flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#39ff14] text-lg">security</span>
+                          IDENTITY & AUTH ENGINE
+                        </div>
+                        <span className="px-2 py-0.5 bg-[#39ff14] text-black text-[10px] font-black uppercase border border-black">
+                          {health.identity?.status || 'UP'}
+                        </span>
+                      </div>
+                      <div className="p-4 space-y-2 font-mono text-xs flex-grow bg-[#fafafa]">
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Node ID:</span>
+                          <span className="font-bold">identity-service</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">JWT Engine:</span>
+                          <span className="font-bold text-[#008000]">{health.identity?.jwtEngine || 'Active (HS256)'}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Java Runtime:</span>
+                          <span className="font-bold">{health.system?.javaVersion || 'JDK 21'}</span>
+                        </div>
+                      </div>
+                      <div className="p-2 bg-gray-100 border-t border-black text-[10px] font-mono text-center text-gray-600">
+                        MICROSERVICE PORT: 8081 / DOCKER CONTAINER
+                      </div>
+                    </div>
+
+                    {/* LaTeX Engine Card */}
+                    <div className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000000] overflow-hidden flex flex-col justify-between">
+                      <div className="p-4 bg-black text-white flex justify-between items-center border-b-2 border-black">
+                        <div className="font-mono font-bold text-sm tracking-wider flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#39ff14] text-lg">picture_as_pdf</span>
+                          LATEX COMPILATION ENGINE
+                        </div>
+                        <span className={`px-2 py-0.5 text-[10px] font-black uppercase border border-black ${
+                          (health.latex?.status === 'UP' || health.latex?.ready) ? 'bg-[#39ff14] text-black' : 'bg-red-600 text-white'
+                        }`}>
+                          {(health.latex?.status === 'UP' || health.latex?.ready) ? 'OPERATIONAL' : 'SYSTEM FAULT'}
+                        </span>
+                      </div>
+                      <div className="p-4 space-y-2 font-mono text-xs flex-grow bg-[#fafafa]">
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Endpoint:</span>
+                          <span className="font-bold truncate max-w-[140px]" title="resify-resume-service.onrender.com">Render Cloud</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Compiler Exec:</span>
+                          <span className="font-bold text-[#008000]">{health.latex?.compiler || health.latex?.mode || 'pdflatex / tectonic'}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Health Check Latency:</span>
+                          <span className="font-bold">{health.latex?.latencyMs ?? 'N/A'} ms</span>
+                        </div>
+                        {health.latex?.error && (
+                          <div className="p-2 bg-red-100 border border-red-500 text-red-700 text-[10px] break-words">
+                            ERR: {health.latex.error}
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-2 bg-gray-100 border-t border-black text-[10px] font-mono text-center text-gray-600">
+                        MICROSERVICE PORT: 8082 / CLOUD ENGINE
+                      </div>
+                    </div>
+
+                    {/* MySQL Database Card */}
+                    <div className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000000] overflow-hidden flex flex-col justify-between">
+                      <div className="p-4 bg-black text-white flex justify-between items-center border-b-2 border-black">
+                        <div className="font-mono font-bold text-sm tracking-wider flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#39ff14] text-lg">database</span>
+                          CORE DATABASE (MYSQL)
+                        </div>
+                        <span className={`px-2 py-0.5 text-[10px] font-black uppercase border border-black ${
+                          health.database?.status === 'UP' ? 'bg-[#39ff14] text-black' : 'bg-red-600 text-white'
+                        }`}>
+                          {health.database?.status || 'UNKNOWN'}
+                        </span>
+                      </div>
+                      <div className="p-4 space-y-2 font-mono text-xs flex-grow bg-[#fafafa]">
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">User Pool Size:</span>
+                          <span className="font-bold text-[#008000]">{health.database?.userCount ?? '0'} records</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Query Ping Latency:</span>
+                          <span className="font-bold">{health.database?.latencyMs ?? 'N/A'} ms</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Host Cluster:</span>
+                          <span className="font-bold truncate max-w-[140px]" title="ats-resify-db-praveensuthar1863-fbe4.c.aivencloud.com">Aiven MySQL Cloud</span>
+                        </div>
+                      </div>
+                      <div className="p-2 bg-gray-100 border-t border-black text-[10px] font-mono text-center text-gray-600">
+                        JDBC POOL / SSL ENABLED
+                      </div>
+                    </div>
+
+                    {/* Redis Cache Card */}
+                    <div className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000000] overflow-hidden flex flex-col justify-between">
+                      <div className="p-4 bg-black text-white flex justify-between items-center border-b-2 border-black">
+                        <div className="font-mono font-bold text-sm tracking-wider flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#39ff14] text-lg">memory</span>
+                          IN-MEMORY CACHE (REDIS)
+                        </div>
+                        <span className={`px-2 py-0.5 text-[10px] font-black uppercase border border-black ${
+                          health.redis?.status === 'UP' ? 'bg-[#39ff14] text-black' : 'bg-red-600 text-white'
+                        }`}>
+                          {health.redis?.status || 'UNKNOWN'}
+                        </span>
+                      </div>
+                      <div className="p-4 space-y-2 font-mono text-xs flex-grow bg-[#fafafa]">
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Ping Verification:</span>
+                          <span className="font-bold text-[#008000]">{health.redis?.status === 'UP' ? 'PONG (SUCCESS)' : 'FAILED'}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Ping Roundtrip:</span>
+                          <span className="font-bold">{health.redis?.latencyMs ?? 'N/A'} ms</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Client Driver:</span>
+                          <span className="font-bold">Lettuce Async Pool</span>
+                        </div>
+                      </div>
+                      <div className="p-2 bg-gray-100 border-t border-black text-[10px] font-mono text-center text-gray-600">
+                        REDIS CLUSTER / CACHE STORE
+                      </div>
+                    </div>
+
+                    {/* Async Queue Card */}
+                    <div className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000000] overflow-hidden flex flex-col justify-between">
+                      <div className="p-4 bg-black text-white flex justify-between items-center border-b-2 border-black">
+                        <div className="font-mono font-bold text-sm tracking-wider flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#39ff14] text-lg">queue</span>
+                          ASYNC TASK QUEUE
+                        </div>
+                        <span className="px-2 py-0.5 bg-[#39ff14] text-black text-[10px] font-black uppercase border border-black">
+                          {health.queue?.status || 'UP'}
+                        </span>
+                      </div>
+                      <div className="p-4 space-y-2 font-mono text-xs flex-grow bg-[#fafafa]">
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Queue Usage:</span>
+                          <span className="font-bold">{health.queue?.usage ?? '0'} active tasks</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Worker Threads:</span>
+                          <span className="font-bold text-[#008000]">Ready & Waiting</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Execution Timeout:</span>
+                          <span className="font-bold">60 seconds limit</span>
+                        </div>
+                      </div>
+                      <div className="p-2 bg-gray-100 border-t border-black text-[10px] font-mono text-center text-gray-600">
+                        CONCURRENT COMPILATION QUEUE
+                      </div>
+                    </div>
+
+                    {/* Host OS Card */}
+                    <div className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000000] overflow-hidden flex flex-col justify-between">
+                      <div className="p-4 bg-black text-white flex justify-between items-center border-b-2 border-black">
+                        <div className="font-mono font-bold text-sm tracking-wider flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#39ff14] text-lg">dns</span>
+                          HOST OS & RUNTIME
+                        </div>
+                        <span className="px-2 py-0.5 bg-[#39ff14] text-black text-[10px] font-black uppercase border border-black">
+                          ONLINE
+                        </span>
+                      </div>
+                      <div className="p-4 space-y-2 font-mono text-xs flex-grow bg-[#fafafa]">
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">OS System:</span>
+                          <span className="font-bold truncate max-w-[150px]">{health.system?.osName || 'Linux'}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Active Threads:</span>
+                          <span className="font-bold text-[#008000]">{health.system?.activeThreads || '18'} threads</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-1">
+                          <span className="text-gray-500">Processors:</span>
+                          <span className="font-bold">{health.system?.processors || '4'} Logical Cores</span>
+                        </div>
+                      </div>
+                      <div className="p-2 bg-gray-100 border-t border-black text-[10px] font-mono text-center text-gray-600">
+                        CONTAINER ENCAPSULATED
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Raw Telemetry Terminal Section */}
+                  <div className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000000]">
+                    <div
+                      onClick={() => setShowRawTelemetry(!showRawTelemetry)}
+                      className="p-4 bg-black text-[#39ff14] flex justify-between items-center cursor-pointer select-none hover:bg-gray-900 transition-colors"
+                    >
+                      <div className="font-mono font-bold text-sm uppercase flex items-center gap-2">
+                        <span className="material-symbols-outlined">code</span>
+                        RAW JSON TELEMETRY & DIAGNOSTIC DUMP
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-gray-400">
+                          {showRawTelemetry ? 'CLICK TO COLLAPSE' : 'CLICK TO EXPAND'}
+                        </span>
+                        <span className="material-symbols-outlined">{showRawTelemetry ? 'expand_less' : 'expand_more'}</span>
+                      </div>
+                    </div>
+
+                    {showRawTelemetry && (
+                      <div className="p-4 bg-black border-t-2 border-[#39ff14] relative">
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(JSON.stringify(health, null, 2));
+                            alert('Telemetry copied to clipboard!');
+                          }}
+                          className="absolute top-4 right-4 px-3 py-1 bg-[#39ff14] text-black font-mono font-bold text-xs uppercase border border-black hover:bg-white transition-colors flex items-center gap-1 shadow-[2px_2px_0px_0px_#fff]"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">content_copy</span> COPY JSON
+                        </button>
+                        <pre className="font-mono text-xs text-[#39ff14] overflow-x-auto max-h-[450px] pr-24 leading-relaxed">
+                          {JSON.stringify(health, null, 2)}
+                        </pre>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1505,6 +1953,313 @@ const AdminPanel = () => {
                           FEATURE USAGE TRACKS UNIQUE USERS ENGAGING WITH SPECIFIC TOOLS IN THE LAST 30 DAYS.
                         </p>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 9: AI OPS STUDIO */}
+              {tabValue === 9 && (
+                <div>
+                  <div className="flex justify-between items-center mb-6 border-b-2 border-black pb-4">
+                    <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+                      <span className="material-symbols-outlined text-3xl text-[#39ff14] bg-black p-1">auto_awesome</span>
+                      AI OPERATIONS & PROMPT STUDIO
+                    </h2>
+                    <button onClick={fetchAiPrompts} className="px-4 py-2 border-2 border-black bg-[#39ff14] font-bold text-sm shadow-[2px_2px_0px_0px_#000] hover:bg-black hover:text-[#39ff14] transition-colors flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px]">refresh</span> SYNC PROMPTS
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    {aiPrompts.map((p) => (
+                      <div key={p.id} className="border-2 border-black bg-white p-6 shadow-[4px_4px_0px_0px_#000]">
+                        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4 border-b border-black pb-3">
+                          <div>
+                            <span className="bg-black text-[#39ff14] font-mono font-bold px-2 py-0.5 text-xs mr-2 uppercase">{p.promptKey}</span>
+                            <strong className="text-lg font-black uppercase">{p.promptName}</strong>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1 text-xs font-bold">
+                              <span>MODEL:</span>
+                              <input
+                                type="text"
+                                defaultValue={p.modelName}
+                                onBlur={(e) => updateAiPrompt(p.id, { modelName: e.target.value })}
+                                className="border border-black px-2 py-1 bg-gray-50 font-mono font-bold w-36"
+                              />
+                            </div>
+                            <div className="flex items-center gap-1 text-xs font-bold">
+                              <span>TEMP:</span>
+                              <input
+                                type="number"
+                                step="0.1"
+                                defaultValue={p.temperature}
+                                onBlur={(e) => updateAiPrompt(p.id, { temperature: parseFloat(e.target.value) })}
+                                className="border border-black px-2 py-1 bg-gray-50 font-mono font-bold w-20"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mb-3">
+                          <label className="block text-xs font-bold uppercase text-gray-600 mb-1">SYSTEM PROMPT (LIVE ENGINE INSTRUCTIONS):</label>
+                          <textarea
+                            defaultValue={p.systemPrompt}
+                            onBlur={(e) => updateAiPrompt(p.id, { systemPrompt: e.target.value })}
+                            rows={4}
+                            className="w-full border-2 border-black p-3 font-mono text-sm bg-[#f8f8f8] focus:bg-white focus:outline-none focus:border-[#39ff14]"
+                          />
+                        </div>
+                        <div className="text-right text-xs font-bold text-gray-400">
+                          LAST UPDATED: {new Date(p.updatedAt).toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 10: SECURITY & THREATS */}
+              {tabValue === 10 && (
+                <div>
+                  <div className="flex justify-between items-center mb-6 border-b-2 border-black pb-4">
+                    <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+                      <span className="material-symbols-outlined text-3xl bg-red-600 text-white p-1">shield_lock</span>
+                      SECURITY DEFENSE & COMPLIANCE
+                    </h2>
+                    <div className="flex gap-4">
+                      <a
+                        href={`${API_BASE_URL}/admin/export/audit-logs`}
+                        className="px-4 py-2 border-2 border-black bg-white hover:bg-black hover:text-white transition-colors flex items-center gap-2 font-bold text-sm shadow-[2px_2px_0px_0px_#000]"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">download</span> EXPORT AUDIT LOGS (CSV)
+                      </a>
+                      <button onClick={fetchSecurityAlerts} className="px-4 py-2 border-2 border-black bg-[#39ff14] font-bold text-sm shadow-[2px_2px_0px_0px_#000] hover:bg-black hover:text-[#39ff14] transition-colors flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">refresh</span> REFRESH ALERTS
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000] overflow-hidden">
+                    <div className="bg-black text-[#39ff14] p-3 font-black text-sm uppercase flex justify-between">
+                      <span>LIVE THREAT AUDIT & RATE-LIMIT ALERTS</span>
+                      <span>TOTAL ALERTS: {securityAlerts.length}</span>
+                    </div>
+                    {securityAlerts.length === 0 ? (
+                      <div className="p-8 text-center font-bold text-gray-500 uppercase">NO SECURITY ALERTS REGISTERED IN THIS EPOCH. SYSTEM SECURE.</div>
+                    ) : (
+                      <div className="divide-y divide-black">
+                        {securityAlerts.map((a) => (
+                          <div key={a.id} className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 hover:bg-gray-50">
+                            <div className="flex items-center gap-3">
+                              <span className={`px-2 py-0.5 text-xs font-black uppercase border border-black ${a.severity === 'CRITICAL' ? 'bg-red-600 text-white animate-pulse' : 'bg-yellow-400 text-black'}`}>
+                                {a.severity}
+                              </span>
+                              <span className="font-mono font-bold bg-gray-100 px-2 py-0.5 border border-black text-xs">{a.ipAddress}</span>
+                              <strong className="uppercase font-bold text-sm">{a.alertType}</strong>
+                              <span className="text-gray-600 text-xs font-mono">- {a.details}</span>
+                            </div>
+                            <span className="text-xs font-bold text-gray-400 font-mono whitespace-nowrap">{new Date(a.createdAt).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 11: FLAGS & QUOTAS */}
+              {tabValue === 11 && (
+                <div>
+                  <div className="flex justify-between items-center mb-6 border-b-2 border-black pb-4">
+                    <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+                      <span className="material-symbols-outlined text-3xl bg-black text-[#39ff14] p-1">tune</span>
+                      FEATURE FLAGS & DYNAMIC TIERS
+                    </h2>
+                    <button onClick={() => { fetchFeatureFlags(); fetchTierConfigs(); }} className="px-4 py-2 border-2 border-black bg-[#39ff14] font-bold text-sm shadow-[2px_2px_0px_0px_#000] hover:bg-black hover:text-[#39ff14] transition-colors flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px]">refresh</span> SYNC CONFIGS
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    {/* FEATURE FLAGS */}
+                    <div className="border-2 border-black bg-white p-6 shadow-[4px_4px_0px_0px_#000]">
+                      <h3 className="font-black text-lg uppercase mb-4 border-b-2 border-black pb-2 flex items-center justify-between">
+                        <span>LIVE FEATURE TOGGLES</span>
+                        <span className="text-xs bg-black text-[#39ff14] px-2 py-0.5">CANARY CONTROL</span>
+                      </h3>
+                      <div className="space-y-4">
+                        {featureFlags.map((f) => (
+                          <div key={f.id} className="border border-black p-4 bg-[#f8f8f8] flex flex-col gap-2">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <strong className="uppercase text-sm font-black">{f.flagName}</strong>
+                                <span className="block font-mono text-xs text-gray-500">{f.flagKey}</span>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => updateFeatureFlag(f.id, { enabledGlobal: !f.enabledGlobal })}
+                                  className={`px-3 py-1 font-bold text-xs uppercase border border-black transition-colors ${f.enabledGlobal ? 'bg-[#39ff14] text-black shadow-[inset_0px_-2px_0px_0px_#000]' : 'bg-gray-300 text-gray-600'}`}
+                                >
+                                  GLOBAL: {f.enabledGlobal ? 'ON' : 'OFF'}
+                                </button>
+                                <button
+                                  onClick={() => updateFeatureFlag(f.id, { enabledProOnly: !f.enabledProOnly })}
+                                  className={`px-3 py-1 font-bold text-xs uppercase border border-black transition-colors ${f.enabledProOnly ? 'bg-black text-[#39ff14]' : 'bg-gray-200 text-gray-600'}`}
+                                >
+                                  PRO ONLY: {f.enabledProOnly ? 'YES' : 'NO'}
+                                </button>
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-600 font-mono">{f.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* TIER QUOTA CONTROLLER */}
+                    <div className="border-2 border-black bg-white p-6 shadow-[4px_4px_0px_0px_#000]">
+                      <h3 className="font-black text-lg uppercase mb-4 border-b-2 border-black pb-2 flex items-center justify-between">
+                        <span>TIER QUOTA CONTROLLER</span>
+                        <span className="text-xs bg-black text-[#39ff14] px-2 py-0.5">LIMITS ENGINE</span>
+                      </h3>
+                      <div className="space-y-4">
+                        {tierConfigs.map((t) => (
+                          <div key={t.id} className="border border-black p-4 bg-[#f8f8f8] space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-300 pb-2">
+                              <span className="font-black text-base uppercase bg-black text-white px-3 py-0.5">{t.tierName} TIER</span>
+                              <span className="text-xs font-mono font-bold text-gray-500">UPDATED: {new Date(t.updatedAt).toLocaleDateString()}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-xs font-bold">
+                              <div>
+                                <label className="block text-gray-600 uppercase mb-1">MAX RESUMES / MO:</label>
+                                <input
+                                  type="number"
+                                  defaultValue={t.maxResumesPerMonth}
+                                  onBlur={(e) => updateTierConfig(t.id, { maxResumesPerMonth: parseInt(e.target.value) })}
+                                  className="border border-black p-1.5 w-full bg-white font-mono"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-gray-600 uppercase mb-1">MAX ATS / DAY:</label>
+                                <input
+                                  type="number"
+                                  defaultValue={t.maxAtsChecksPerDay}
+                                  onBlur={(e) => updateTierConfig(t.id, { maxAtsChecksPerDay: parseInt(e.target.value) })}
+                                  className="border border-black p-1.5 w-full bg-white font-mono"
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-bold text-gray-600 uppercase mb-1">ALLOWED AI MODEL:</label>
+                              <input
+                                type="text"
+                                defaultValue={t.aiModelAllowed}
+                                onBlur={(e) => updateTierConfig(t.id, { aiModelAllowed: e.target.value })}
+                                className="border border-black p-1.5 w-full bg-white font-mono text-xs"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 12: SQL & LOGS STUDIO */}
+              {tabValue === 12 && (
+                <div>
+                  <div className="flex justify-between items-center mb-6 border-b-2 border-black pb-4">
+                    <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+                      <span className="material-symbols-outlined text-3xl bg-black text-[#39ff14] p-1">terminal</span>
+                      SQL SANDBOX & LIVE LOGS STUDIO
+                    </h2>
+                    <button onClick={fetchLiveLogs} className="px-4 py-2 border-2 border-black bg-[#39ff14] font-bold text-sm shadow-[2px_2px_0px_0px_#000] hover:bg-black hover:text-[#39ff14] transition-colors flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px]">refresh</span> TAIL LOGS
+                    </button>
+                  </div>
+
+                  {/* SQL QUERY SANDBOX */}
+                  <div className="border-2 border-black bg-white p-6 shadow-[4px_4px_0px_0px_#000] mb-8">
+                    <h3 className="font-black text-sm uppercase bg-black text-[#39ff14] p-2 inline-block mb-3">READ-ONLY SQL QUERY STUDIO (PRESET SAFE QUERIES)</h3>
+                    <div className="flex flex-col gap-3 mb-4">
+                      <div className="flex flex-col md:flex-row gap-3">
+                        <select
+                          value={sqlQueryInput}
+                          onChange={(e) => setSqlQueryInput(e.target.value)}
+                          className="w-full md:flex-1 min-w-0 max-w-full border-2 border-black p-3 font-mono text-sm font-bold bg-[#f8f8f8] focus:bg-white focus:outline-none focus:border-[#39ff14] cursor-pointer truncate"
+                        >
+                          {PRESET_SQL_QUERIES.map((item, idx) => (
+                            <option key={idx} value={item.query} className="font-mono py-1">
+                              {item.label}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={runSqlQuery}
+                          className="px-6 py-3 border-2 border-black bg-black text-[#39ff14] font-black uppercase hover:bg-[#39ff14] hover:text-black transition-colors flex items-center justify-center gap-2 shrink-0"
+                        >
+                          <span className="material-symbols-outlined">play_arrow</span> EXECUTE QUERY
+                        </button>
+                      </div>
+                      <div className="bg-black text-[#39ff14] p-2 font-mono text-xs overflow-x-auto border border-gray-800 flex items-center gap-2">
+                        <span className="text-gray-400 font-bold shrink-0">[ACTIVE QUERY]:</span>
+                        <code className="whitespace-nowrap">{sqlQueryInput}</code>
+                      </div>
+                    </div>
+
+                    {sqlError && (
+                      <div className="border border-red-600 bg-red-100 text-red-700 p-3 text-xs font-bold font-mono uppercase mb-4">
+                        [SQL ERROR]: {sqlError}
+                      </div>
+                    )}
+
+                    {sqlResults && (
+                      <div className="overflow-x-auto border border-black bg-gray-50 max-h-64 overflow-y-auto">
+                        {sqlResults.length === 0 ? (
+                          <div className="p-4 text-xs font-bold font-mono text-gray-500 uppercase">QUERY EXECUTED SUCCESSFULLY. 0 ROWS RETURNED.</div>
+                        ) : (
+                          <table className="w-full text-left font-mono text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-black text-[#39ff14] border-b border-black">
+                                {Object.keys(sqlResults[0]).map((key) => (
+                                  <th key={key} className="p-2 border-r border-gray-700 uppercase">{key}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-300">
+                              {sqlResults.map((row, idx) => (
+                                <tr key={idx} className="hover:bg-[#39ff14]/20">
+                                  {Object.keys(row).map((key) => (
+                                    <td key={key} className="p-2 border-r border-gray-300 whitespace-nowrap">
+                                      {row[key] !== null ? row[key].toString() : 'NULL'}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* LIVE TERMINAL LOGS STREAM */}
+                  <div className="border-2 border-black bg-[#0d0d0d] shadow-[4px_4px_0px_0px_#000] p-4 font-mono text-xs text-[#39ff14]">
+                    <div className="flex justify-between items-center border-b border-gray-800 pb-2 mb-3 text-gray-400 font-bold">
+                      <span>[LIVE TAIL]: MICROSERVICES LOG BUFFER</span>
+                      <span>BUFFER SIZE: {liveLogs.length} EVENTS</span>
+                    </div>
+                    <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+                      {liveLogs.map((log, idx) => (
+                        <div key={idx} className="flex flex-col md:flex-row gap-2 border-l-2 border-[#39ff14] pl-2 hover:bg-gray-900/50 py-1">
+                          <span className="text-gray-500 whitespace-nowrap">[{log.timestamp}]</span>
+                          <span className="bg-gray-800 text-white px-1.5 font-bold uppercase">{log.service}</span>
+                          <span className={`font-bold ${log.level === 'ERROR' ? 'text-red-500' : log.level === 'WARN' ? 'text-yellow-400' : 'text-[#39ff14]'}`}>[{log.level}]</span>
+                          <span className="text-gray-300">{log.message}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
