@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  intelligence-service:
+    build:
+      context: .
+      dockerfile: Backend/intelligence-service/Dockerfile.prod
+    container_name: resify-intelligence-service
+    ports:
+      - "8083:8083"
+    environment:
+      - EUREKA_URI=http://130.210.22.94:8761/eureka/ # Points to VM 2's Eureka Server
+      - DB_URL=${INTELLIGENCE_DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASS=${RABBITMQ_PASS}
+      - RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VIRTUAL_HOST}
+      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=50.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+    networks:
+      - resify-net
+    restart: always
+
+networks:
+  resify-net:
+    driver: bridge
