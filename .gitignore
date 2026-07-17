@@ -79,6 +79,7 @@ back.sql
 # Interview Preparation
 INTERVIEW_PREP.md
 COMPLETE_INTERVIEW_HANDBOOK.md
+DEPLOYMENT_MASTER_MANUAL.md
 # Large Archives and Executables
 *.zip
 *.exe

@@ -25,6 +25,8 @@ jobs:
             echo "--- [VM 1] Pulling latest code from main ---"
             cd AI_Powered_Resume_Builder
             git pull origin main
+            echo "--- [VM 1] Compiling latest Java JARs with Maven ---"
+            cd Backend && (mvn clean package -DskipTests || ./mvnw clean package -DskipTests) && cd ..
             echo "--- [VM 1] Rebuilding and starting Discovery Server & API Gateway ---"
             docker compose -f docker-compose.vm1.yml up -d --build --remove-orphans
             echo "--- [VM 1] Deployment complete ---"
@@ -44,6 +46,8 @@ jobs:
             echo "--- [VM 2] Pulling latest code from main ---"
             cd AI_Powered_Resume_Builder
             git pull origin main
+            echo "--- [VM 2] Compiling latest Java JARs with Maven ---"
+            cd Backend && (mvn clean package -DskipTests || ./mvnw clean package -DskipTests) && cd ..
             echo "--- [VM 2] Rebuilding and starting Business Microservices & RabbitMQ ---"
             docker compose -f docker-compose.vm2.yml up -d --build --remove-orphans
             echo "--- [VM 2] Deployment complete ---"

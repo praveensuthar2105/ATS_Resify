@@ -390,11 +390,30 @@ const AdminPanel = () => {
   };
 
   // Phase 3 Command Center Fetchers (ponytail mode)
+  // Helper for safe response parsing
+  const parseResponseOrError = async (res) => {
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}: ${res.statusText}`);
+      return data;
+    } else {
+      const text = await res.text();
+      if (!res.ok) throw new Error(`Server returned HTTP ${res.status} (${res.statusText}). Please check backend logs.`);
+      return text;
+    }
+  };
+
+  // Phase 3 Command Center Fetchers (ponytail mode with robust error resilience)
   const fetchAiPrompts = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/admin/ai-prompts`, { headers: getAuthHeaders() });
-      if (res.ok) setAiPrompts(await res.json());
-    } catch (err) { console.error(err); }
+      const data = await parseResponseOrError(res);
+      setAiPrompts(data || []);
+    } catch (err) {
+      console.error('fetchAiPrompts error:', err);
+      setError(`Failed to fetch AI Prompts: ${err.message}`);
+    }
   };
 
   const updateAiPrompt = async (id, updatedData) => {
@@ -404,15 +423,25 @@ const AdminPanel = () => {
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData)
       });
-      if (res.ok) fetchAiPrompts();
-    } catch (err) { console.error(err); }
+      await parseResponseOrError(res);
+      setSuccess('AI PROMPT UPDATED SUCCESSFULLY');
+      setTimeout(() => setSuccess(null), 3000);
+      fetchAiPrompts();
+    } catch (err) {
+      console.error('updateAiPrompt error:', err);
+      setError(`Failed to update AI Prompt: ${err.message}`);
+    }
   };
 
   const fetchFeatureFlags = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/admin/feature-flags`, { headers: getAuthHeaders() });
-      if (res.ok) setFeatureFlags(await res.json());
-    } catch (err) { console.error(err); }
+      const data = await parseResponseOrError(res);
+      setFeatureFlags(data || []);
+    } catch (err) {
+      console.error('fetchFeatureFlags error:', err);
+      setError(`Failed to fetch Feature Flags: ${err.message}`);
+    }
   };
 
   const updateFeatureFlag = async (id, updatedData) => {
@@ -422,15 +451,25 @@ const AdminPanel = () => {
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData)
       });
-      if (res.ok) fetchFeatureFlags();
-    } catch (err) { console.error(err); }
+      await parseResponseOrError(res);
+      setSuccess('FEATURE FLAG UPDATED SUCCESSFULLY');
+      setTimeout(() => setSuccess(null), 3000);
+      fetchFeatureFlags();
+    } catch (err) {
+      console.error('updateFeatureFlag error:', err);
+      setError(`Failed to update Feature Flag: ${err.message}`);
+    }
   };
 
   const fetchTierConfigs = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/admin/tier-configs`, { headers: getAuthHeaders() });
-      if (res.ok) setTierConfigs(await res.json());
-    } catch (err) { console.error(err); }
+      const data = await parseResponseOrError(res);
+      setTierConfigs(data || []);
+    } catch (err) {
+      console.error('fetchTierConfigs error:', err);
+      setError(`Failed to fetch Tier Configs: ${err.message}`);
+    }
   };
 
   const updateTierConfig = async (id, updatedData) => {
@@ -440,22 +479,36 @@ const AdminPanel = () => {
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData)
       });
-      if (res.ok) fetchTierConfigs();
-    } catch (err) { console.error(err); }
+      await parseResponseOrError(res);
+      setSuccess('TIER CONFIG UPDATED SUCCESSFULLY');
+      setTimeout(() => setSuccess(null), 3000);
+      fetchTierConfigs();
+    } catch (err) {
+      console.error('updateTierConfig error:', err);
+      setError(`Failed to update Tier Config: ${err.message}`);
+    }
   };
 
   const fetchSecurityAlerts = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/admin/security/alerts`, { headers: getAuthHeaders() });
-      if (res.ok) setSecurityAlerts(await res.json());
-    } catch (err) { console.error(err); }
+      const data = await parseResponseOrError(res);
+      setSecurityAlerts(data || []);
+    } catch (err) {
+      console.error('fetchSecurityAlerts error:', err);
+      setError(`Failed to fetch Security Alerts: ${err.message}`);
+    }
   };
 
   const fetchLiveLogs = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/admin/logs`, { headers: getAuthHeaders() });
-      if (res.ok) setLiveLogs(await res.json());
-    } catch (err) { console.error(err); }
+      const data = await parseResponseOrError(res);
+      setLiveLogs(data || []);
+    } catch (err) {
+      console.error('fetchLiveLogs error:', err);
+      setError(`Failed to fetch Live Logs: ${err.message}`);
+    }
   };
 
   const runSqlQuery = async () => {
@@ -467,10 +520,11 @@ const AdminPanel = () => {
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: sqlQueryInput })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to run SQL query');
+      const data = await parseResponseOrError(res);
       setSqlResults(data);
-    } catch (err) { setSqlError(err.message); }
+    } catch (err) {
+      setSqlError(err.message);
+    }
   };
 
   const handleRequestSort = (property) => {
