@@ -1,225 +1,486 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { API_ROOT_URL } from '../services/api';
-import './Navbar.css';
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const menuRef = useRef(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null); // null | 'create' | 'ats'
+  const [mobileExpanded, setMobileExpanded] = useState({ create: false, ats: false });
+  
+  const userMenuRef = useRef(null);
+  const dropdownTimeoutRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     const name = localStorage.getItem('userName');
     const email = localStorage.getItem('userEmail');
+    if (token && name && email) setUser({ name, email });
 
-    if (token && name && email) {
-      setUser({ name, email });
-    }
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpen(false);
+    const close = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
       }
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
   }, []);
 
-  // Close mobile nav on route change
   useEffect(() => {
     setMobileNavOpen(false);
+    setActiveDropdown(null);
   }, [location.pathname]);
 
-  const handleLogin = () => {
-    window.location.href = `${API_ROOT_URL}/oauth2/authorization/google`;
-  };
-
+  const handleLogin = () => { window.location.href = `${API_ROOT_URL}/oauth2/authorization/google`; };
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userRole');
+    ['authToken', 'userName', 'userEmail', 'userRole'].forEach(k => localStorage.removeItem(k));
     setUser(null);
-    setMenuOpen(false);
-    // Full page refresh to clear all state and force re-authentication
+    setUserMenuOpen(false);
     window.location.href = '/';
   };
 
-  const baseLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/generate', label: 'Create Resume' },
-    { to: '/ats-checker', label: 'ATS Checker' },
-    { to: '/features', label: 'Features' },
-  ];
+  const initials = (n) => n ? n.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
 
-  const currentRole = localStorage.getItem('userRole');
-  const links = currentRole === 'ADMIN'
-    ? [...baseLinks, { to: '/admin', label: 'Admin Panel' }]
-    : baseLinks;
-
-  const getInitials = (name) => {
-    if (!name) return '?';
-    return name.split(' ').filter(Boolean).map((n) => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+  const handleMouseEnter = (menuName) => {
+    if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
+    setActiveDropdown(menuName);
   };
 
+  const handleMouseLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 180);
+  };
+
+  const createResumeOptions = [
+    {
+      title: 'Start from scratch',
+      description: 'Build step by step with guided prompts',
+      icon: 'note_add',
+      route: '/generate?mode=scratch'
+    },
+    {
+      title: 'Import existing resume',
+      description: "Upload a PDF or Word file — we'll restructure it for ATS",
+      icon: 'upload_file',
+      route: '/generate?mode=upload'
+    },
+    {
+      title: 'Import from LinkedIn',
+      description: 'Pull your experience directly from your profile',
+      icon: 'work',
+      route: '/generate?mode=linkedin'
+    },
+    {
+      title: 'Generate from a prompt',
+      description: 'Describe your background — AI drafts the first version',
+      icon: 'auto_awesome',
+      route: '/generate?mode=prompt'
+    }
+  ];
+
+  const atsCheckerOptions = [
+    {
+      title: 'Quick ATS score',
+      description: 'Upload your resume for an instant parsing and formatting score',
+      icon: 'percent',
+      route: '/ats-checker?mode=score'
+    },
+    {
+      title: 'Match against a job description',
+      description: "Paste a job posting to see exactly which keywords you're missing",
+      icon: 'tag',
+      route: '/ats-checker?mode=job'
+    },
+    {
+      title: 'Format & layout check',
+      description: 'Catch tables, columns, and graphics that break ATS parsing',
+      icon: 'layers',
+      route: '/ats-checker?mode=format'
+    }
+  ];
+
+  const isActive = (path) => location.pathname === path;
+  const isCreateActive = location.pathname.startsWith('/generate') || location.pathname.startsWith('/edit-resume');
+  const isAtsActive = location.pathname.startsWith('/ats-checker');
+
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 z-[1000] bg-brutal-black border-b-2 border-brutal-white font-mono uppercase">
-      <div className="max-w-[1400px] mx-auto px-4 h-full flex items-center justify-between">
-        {/* Logo */}
-        <RouterLink to="/" className="flex items-center no-underline gap-3" onClick={() => setMobileNavOpen(false)}>
-          <img src="/logo.png" alt="ATS Resify logo" width="40" height="40" className="h-10 w-10 object-contain" loading="eager" />
-          <span className="text-xl font-black tracking-tighter text-brutal-white">ATS RESIFY</span>
+    <header
+      className="sticky top-0 left-0 right-0 z-[1000] transition-all duration-500 ease-out py-3 px-4 sm:px-6"
+    >
+      {/* ── Glass Container Anchor ── */}
+      <div
+        className={`max-w-[1200px] mx-auto transition-all duration-500 ease-out rounded-2xl px-5 sm:px-6 py-3 flex items-center justify-between border ${
+          scrolled
+            ? 'bg-white/80 backdrop-blur-xl border-slate-200/80 shadow-lg shadow-slate-900/5'
+            : 'bg-white/60 backdrop-blur-md border-white/70 shadow-sm shadow-slate-900/5'
+        }`}
+      >
+        {/* ── Logo ── */}
+        <RouterLink to="/" className="flex items-center gap-3 no-underline group flex-shrink-0" onClick={() => setMobileNavOpen(false)}>
+          <div className="w-9 h-9 rounded-xl bg-[#0F1115] flex items-center justify-center shadow-md shadow-slate-900/15 group-hover:bg-[#14B8A6] transition-all duration-300">
+            <span className="material-symbols-outlined text-white text-lg">description</span>
+          </div>
+          <span className="text-lg font-bold tracking-tight text-[#0F1115]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            ATS <span className="text-[#14B8A6] font-extrabold">Resify</span>
+          </span>
         </RouterLink>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-8">
-          {links.map((link) => (
-            <RouterLink
-              key={link.to}
-              to={link.to}
-              className={`text-xs font-bold hover:text-neon-green underline decoration-2 underline-offset-4 no-underline transition-colors ${location.pathname === link.to ? 'text-neon-green' : 'text-brutal-white'
-                }`}
-              style={{ textDecoration: 'underline', textDecorationThickness: '2px', textUnderlineOffset: '4px' }}
+        {/* ── Desktop Nav Links & Dropdowns ── */}
+        <nav className="hidden lg:flex items-center gap-1.5">
+          {/* Home Link */}
+          <RouterLink
+            to="/"
+            className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-300 no-underline cursor-pointer ${
+              isActive('/')
+                ? 'bg-[#14B8A6]/10 text-[#14B8A6] border border-[#14B8A6]/20 font-bold shadow-sm'
+                : 'text-slate-600 hover:text-[#0F1115] hover:bg-slate-100/80 border border-transparent'
+            }`}
+          >
+            Home
+          </RouterLink>
+
+          {/* Create Resume Dropdown Trigger */}
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter('create')}
+            onMouseLeave={handleMouseLeave}
+          >
+            <button
+              onClick={() => setActiveDropdown(activeDropdown === 'create' ? null : 'create')}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-300 border cursor-pointer ${
+                isCreateActive || activeDropdown === 'create'
+                  ? 'bg-[#14B8A6]/10 text-[#14B8A6] border-[#14B8A6]/20 font-bold shadow-sm'
+                  : 'text-slate-600 hover:text-[#0F1115] hover:bg-slate-100/80 border-transparent bg-transparent'
+              }`}
             >
-              {link.label}
+              <span className="material-symbols-outlined text-[16px] text-[#14B8A6]">auto_awesome</span>
+              Create Resume
+              <span className={`material-symbols-outlined text-[14px] transition-transform duration-200 ${activeDropdown === 'create' ? 'rotate-180' : ''}`}>expand_more</span>
+            </button>
+
+            {/* Create Resume Mega-Menu Panel */}
+            <div
+              className={`absolute top-[calc(100%+10px)] -left-20 min-w-[540px] bg-white/90 backdrop-blur-2xl rounded-2xl p-4 z-[1001] border border-slate-200/80 shadow-2xl transition-all duration-200 origin-top ${
+                activeDropdown === 'create'
+                  ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+                  : 'opacity-0 scale-98 -translate-y-2 pointer-events-none'
+              }`}
+            >
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#0D9488] mb-3 px-2 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#14B8A6]" />
+                Select creation flow
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {createResumeOptions.map((opt, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      setActiveDropdown(null);
+                      navigate(opt.route);
+                    }}
+                    className="group/item flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-[#14B8A6]/30 hover:bg-[#14B8A6]/8 transition-all duration-200 cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[#14B8A6]/10 text-[#0D9488] flex items-center justify-center flex-shrink-0 group-hover/item:scale-108 group-hover/item:bg-[#14B8A6] group-hover/item:text-white transition-all duration-200">
+                      <span className="material-symbols-outlined text-lg">{opt.icon}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-[#0F1115] group-hover/item:text-[#0D9488] transition-colors">{opt.title}</div>
+                      <div className="text-xs text-slate-500 leading-snug mt-0.5">{opt.description}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ATS Checker Dropdown Trigger */}
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter('ats')}
+            onMouseLeave={handleMouseLeave}
+          >
+            <button
+              onClick={() => setActiveDropdown(activeDropdown === 'ats' ? null : 'ats')}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-300 border cursor-pointer ${
+                isAtsActive || activeDropdown === 'ats'
+                  ? 'bg-[#14B8A6]/10 text-[#14B8A6] border-[#14B8A6]/20 font-bold shadow-sm'
+                  : 'text-slate-600 hover:text-[#0F1115] hover:bg-slate-100/80 border-transparent bg-transparent'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px] text-[#14B8A6]">query_stats</span>
+              ATS Checker
+              <span className={`material-symbols-outlined text-[14px] transition-transform duration-200 ${activeDropdown === 'ats' ? 'rotate-180' : ''}`}>expand_more</span>
+            </button>
+
+            {/* ATS Checker Mega-Menu Panel */}
+            <div
+              className={`absolute top-[calc(100%+10px)] -left-12 min-w-[360px] bg-white/90 backdrop-blur-2xl rounded-2xl p-3 z-[1001] border border-slate-200/80 shadow-2xl transition-all duration-200 origin-top ${
+                activeDropdown === 'ats'
+                  ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+                  : 'opacity-0 scale-98 -translate-y-2 pointer-events-none'
+              }`}
+            >
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#0D9488] mb-2 px-2 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#14B8A6]" />
+                Analysis modes
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {atsCheckerOptions.map((opt, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      setActiveDropdown(null);
+                      navigate(opt.route);
+                    }}
+                    className="group/item flex items-start gap-3 p-3 rounded-xl border border-transparent hover:border-[#14B8A6]/30 hover:bg-[#14B8A6]/8 transition-all duration-200 cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[#14B8A6]/10 text-[#0D9488] flex items-center justify-center flex-shrink-0 group-hover/item:scale-108 group-hover/item:bg-[#14B8A6] group-hover/item:text-white transition-all duration-200">
+                      <span className="material-symbols-outlined text-lg">{opt.icon}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-[#0F1115] group-hover/item:text-[#0D9488] transition-colors">{opt.title}</div>
+                      <div className="text-xs text-slate-500 leading-snug mt-0.5">{opt.description}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Features Link */}
+          <RouterLink
+            to="/features"
+            className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-300 no-underline cursor-pointer ${
+              isActive('/features')
+                ? 'bg-[#14B8A6]/10 text-[#14B8A6] border border-[#14B8A6]/20 font-bold shadow-sm'
+                : 'text-slate-600 hover:text-[#0F1115] hover:bg-slate-100/80 border border-transparent'
+            }`}
+          >
+            Features
+          </RouterLink>
+
+          {localStorage.getItem('userRole') === 'ADMIN' && (
+            <RouterLink
+              to="/admin"
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-300 no-underline cursor-pointer ${
+                isActive('/admin')
+                  ? 'bg-[#14B8A6]/10 text-[#14B8A6] border border-[#14B8A6]/20 font-bold shadow-sm'
+                  : 'text-slate-600 hover:text-[#0F1115] hover:bg-slate-100/80 border border-transparent'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+              Admin
             </RouterLink>
-          ))}
+          )}
         </nav>
 
-        {/* Right Side Actions */}
-        <div className="flex items-center gap-4">
+        {/* ── Right Actions ── */}
+        <div className="flex items-center gap-3">
           {user ? (
-            <>
-              <div className="relative" ref={menuRef}>
-                <button
-                  className="flex items-center gap-2 px-2 py-1 bg-transparent border border-brutal-white cursor-pointer transition-all hover:border-neon-green"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                >
-                  <div className="w-8 h-8 bg-neon-green text-black flex items-center justify-center font-bold text-xs">
-                    {getInitials(user.name)}
-                  </div>
-                  <span className="hidden sm:inline text-xs font-bold text-brutal-white">{user.name.split(' ')[0]}</span>
-                  <svg className="text-brutal-white" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
+            <div className="relative" ref={userMenuRef}>
+              <button
+                className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full bg-white/70 backdrop-blur-md border border-slate-200/70 shadow-sm cursor-pointer transition-all duration-300 hover:border-[#14B8A6] hover:shadow-md"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+              >
+                <div className="w-8 h-8 rounded-full bg-[#0F1115] text-[#14B8A6] flex items-center justify-center font-bold text-xs border border-[#14B8A6]/30">
+                  {initials(user.name)}
+                </div>
+                <span className="hidden sm:inline text-sm font-semibold text-slate-800">{user.name.split(' ')[0]}</span>
+                <span className="material-symbols-outlined text-slate-400 text-lg transition-transform duration-300" style={{ transform: userMenuOpen ? 'rotate(180deg)' : 'none' }}>expand_more</span>
+              </button>
 
-                {menuOpen && (
-                  <div className="dropdown-menu absolute top-[calc(100%+8px)] right-0 min-w-[240px] bg-brutal-black border-2 border-brutal-white z-[1001] overflow-hidden">
-                    <div className="p-4 flex items-center gap-3 border-b border-brutal-white/30">
-                      <div className="w-10 h-10 bg-neon-green text-black flex items-center justify-center font-bold text-sm flex-shrink-0">
-                        {getInitials(user.name)}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-bold text-sm text-brutal-white">{user.name}</span>
-                        <span className="text-[11px] text-slate-500 truncate">{user.email}</span>
-                      </div>
-                    </div>
-                    <RouterLink
-                      to="/generate"
-                      className="w-full flex items-center gap-3 px-4 py-3 text-brutal-white text-xs font-bold no-underline transition-all hover:bg-neon-green hover:text-black"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      <span className="material-symbols-outlined text-sm">add</span>
-                      CREATE RESUME
-                    </RouterLink>
-                    <RouterLink
-                      to="/ats-checker"
-                      className="w-full flex items-center gap-3 px-4 py-3 text-brutal-white text-xs font-bold no-underline transition-all hover:bg-neon-green hover:text-black"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      <span className="material-symbols-outlined text-sm">check_circle</span>
-                      ATS CHECKER
-                    </RouterLink>
-                    <div className="h-px bg-brutal-white/20"></div>
-                    <button
-                      className="w-full flex items-center gap-3 px-4 py-3 text-red-400 text-xs font-bold bg-transparent border-none cursor-pointer transition-all hover:bg-red-500/20 uppercase font-mono"
-                      onClick={handleLogout}
-                    >
-                      <span className="material-symbols-outlined text-sm">logout</span>
-                      LOGOUT
-                    </button>
+              {/* User Account Dropdown */}
+              <div className={`absolute top-[calc(100%+8px)] right-0 min-w-[260px] bg-white/90 backdrop-blur-2xl rounded-2xl p-2 z-[1001] border border-slate-200/80 shadow-xl transition-all duration-300 origin-top-right ${
+                userMenuOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+              }`}>
+                <div className="p-3 mb-1 flex items-center gap-3 bg-slate-50/80 rounded-xl border border-slate-100">
+                  <div className="w-10 h-10 rounded-full bg-[#0F1115] text-[#14B8A6] flex items-center justify-center font-bold text-sm flex-shrink-0 border border-[#14B8A6]/30">
+                    {initials(user.name)}
                   </div>
-                )}
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-bold text-sm text-slate-900 truncate">{user.name}</span>
+                    <span className="text-xs text-slate-400 truncate">{user.email}</span>
+                  </div>
+                </div>
+                <RouterLink to="/generate?mode=scratch" onClick={() => setUserMenuOpen(false)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 text-sm font-medium no-underline transition-all duration-200 hover:bg-[#14B8A6]/10 hover:text-[#0D9488]">
+                  <span className="material-symbols-outlined text-[#14B8A6] text-lg">auto_awesome</span>
+                  Create new resume
+                </RouterLink>
+                <RouterLink to="/ats-checker?mode=score" onClick={() => setUserMenuOpen(false)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 text-sm font-medium no-underline transition-all duration-200 hover:bg-[#14B8A6]/10 hover:text-[#0D9488]">
+                  <span className="material-symbols-outlined text-[#14B8A6] text-lg">query_stats</span>
+                  Check ATS score
+                </RouterLink>
+                <div className="h-px bg-slate-200/60 my-1" />
+                <button onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-rose-600 text-sm font-medium bg-transparent border-none cursor-pointer transition-all duration-200 hover:bg-rose-50">
+                  <span className="material-symbols-outlined text-lg">logout</span>
+                  Sign out
+                </button>
               </div>
-            </>
+            </div>
           ) : (
-            <>
-              <button
-                className="hidden sm:block text-xs font-bold text-brutal-white hover:text-neon-green bg-transparent border-none cursor-pointer transition-colors uppercase font-mono"
-                onClick={handleLogin}
-              >
-                Log In
+            <div className="flex items-center gap-3">
+              <button onClick={handleLogin}
+                className="hidden sm:inline-flex px-4 py-2 text-sm font-semibold text-slate-600 hover:text-[#0F1115] bg-transparent border-none cursor-pointer transition-colors duration-200">
+                Sign in
               </button>
               <button
-                className="bg-neon-green text-black text-xs font-black px-4 py-2 btn-brutal cursor-pointer uppercase font-mono"
                 onClick={handleLogin}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm text-white bg-[#0F1115] border border-white/10 shadow-md shadow-slate-900/20 hover:bg-[#1A1D24] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
               >
-                GET STARTED
+                <span className="material-symbols-outlined text-base text-[#14B8A6]">auto_awesome</span>
+                Get started free
               </button>
-            </>
+            </div>
           )}
 
-          {/* Mobile Hamburger */}
+          {/* Mobile hamburger button */}
           <button
-            className={`mobile-menu-btn flex md:hidden flex-col justify-center items-center gap-[5px] w-10 h-10 bg-transparent border border-brutal-white cursor-pointer p-0 transition-all ${mobileNavOpen ? 'open' : ''}`}
+            className="flex lg:hidden items-center justify-center w-10 h-10 rounded-xl bg-white/70 backdrop-blur-md border border-slate-200/70 text-slate-700 cursor-pointer transition-all duration-300 hover:bg-white hover:shadow-sm"
             onClick={() => setMobileNavOpen(!mobileNavOpen)}
             aria-label="Toggle menu"
           >
-            <span className="block w-[18px] h-[2px] bg-brutal-white transition-all"></span>
-            <span className="block w-[18px] h-[2px] bg-brutal-white transition-all"></span>
-            <span className="block w-[18px] h-[2px] bg-brutal-white transition-all"></span>
+            <span className="material-symbols-outlined text-xl">{mobileNavOpen ? 'close' : 'menu'}</span>
           </button>
         </div>
       </div>
 
-      {/* Mobile Navigation */}
-      {mobileNavOpen && (
-        <div className="flex md:hidden flex-col bg-brutal-black border-b-2 border-brutal-white p-4">
-          {links.map((link) => (
-            <RouterLink
-              key={link.to}
-              to={link.to}
-              className={`block px-4 py-3 text-xs font-bold no-underline transition-all hover:bg-neon-green hover:text-black ${location.pathname === link.to ? 'text-neon-green' : 'text-brutal-white'
-                }`}
+      {/* ── Mobile Nav Sheet ── */}
+      <div className={`lg:hidden absolute left-4 right-4 top-[calc(100%+8px)] bg-white/95 backdrop-blur-2xl rounded-2xl border border-slate-200/80 shadow-2xl transition-all duration-300 origin-top overflow-hidden ${
+        mobileNavOpen ? 'opacity-100 scale-y-100 max-h-[85vh] overflow-y-auto pointer-events-auto' : 'opacity-0 scale-y-95 max-h-0 pointer-events-none'
+      }`}>
+        <div className="p-5 flex flex-col gap-3">
+          {/* Home */}
+          <RouterLink
+            to="/"
+            onClick={() => setMobileNavOpen(false)}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold no-underline transition-all duration-200 ${
+              isActive('/') ? 'bg-[#14B8A6]/10 text-[#14B8A6] font-bold border border-[#14B8A6]/20' : 'text-slate-700 hover:bg-slate-100/80'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg">home</span>
+            Home
+          </RouterLink>
+
+          {/* Create Resume Accordion */}
+          <div className="border border-slate-100 rounded-xl overflow-hidden bg-slate-50/50">
+            <button
+              onClick={() => setMobileExpanded({ ...mobileExpanded, create: !mobileExpanded.create })}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-800 bg-transparent border-none cursor-pointer"
             >
-              {link.label}
-            </RouterLink>
-          ))}
-          {user ? (
-            <div className="flex items-center justify-between gap-3 mt-2 pt-3 px-4 border-t border-brutal-white/20">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-neon-green text-black text-xs font-bold flex items-center justify-center">
-                  {getInitials(user.name)}
-                </div>
-                <span className="text-xs font-bold text-brutal-white">{user.name}</span>
+                <span className="material-symbols-outlined text-lg text-[#14B8A6]">auto_awesome</span>
+                Create Resume
               </div>
-              <button
-                className="px-3 py-2 bg-red-500/20 text-red-400 border-none text-xs font-bold cursor-pointer transition-all hover:bg-red-500/30 uppercase font-mono"
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
+              <span className={`material-symbols-outlined text-base transition-transform duration-200 ${mobileExpanded.create ? 'rotate-180' : ''}`}>expand_more</span>
+            </button>
+            {mobileExpanded.create && (
+              <div className="px-3 pb-3 pt-1 flex flex-col gap-1.5 border-t border-slate-100 bg-white/60">
+                {createResumeOptions.map((opt, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      setMobileNavOpen(false);
+                      navigate(opt.route);
+                    }}
+                    className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-[#14B8A6]/10 transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-base text-[#0D9488] mt-0.5">{opt.icon}</span>
+                    <div>
+                      <div className="text-xs font-bold text-slate-800">{opt.title}</div>
+                      <div className="text-[11px] text-slate-500 leading-tight">{opt.description}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ATS Checker Accordion */}
+          <div className="border border-slate-100 rounded-xl overflow-hidden bg-slate-50/50">
+            <button
+              onClick={() => setMobileExpanded({ ...mobileExpanded, ats: !mobileExpanded.ats })}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-800 bg-transparent border-none cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-lg text-[#14B8A6]">query_stats</span>
+                ATS Checker
+              </div>
+              <span className={`material-symbols-outlined text-base transition-transform duration-200 ${mobileExpanded.ats ? 'rotate-180' : ''}`}>expand_more</span>
+            </button>
+            {mobileExpanded.ats && (
+              <div className="px-3 pb-3 pt-1 flex flex-col gap-1.5 border-t border-slate-100 bg-white/60">
+                {atsCheckerOptions.map((opt, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      setMobileNavOpen(false);
+                      navigate(opt.route);
+                    }}
+                    className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-[#14B8A6]/10 transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-base text-[#0D9488] mt-0.5">{opt.icon}</span>
+                    <div>
+                      <div className="text-xs font-bold text-slate-800">{opt.title}</div>
+                      <div className="text-[11px] text-slate-500 leading-tight">{opt.description}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Features */}
+          <RouterLink
+            to="/features"
+            onClick={() => setMobileNavOpen(false)}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold no-underline transition-all duration-200 ${
+              isActive('/features') ? 'bg-[#14B8A6]/10 text-[#14B8A6] font-bold border border-[#14B8A6]/20' : 'text-slate-700 hover:bg-slate-100/80'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg">star</span>
+            Features
+          </RouterLink>
+
+          <div className="h-px bg-slate-200/60 my-1" />
+
+          {user ? (
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#0F1115] text-[#14B8A6] font-bold flex items-center justify-center text-xs border border-[#14B8A6]/30">{initials(user.name)}</div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-slate-900 leading-tight">{user.name}</span>
+                  <span className="text-xs text-slate-400">{user.email}</span>
+                </div>
+              </div>
+              <button onClick={handleLogout} className="px-4 py-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 text-xs font-semibold cursor-pointer transition-all hover:bg-rose-100">Sign out</button>
             </div>
           ) : (
-            <div className="flex gap-2 mt-2 pt-3 px-4 border-t border-brutal-white/20">
-              <button
-                className="flex-1 bg-neon-green text-black text-xs font-black py-3 border border-brutal-white cursor-pointer transition-all uppercase font-mono"
-                onClick={handleLogin}
-              >
-                GET STARTED
-              </button>
-            </div>
+            <button
+              onClick={handleLogin}
+              className="w-full py-3 rounded-xl font-semibold text-sm text-white bg-[#0F1115] flex items-center justify-center gap-2 border border-white/10 shadow-md cursor-pointer"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              <span className="material-symbols-outlined text-base text-[#14B8A6]">auto_awesome</span>
+              Get started free
+            </button>
           )}
         </div>
-      )}
+      </div>
     </header>
   );
 };
