@@ -91,7 +91,7 @@ const OverviewTab = ({ data }) => {
         <div className="overview-tab">
             <div className="overview-grid">
                 <div className="overview-card">
-                    <h3><span className="card-icon">👤</span>Personal Info</h3>
+                    <h3><span className="card-icon"><span className="material-symbols-outlined" style={{fontSize: '18px'}}>person</span></span>Personal Info</h3>
                     <div className="info-item">
                         <span className="label">Name:</span>
                         <span className="value">{data?.name || 'Not set'}</span>
@@ -107,7 +107,7 @@ const OverviewTab = ({ data }) => {
                 </div>
 
                 <div className="overview-card stats-card">
-                    <h3><span className="card-icon">📊</span>Snapshot</h3>
+                    <h3><span className="card-icon"><span className="material-symbols-outlined" style={{fontSize: '18px'}}>bar_chart</span></span>Snapshot</h3>
                     <div className="stat-row">
                         <div className="stat">
                             <span className="stat-number">{data?.experienceList?.length || 0}</span>
@@ -126,7 +126,7 @@ const OverviewTab = ({ data }) => {
                 </div>
 
                 <div className="overview-card">
-                    <h3><span className="card-icon">📝</span>Summary</h3>
+                    <h3><span className="card-icon"><span className="material-symbols-outlined" style={{fontSize: '18px'}}>edit_note</span></span>Summary</h3>
                     <p className="summary-text">{summaryText}</p>
                     <button className="link-btn" onClick={() => document.querySelector('.nav-tabs .tab:nth-child(2)')?.click()}>
                         Edit summary →
@@ -134,7 +134,7 @@ const OverviewTab = ({ data }) => {
                 </div>
 
                 <div className="overview-card">
-                    <h3><span className="card-icon">✨</span>Skills</h3>
+                    <h3><span className="card-icon"><span className="material-symbols-outlined" style={{fontSize: '18px'}}>auto_awesome</span></span>Skills</h3>
                     {skills.length > 0 ? (
                         <div className="chip-row">
                             {skills.slice(0, 8).map((skill, idx) => (
@@ -148,12 +148,12 @@ const OverviewTab = ({ data }) => {
                 </div>
 
                 <div className="overview-card actions-card">
-                    <h3><span className="card-icon">⚡</span>Quick Actions</h3>
+                    <h3><span className="card-icon"><span className="material-symbols-outlined" style={{fontSize: '18px'}}>bolt</span></span>Quick Actions</h3>
                     <div className="actions-grid">
-                        <button className="action-btn">📥 Download PDF</button>
-                        <button className="action-btn">🔗 Share Link</button>
-                        <button className="action-btn">📋 Duplicate</button>
-                        <button className="action-btn ghost">🖊️ Edit Details</button>
+                        <button className="action-btn"><span className="material-symbols-outlined" style={{fontSize: '16px'}}>download</span> Download PDF</button>
+                        <button className="action-btn"><span className="material-symbols-outlined" style={{fontSize: '16px'}}>link</span> Share Link</button>
+                        <button className="action-btn"><span className="material-symbols-outlined" style={{fontSize: '16px'}}>content_copy</span> Duplicate</button>
+                        <button className="action-btn ghost"><span className="material-symbols-outlined" style={{fontSize: '16px'}}>edit</span> Edit Details</button>
                     </div>
                 </div>
             </div>

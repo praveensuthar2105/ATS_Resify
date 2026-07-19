@@ -958,10 +958,10 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
         </div>
         <div className="header-right">
           <button className="header-btn export-btn" onClick={handleSaveToFile}>
-            📤 Export .TEX
+            <span className="material-symbols-outlined" style={{fontSize: '16px', verticalAlign: 'middle'}}>upload_file</span> Export .TEX
           </button>
           <button className="header-btn download-btn" onClick={handleDownloadPDF} disabled={compiling}>
-            {compiling ? '⏳ Compiling...' : '📥 Download PDF'}
+            {compiling ? <><span className="material-symbols-outlined" style={{fontSize: '16px', verticalAlign: 'middle'}}>hourglass_top</span> Compiling...</> : <><span className="material-symbols-outlined" style={{fontSize: '16px', verticalAlign: 'middle'}}>download</span> Download PDF</>}
           </button>
           <button className="close-btn" onClick={onClose} title="Close Editor">
             ✕
@@ -1018,7 +1018,7 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
               <span className={`compile-status ${previewSynced ? 'synced' : 'compiling'}`}>
                 {compiling ? '◐ Compiling...' : previewSynced ? '● Synced' : '○ Pending'}
               </span>
-              {useOnlineCompiler && <span className="online-badge">🌐 Online</span>}
+              {useOnlineCompiler && <span className="online-badge"><span className="material-symbols-outlined" style={{fontSize: '14px', verticalAlign: 'middle'}}>language</span> Online</span>}
             </div>
             <div className="preview-actions">
               <label className="compiler-toggle" title="Toggle between local and online compiler">
@@ -1048,26 +1048,26 @@ ${achievementsSection ? `%----------ACHIEVEMENTS----------\n${achievementsSectio
               </div>
             ) : compileError ? (
               <div className="compile-error">
-                <div className="error-icon">⚠️</div>
+                <div className="error-icon"><span className="material-symbols-outlined" style={{fontSize: '32px', color: '#F59E0B'}}>warning</span></div>
                 <h3>Compilation Error</h3>
                 <p className="error-message">{compileError}</p>
                 <div className="error-actions">
                   <button className="retry-btn" onClick={handleCompile}>
-                    🔄 Retry Compile
+                    <span className="material-symbols-outlined" style={{fontSize: '16px', verticalAlign: 'middle'}}>refresh</span> Retry Compile
                   </button>
                   <button
                     className="retry-btn"
                     onClick={() => { setUseOnlineCompiler(!useOnlineCompiler); setCompileError(null); }}
                     style={{ background: useOnlineCompiler ? '#38a169' : '#667eea' }}
                   >
-                    🌐 {useOnlineCompiler ? 'Use Local' : 'Try Online Compiler'}
+                    <span className="material-symbols-outlined" style={{fontSize: '16px', verticalAlign: 'middle'}}>language</span> {useOnlineCompiler ? 'Use Local' : 'Try Online Compiler'}
                   </button>
                   <button className="export-tex-btn" onClick={handleSaveToFile}>
-                    📤 Download .TEX
+                    <span className="material-symbols-outlined" style={{fontSize: '16px', verticalAlign: 'middle'}}>upload_file</span> Download .TEX
                   </button>
                 </div>
                 <p className="error-hint">
-                  💡 {useOnlineCompiler
+                  <span className="material-symbols-outlined" style={{fontSize: '16px', verticalAlign: 'middle', color: '#F59E0B'}}>lightbulb</span> {useOnlineCompiler
                     ? 'Using online compiler. If it fails, download .tex and use Overleaf.'
                     : 'Local compilation failed. Try the online compiler or download .tex file.'}
                   {' '}

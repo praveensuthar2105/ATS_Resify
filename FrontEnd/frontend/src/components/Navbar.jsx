@@ -95,19 +95,13 @@ const Navbar = () => {
       title: 'Quick ATS score',
       description: 'Upload your resume for an instant parsing and formatting score',
       icon: 'percent',
-      route: '/ats-checker?mode=score'
+      route: '/ats-checker/quick-score'
     },
     {
       title: 'Match against a job description',
       description: "Paste a job posting to see exactly which keywords you're missing",
       icon: 'tag',
-      route: '/ats-checker?mode=job'
-    },
-    {
-      title: 'Format & layout check',
-      description: 'Catch tables, columns, and graphics that break ATS parsing',
-      icon: 'layers',
-      route: '/ats-checker?mode=format'
+      route: '/ats-checker/job-match'
     }
   ];
 

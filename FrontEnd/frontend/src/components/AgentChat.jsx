@@ -34,8 +34,10 @@ const EXPERIENCE_LEVEL_OPTIONS = [
 
 const TEMPLATE_OPTIONS = [
   { value: '', label: 'Agent Default' },
-  { value: 'ats', label: 'ATS Optimized' },
-  { value: 'minimal', label: 'Minimal Serif' },
+  { value: 'modern', label: 'Modern' },
+  { value: 'professional', label: 'Professional' },
+  { value: 'creative', label: 'Creative' },
+  { value: 'minimalist', label: 'Minimalist' },
 ];
 
 // Format timestamp
@@ -71,19 +73,58 @@ const renderSafeMessage = (text) => {
   });
 };
 
-const SettingsSelect = ({ name, defaultValue, options }) => (
-  <div className="settings-select-wrap">
-    <select className="settings-input settings-select" name={name} defaultValue={defaultValue || ''}>
-      {options.map(option => (
-        <option key={option.value || 'default'} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-    <ChevronDown className="settings-select-chevron" size={16} aria-hidden="true" />
-    <Check className="settings-select-check" size={14} aria-hidden="true" />
-  </div>
-);
+const SettingsSelect = ({ name, defaultValue, options }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedValue, setSelectedValue] = useState(defaultValue || '');
+  const containerRef = useRef(null);
+
+  const selectedOption = options.find(opt => opt.value === selectedValue) || options[0];
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="settings-select-wrap" ref={containerRef}>
+      <input type="hidden" name={name} value={selectedValue} />
+      <button
+        type="button"
+        className={`settings-select-trigger ${isOpen ? 'open' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span>{selectedOption?.label}</span>
+        <ChevronDown size={14} className="settings-select-chevron" />
+      </button>
+
+      {isOpen && (
+        <ul className="settings-select-options">
+          {options.map(option => {
+            const isSelected = option.value === selectedValue;
+            return (
+              <li
+                key={option.value || 'default'}
+                className={`settings-select-option ${isSelected ? 'selected' : ''}`}
+                onClick={() => {
+                  setSelectedValue(option.value);
+                  setIsOpen(false);
+                }}
+              >
+                <span>{option.label}</span>
+                {isSelected && <Check size={12} className="settings-select-check" />}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 const AgentChat = ({ resumeContext, formData, userId }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -410,7 +451,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
   const renderWelcome = () => {
     return (
       <div className="agent-welcome">
-        <div className="agent-welcome-icon" aria-hidden="true"><Bot size={28} /></div>
+        <div className="agent-welcome-icon" aria-hidden="true"><Sparkles size={28} /></div>
         <p>I can help you improve your resume, write impactful bullet points, analyze job matches, and generate content!</p>
         <div className="agent-quick-actions">
           {QUICK_ACTIONS.map((action, i) => {
@@ -544,7 +585,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
     return (
       <div key={msg.id} className={`agent-message ${msg.role}`}>
         <div className="msg-avatar">
-          {isUser ? <User size={14} /> : <Bot size={14} />}
+          {isUser ? <User size={14} /> : <Sparkles size={14} />}
         </div>
         <div>
           <div
@@ -593,7 +634,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
         <div className="settings-header">
           <h3>
             <span className="settings-icon">🛠️</span>
-            AGENT_PREFS
+            Agent Preferences
           </h3>
           <p>
             Customize how the AI assists you.
@@ -690,7 +731,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
             <label className="settings-toggle">
               <input type="checkbox" name="preferActionVerbs" defaultChecked={preferences.preferActionVerbs} />
               <span className="settings-checkbox" aria-hidden="true">
-                <Check size={13} />
+                <Check size={12} />
               </span>
               <span className="toggle-copy">
                 <span className="toggle-text">Prefer Action Verbs</span>
@@ -699,7 +740,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
             <label className="settings-toggle">
               <input type="checkbox" name="preferMetrics" defaultChecked={preferences.preferMetrics} />
               <span className="settings-checkbox" aria-hidden="true">
-                <Check size={13} />
+                <Check size={12} />
               </span>
               <span className="toggle-copy">
                 <span className="toggle-text">Prefer Metrics</span>
@@ -708,7 +749,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
             <label className="settings-toggle">
               <input type="checkbox" name="atsOptimized" defaultChecked={preferences.atsOptimized} />
               <span className="settings-checkbox" aria-hidden="true">
-                <Check size={13} />
+                <Check size={12} />
               </span>
               <span className="toggle-copy">
                 <span className="toggle-text">Strict ATS Mode</span>
@@ -716,6 +757,9 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
               </span>
             </label>
           </div>
+
+          {/* Divider */}
+          <div className="settings-divider" />
 
           {/* Footer Actions */}
           <div className="settings-actions">
@@ -739,7 +783,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
           title="Open AI Agent"
         >
           {showPulse && <span className="agent-toggle-pulse" />}
-          <Bot size={24} />
+          <Sparkles size={24} />
         </button>
       )}
 
@@ -766,7 +810,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
             onTouchStart={handlePanelDragStart}
           >
             <div className="agent-header-left">
-              <div className="agent-avatar"><Bot size={18} /></div>
+              <div className="agent-avatar"><Sparkles size={16} /></div>
               <div className="agent-header-info">
                 <h3>Resume AI Agent</h3>
                 <span><span className="agent-status-dot" /> Online</span>

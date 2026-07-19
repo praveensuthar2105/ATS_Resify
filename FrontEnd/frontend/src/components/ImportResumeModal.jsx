@@ -395,7 +395,7 @@ Software Engineer | Google | 2020 - Present
                                         : !selectedFile
                                 }
                             >
-                                ✨ Parse Resume with AI
+                                <span className="material-symbols-outlined" style={{fontSize: '16px', verticalAlign: 'middle'}}>auto_awesome</span> Parse Resume with AI
                             </button>
                         </>
                     )}

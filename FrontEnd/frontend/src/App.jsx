@@ -14,6 +14,9 @@ import './App.css';
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const EditResume = lazy(() => import('./pages/EditResume'));
 const AtsChecker = lazy(() => import('./pages/AtsChecker'));
+const QuickScore = lazy(() => import('./pages/QuickScore'));
+const JobMatch = lazy(() => import('./pages/JobMatch'));
+
 const Features = lazy(() => import('./pages/Features'));
 const About = lazy(() => import('./pages/About'));
 const AuthCallback = lazy(() => import('./pages/AuthCallback'));
@@ -123,7 +126,10 @@ function AppContent() {
                 <EditResume />
               </ProtectedRoute>
             } />
-            <Route path="/ats-checker" element={<AtsChecker />} />
+            <Route path="/ats-checker" element={<Navigate to="/ats-checker/quick-score" replace />} />
+            <Route path="/ats-checker/quick-score" element={<QuickScore />} />
+            <Route path="/ats-checker/job-match" element={<JobMatch />} />
+
             <Route path="/features" element={<Features />} />
             <Route path="/about" element={<About />} />
             <Route path="/auth/callback" element={<AuthCallback />} />

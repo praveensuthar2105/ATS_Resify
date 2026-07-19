@@ -46,15 +46,15 @@ const ResumePreview = () => {
             </div>
           ) : compileError ? (
             <div className="pdf-error">
-              <div className="error-icon">⚠️</div>
+              <div className="error-icon"><span className="material-symbols-outlined" style={{fontSize: '32px', color: '#F59E0B'}}>warning</span></div>
               <h3>Compilation Error</h3>
               <p className="error-message">{compileError}</p>
               <div className="error-actions">
-                <button onClick={handleManualCompile}>🔄 Retry</button>
-                <button onClick={downloadTex}>📤 Download .TEX</button>
+                <button onClick={handleManualCompile}><span className="material-symbols-outlined" style={{fontSize: '16px', verticalAlign: 'middle'}}>refresh</span> Retry</button>
+                <button onClick={downloadTex}><span className="material-symbols-outlined" style={{fontSize: '16px', verticalAlign: 'middle'}}>upload_file</span> Download .TEX</button>
               </div>
               <p className="error-hint">
-                💡 Download .TEX and use <a href="https://www.overleaf.com" target="_blank" rel="noopener noreferrer">Overleaf</a> to compile
+                <span className="material-symbols-outlined" style={{fontSize: '16px', verticalAlign: 'middle', color: '#F59E0B'}}>lightbulb</span> Download .TEX and use <a href="https://www.overleaf.com" target="_blank" rel="noopener noreferrer">Overleaf</a> to compile
               </p>
             </div>
           ) : pdfUrl ? (

@@ -13,8 +13,8 @@ import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from 'reac
 const FormItem = ({ label, value, onChange, placeholder, type = 'text', colspan = 1 }) => {
   const idId = React.useId ? React.useId() : label.replace(/\s+/g, '-');
   return (
-    <div className={`flex flex-col gap-1.5 mt-2 ${colspan > 1 ? `sm:col-span-${colspan}` : ''}`}>
-      <label htmlFor={idId} className="text-xs font-semibold font-sans block" style={{ color: '#3D5751' }}>
+    <div className={`flex flex-col mt-2 ${colspan > 1 ? `sm:col-span-${colspan}` : ''}`}>
+      <label htmlFor={idId} className="text-[13px] font-semibold font-sans block mb-[6px]" style={{ color: '#3D5751' }}>
         {label}
       </label>
       {type === 'textarea' ? (
@@ -23,7 +23,14 @@ const FormItem = ({ label, value, onChange, placeholder, type = 'text', colspan 
           value={value || ''}
           onChange={onChange}
           placeholder={placeholder || ''}
-          className="flex min-h-[100px] w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus-visible:outline-none focus-visible:border-teal-600 focus-visible:ring-1 focus-visible:ring-teal-600 disabled:cursor-not-allowed disabled:opacity-50 font-sans"
+          className="flex min-h-[100px] w-full bg-white text-[14px] text-slate-900 transition-all placeholder:text-[rgba(20,40,35,0.35)] focus-visible:outline-none focus-visible:border-[rgb(20,180,140)] focus-visible:ring-[3px] focus-visible:ring-[rgba(20,180,140,0.12)] disabled:cursor-not-allowed disabled:opacity-50 font-sans"
+          style={{
+            background: '#FFFFFF',
+            border: '1px solid rgba(20,40,35,0.15)',
+            borderRadius: '8px',
+            padding: '10px 14px',
+            fontSize: '14px',
+          }}
         />
       ) : (
         <input
@@ -32,7 +39,14 @@ const FormItem = ({ label, value, onChange, placeholder, type = 'text', colspan 
           value={value || ''}
           onChange={onChange}
           placeholder={placeholder || ''}
-          className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus-visible:outline-none focus-visible:border-teal-600 focus-visible:ring-1 focus-visible:ring-teal-600 disabled:cursor-not-allowed disabled:opacity-50 font-sans"
+          className="flex h-10 w-full bg-white text-[14px] text-slate-900 transition-all placeholder:text-[rgba(20,40,35,0.35)] focus-visible:outline-none focus-visible:border-[rgb(20,180,140)] focus-visible:ring-[3px] focus-visible:ring-[rgba(20,180,140,0.12)] disabled:cursor-not-allowed disabled:opacity-50 font-sans"
+          style={{
+            background: '#FFFFFF',
+            border: '1px solid rgba(20,40,35,0.15)',
+            borderRadius: '8px',
+            padding: '10px 14px',
+            fontSize: '14px',
+          }}
         />
       )}
     </div>
@@ -970,9 +984,9 @@ ${sections}
                 <FormItem label="Location" value={formData.location} onChange={(e) => updateField('location', e.target.value)} placeholder="e.g. San Francisco, CA" />
                 
                 {/* LinkedIn */}
-                <div className="flex flex-col gap-1.5 mt-2 sm:col-span-1">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="linkedin-input" className="text-xs font-semibold font-sans flex items-center gap-1.5" style={{ color: '#3D5751' }}>
+                <div className="flex flex-col mt-2 sm:col-span-1">
+                  <div className="flex items-center justify-between mb-[6px]">
+                    <label htmlFor="linkedin-input" className="text-[13px] font-semibold font-sans flex items-center gap-1.5" style={{ color: '#3D5751' }}>
                       LinkedIn Profile URL
                       <span className="text-[10px] font-semibold text-teal-600 bg-teal-50 border border-teal-200/60 rounded-full px-2 py-0.5">Clickable</span>
                     </label>
@@ -997,14 +1011,21 @@ ${sections}
                       updateField('linkedIn', `https://www.linkedin.com/in/${v}`);
                     }}
                     placeholder="linkedin.com/in/johndoe"
-                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus-visible:outline-none focus-visible:border-teal-600 focus-visible:ring-1 focus-visible:ring-teal-600 font-sans"
+                    className="flex h-10 w-full bg-white text-[14px] text-slate-900 transition-all placeholder:text-[rgba(20,40,35,0.35)] focus-visible:outline-none focus-visible:border-[rgb(20,180,140)] focus-visible:ring-[3px] focus-visible:ring-[rgba(20,180,140,0.12)] font-sans"
+                    style={{
+                      background: '#FFFFFF',
+                      border: '1px solid rgba(20,40,35,0.15)',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      fontSize: '14px',
+                    }}
                   />
                 </div>
 
                 {/* GitHub */}
-                <div className="flex flex-col gap-1.5 mt-2 sm:col-span-1">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="github-input" className="text-xs font-semibold font-sans flex items-center gap-1.5" style={{ color: '#3D5751' }}>
+                <div className="flex flex-col mt-2 sm:col-span-1">
+                  <div className="flex items-center justify-between mb-[6px]">
+                    <label htmlFor="github-input" className="text-[13px] font-semibold font-sans flex items-center gap-1.5" style={{ color: '#3D5751' }}>
                       GitHub Profile URL
                       <span className="text-[10px] font-semibold text-teal-600 bg-teal-50 border border-teal-200/60 rounded-full px-2 py-0.5">Clickable</span>
                     </label>
@@ -1028,7 +1049,14 @@ ${sections}
                       updateField('gitHub', `https://github.com/${v}`);
                     }}
                     placeholder="github.com/johndoe"
-                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus-visible:outline-none focus-visible:border-teal-600 focus-visible:ring-1 focus-visible:ring-teal-600 font-sans"
+                    className="flex h-10 w-full bg-white text-[14px] text-slate-900 transition-all placeholder:text-[rgba(20,40,35,0.35)] focus-visible:outline-none focus-visible:border-[rgb(20,180,140)] focus-visible:ring-[3px] focus-visible:ring-[rgba(20,180,140,0.12)] font-sans"
+                    style={{
+                      background: '#FFFFFF',
+                      border: '1px solid rgba(20,40,35,0.15)',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      fontSize: '14px',
+                    }}
                   />
                 </div>
               </div>
@@ -1087,7 +1115,7 @@ ${sections}
               isExpanded={activeAccordionSections.includes('experience')}
             >
               {formData.experience.map((exp, index) => (
-                <div key={index} className="relative border border-slate-200/60 rounded-2xl pl-5 pr-5 py-5 mb-8 group bg-white transition-all hover:border-teal-500/40 shadow-sm">
+                <div key={index} className="relative border border-slate-200/60 rounded-2xl pl-5 pr-5 py-5 mb-6 group bg-white transition-all hover:border-teal-500/40 shadow-sm">
                   <button 
                     onClick={() => removeExperience(index)} 
                     className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-50 border border-transparent hover:border-rose-100 text-slate-500 hover:text-rose-500 flex items-center justify-center transition-all cursor-pointer"
@@ -1160,7 +1188,7 @@ ${sections}
               isExpanded={activeAccordionSections.includes('projects')}
             >
               {formData.projects.map((project, index) => (
-                <div key={index} className="relative border border-slate-200/60 rounded-2xl pl-5 pr-5 py-5 mb-8 group bg-white transition-all hover:border-teal-500/40 shadow-sm">
+                <div key={index} className="relative border border-slate-200/60 rounded-2xl pl-5 pr-5 py-5 mb-6 group bg-white transition-all hover:border-teal-500/40 shadow-sm">
                   <button 
                     onClick={() => removeProject(index)} 
                     className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-50 border border-transparent hover:border-rose-100 text-slate-500 hover:text-rose-500 flex items-center justify-center transition-all cursor-pointer"
@@ -1192,7 +1220,7 @@ ${sections}
               isExpanded={activeAccordionSections.includes('certifications')}
             >
               {/* Certifications Sub-Section */}
-              <div className="mb-8">
+              <div className="mb-6">
                 <div className="flex justify-between items-center mb-4 pb-1.5 border-b border-slate-200/50">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#3D5751' }}>Certifications</h4>
                   <button 
