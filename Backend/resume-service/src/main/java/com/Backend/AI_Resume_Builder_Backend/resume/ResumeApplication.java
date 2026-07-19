@@ -16,7 +16,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 public class ResumeApplication {
 
     public static void main(String[] args) {
-        System.setProperty("java.net.preferIPv4Stack", "false");
+        System.setProperty("java.net.preferIPv4Stack", "true");
         loadDotEnv();
         SpringApplication.run(ResumeApplication.class, args);
     }

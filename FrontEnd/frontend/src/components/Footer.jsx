@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
+import Logo from './Logo';
 
 const productLinks = [
-  { label: 'AI Resume Builder', to: '/generate' },
+  { label: 'AI Resume Builder', to: '/create-resume/prompt' },
   { label: 'ATS Score Checker', to: '/ats-checker' },
   { label: 'All Features', to: '/features' },
-  { label: 'LaTeX Editor', to: '/generate' },
+  { label: 'LaTeX Editor', to: '/edit-resume' },
 ];
 
 const resourceLinks = [
@@ -22,13 +23,13 @@ const legalLinks = [
 ];
 
 const linkClass =
-  'text-slate-500 hover:text-[#2563EB] no-underline transition-colors duration-200 font-medium';
+  'text-slate-500 hover:text-[#14B8A6] no-underline transition-colors duration-200 font-medium';
 
 const Footer = () => {
   return (
     <footer className="relative bg-white/60 backdrop-blur-xl font-['DM_Sans',_'Inter',_sans-serif]">
       {/* Soft gradient top border */}
-      <div className="h-px bg-gradient-to-r from-transparent via-[#2563EB]/30 to-transparent" />
+      <div className="h-px bg-gradient-to-r from-transparent via-[#14B8A6]/30 to-transparent" />
 
       <div className="max-w-[1300px] mx-auto px-6 pt-16 pb-8">
         {/* 4-column grid */}
@@ -37,19 +38,7 @@ const Footer = () => {
           {/* ── Brand Column ── */}
           <div className="md:col-span-4 flex flex-col justify-between">
             <div>
-              <RouterLink to="/" className="flex items-center gap-3 no-underline mb-4 group">
-                {/* Gradient logo icon */}
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#7C3AED] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-200">
-                  <span className="material-symbols-outlined text-white text-xl">description</span>
-                </div>
-                {/* Brand name with gradient clip */}
-                <span className="text-xl font-bold tracking-tight font-['Space_Grotesk',_sans-serif]">
-                  <span className="text-slate-900">ATS </span>
-                  <span className="bg-gradient-to-r from-[#1E3A5F] to-[#7C3AED] bg-clip-text text-transparent font-extrabold">
-                    Resify
-                  </span>
-                </span>
-              </RouterLink>
+              <Logo className="mb-4" />
 
               <p className="text-sm leading-relaxed text-slate-500 max-w-sm mb-6">
                 The modern AI career suite engineered to help professionals, engineers, and students
@@ -63,21 +52,21 @@ const Footer = () => {
                 href="https://github.com/praveensuthar2105/AI_Powered_Resume_Builder"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-[#2563EB]/10 hover:text-[#2563EB] border border-[#E2E8F0] flex items-center justify-center transition-all duration-200 text-slate-600 no-underline shadow-sm hover:scale-105"
+                className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-[#14B8A6]/10 hover:text-[#14B8A6] border border-[#E2E8F0] flex items-center justify-center transition-all duration-200 text-slate-600 no-underline shadow-sm hover:scale-105"
                 aria-label="GitHub Repository"
               >
                 <span className="material-symbols-outlined text-lg">code</span>
               </a>
               <a
                 href="mailto:contact@atsresify.me"
-                className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-[#2563EB]/10 hover:text-[#2563EB] border border-[#E2E8F0] flex items-center justify-center transition-all duration-200 text-slate-600 no-underline shadow-sm hover:scale-105"
+                className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-[#14B8A6]/10 hover:text-[#14B8A6] border border-[#E2E8F0] flex items-center justify-center transition-all duration-200 text-slate-600 no-underline shadow-sm hover:scale-105"
                 aria-label="Email Contact"
               >
                 <span className="material-symbols-outlined text-lg">mail</span>
               </a>
               <a
                 href="#"
-                className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-[#2563EB]/10 hover:text-[#2563EB] border border-[#E2E8F0] flex items-center justify-center transition-all duration-200 text-slate-600 no-underline shadow-sm hover:scale-105"
+                className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-[#14B8A6]/10 hover:text-[#14B8A6] border border-[#E2E8F0] flex items-center justify-center transition-all duration-200 text-slate-600 no-underline shadow-sm hover:scale-105"
                 aria-label="Share"
               >
                 <span className="material-symbols-outlined text-lg">share</span>

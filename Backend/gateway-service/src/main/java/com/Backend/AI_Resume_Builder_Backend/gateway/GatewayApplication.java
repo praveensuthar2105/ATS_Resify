@@ -12,7 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class GatewayApplication {
 
     public static void main(String[] args) {
-        System.setProperty("java.net.preferIPv4Stack", "false");
+        System.setProperty("java.net.preferIPv4Stack", "true");
         loadDotEnv();
         SpringApplication.run(GatewayApplication.class, args);
     }

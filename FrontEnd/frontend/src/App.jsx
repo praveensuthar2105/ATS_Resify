@@ -1,28 +1,33 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import ResumeDashboard from './components/ResumeDashboard';
-import LandingPage from './pages/LandingPage';
-import GenerateResume from './pages/GenerateResume';
-import EditResume from './pages/EditResume';
-import AtsChecker from './pages/AtsChecker';
-import Features from './pages/Features';
-import About from './pages/About';
-import AuthCallback from './pages/AuthCallback';
-import AdminPanel from './pages/AdminPanel';
-import Login from './pages/Login';
-import Team from './pages/Team';
-import Terms from './pages/Terms';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import Contact from './pages/Contact';
-import Feedback from './pages/Feedback';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import CookieConsent from './components/CookieConsent';
+import { Loader2 } from 'lucide-react';
 import './App.css';
+
+// Lazy load page components to split massive packages (Monaco, Recharts, react-pdf)
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const EditResume = lazy(() => import('./pages/EditResume'));
+const AtsChecker = lazy(() => import('./pages/AtsChecker'));
+const Features = lazy(() => import('./pages/Features'));
+const About = lazy(() => import('./pages/About'));
+const AuthCallback = lazy(() => import('./pages/AuthCallback'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const Login = lazy(() => import('./pages/Login'));
+const Team = lazy(() => import('./pages/Team'));
+const Terms = lazy(() => import('./pages/Terms'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Feedback = lazy(() => import('./pages/Feedback'));
+const CreateScratch = lazy(() => import('./pages/create/CreateScratch'));
+const CreateImport = lazy(() => import('./pages/create/CreateImport'));
+const CreateLinkedin = lazy(() => import('./pages/create/CreateLinkedin'));
+const CreatePrompt = lazy(() => import('./pages/create/CreatePrompt'));
 
 // 404 Not Found Component
 const NotFound = () => (
@@ -56,6 +61,13 @@ const NotFound = () => (
   </Box>
 );
 
+// Fallback Page Loader during route chunk loading
+const PageLoader = () => (
+  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+    <Loader2 className="w-10 h-10 text-teal-600 animate-spin" />
+  </Box>
+);
+
 const theme = createTheme({
   palette: {
     primary: { main: '#6366f1' },
@@ -72,35 +84,62 @@ const theme = createTheme({
 });
 
 function AppContent() {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+
+  React.useEffect(() => {
+    // Preload route chunks in the background after initial render has settled
+    const preloadRoutes = () => {
+      import('./pages/EditResume').catch(() => {});
+      import('./pages/AtsChecker').catch(() => {});
+      import('./pages/Login').catch(() => {});
+      import('./pages/create/CreateScratch').catch(() => {});
+      import('./pages/create/CreateImport').catch(() => {});
+      import('./pages/create/CreateLinkedin').catch(() => {});
+      import('./pages/create/CreatePrompt').catch(() => {});
+      import('./pages/Features').catch(() => {});
+      import('./pages/About').catch(() => {});
+    };
+
+    const timer = setTimeout(preloadRoutes, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
-      <Navbar />
+      {!isHome && <Navbar />}
       <Box component="main" sx={{ width: '100%', flex: 1, mt: 0 }}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/generate" element={<GenerateResume />} />
-          <Route path="/edit-resume" element={
-            <ProtectedRoute>
-              <EditResume />
-            </ProtectedRoute>
-          } />
-          <Route path="/ats-checker" element={<AtsChecker />} />
-          <Route path="/features" element={<Features />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/admin" element={
-            <ProtectedRoute>
-              <AdminPanel />
-            </ProtectedRoute>
-          } />
-          <Route path="/team" element={<Team />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/feedback" element={<Feedback />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/generate" element={<Navigate to="/create-resume/prompt" replace />} />
+            <Route path="/create-resume/scratch" element={<CreateScratch />} />
+            <Route path="/create-resume/import" element={<CreateImport />} />
+            <Route path="/create-resume/linkedin" element={<CreateLinkedin />} />
+            <Route path="/create-resume/prompt" element={<CreatePrompt />} />
+            <Route path="/edit-resume" element={
+              <ProtectedRoute>
+                <EditResume />
+              </ProtectedRoute>
+            } />
+            <Route path="/ats-checker" element={<AtsChecker />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <AdminPanel />
+              </ProtectedRoute>
+            } />
+            <Route path="/team" element={<Team />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/feedback" element={<Feedback />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </Box>
       <Footer />
       <CookieConsent />

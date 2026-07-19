@@ -48,7 +48,7 @@ const EditResumeContent = () => {
         {/* Left Panel - Form or LaTeX Editor */}
         <div className="form-panel">
           {/* Back Link */}
-          <span className="back-link" onClick={() => navigate('/generate')}>
+          <span className="back-link" onClick={() => navigate('/create-resume/prompt')}>
             ← Back to Generator
           </span>
 

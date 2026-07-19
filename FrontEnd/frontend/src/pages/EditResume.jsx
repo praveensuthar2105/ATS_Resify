@@ -5,64 +5,139 @@ import { decodeToken, getAuthToken } from '../utils/auth';
 import { API_BASE_URL } from '../services/api';
 import SEO from '../components/SEO';
 import { Helmet } from 'react-helmet-async';
-import SectionHeader from '../components/SectionHeader';
 import FeedbackPopup from '../components/FeedbackPopup';
+import { ArrowLeft, Loader2, Save, Download, RefreshCw, Trash2, CheckCircle2, ChevronDown, Award, Briefcase, GraduationCap, FolderGit, User, Award as CertificationIcon, Lightbulb } from 'lucide-react';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../components/ui/accordion';
+import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from 'react-resizable-panels';
 
-const FormItem = ({ label, value, onChange, placeholder, type = "text", colspan = 1 }) => (
-  <div className={`flex flex-col gap-1.5 ${colspan > 1 ? `col-span-${colspan} sm:col-span-${colspan}` : ''}`}>
-    <label className="text-[11px] font-bold uppercase tracking-widest text-gray-600 font-sans">{label}</label>
-    {type === "textarea" ? (
-      <textarea
-        value={value} onChange={onChange} placeholder={placeholder} rows={4}
-        className="border-2 border-gray-300 bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[3px_3px_0px_0px_#39ff14] p-3 text-sm font-sans transition-all rounded-none resize-y"
-      />
-    ) : (
-      <input
-        type={type} value={value} onChange={onChange} placeholder={placeholder}
-        className="border-2 border-gray-300 bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[3px_3px_0px_0px_#39ff14] p-3 text-sm font-sans transition-all h-11 rounded-none"
-      />
-    )}
-  </div>
-);
-
-const SectionCard = ({ icon, title, subtitle, children, buttonText, onAdd }) => (
-  <div className="border-2 border-gray-200 bg-white mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.08)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.12)] transition-shadow">
-    <div className="border-b-2 border-gray-200 p-4 flex items-center gap-3 bg-gray-50">
-      <div className="w-10 h-10 border-2 border-black bg-black text-[#39ff14] flex items-center justify-center">
-        <span className="material-symbols-outlined text-xl">{icon}</span>
-      </div>
-      <div>
-        <h3 className="text-lg font-black uppercase tracking-tight font-mono">{title}</h3>
-        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest font-sans">{subtitle}</p>
-      </div>
-    </div>
-    <div className="p-5">
-      {children}
-      {buttonText && (
-        <button onClick={onAdd} className="mt-4 w-full py-3 border-2 border-dashed border-gray-300 font-bold uppercase hover:bg-[#39ff14] hover:border-solid hover:border-black transition-all text-xs flex items-center justify-center gap-2 font-sans text-gray-500 hover:text-black">
-          <span className="material-symbols-outlined text-lg">add</span> {buttonText}
-        </button>
+const FormItem = ({ label, value, onChange, placeholder, type = 'text', colspan = 1 }) => {
+  const idId = React.useId ? React.useId() : label.replace(/\s+/g, '-');
+  return (
+    <div className={`flex flex-col gap-1.5 mt-2 ${colspan > 1 ? `sm:col-span-${colspan}` : ''}`}>
+      <label htmlFor={idId} className="text-xs font-semibold font-sans block" style={{ color: '#3D5751' }}>
+        {label}
+      </label>
+      {type === 'textarea' ? (
+        <textarea
+          id={idId}
+          value={value || ''}
+          onChange={onChange}
+          placeholder={placeholder || ''}
+          className="flex min-h-[100px] w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus-visible:outline-none focus-visible:border-teal-600 focus-visible:ring-1 focus-visible:ring-teal-600 disabled:cursor-not-allowed disabled:opacity-50 font-sans"
+        />
+      ) : (
+        <input
+          type={type}
+          id={idId}
+          value={value || ''}
+          onChange={onChange}
+          placeholder={placeholder || ''}
+          className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus-visible:outline-none focus-visible:border-teal-600 focus-visible:ring-1 focus-visible:ring-teal-600 disabled:cursor-not-allowed disabled:opacity-50 font-sans"
+        />
       )}
     </div>
-  </div>
+  );
+};
+
+const SectionCard = ({ icon, title, subtitle, children, buttonText, onAdd, value, isExpanded }) => (
+  <AccordionItem 
+    value={value} 
+    className="border-b-0 overflow-hidden transition-all duration-300 bg-white rounded-2xl"
+    style={{
+      border: isExpanded ? '1px solid rgba(20, 180, 140, 0.24)' : '1px solid rgba(20, 40, 35, 0.10)',
+      boxShadow: isExpanded ? '0 18px 36px rgba(20, 100, 80, 0.10)' : '0 10px 24px rgba(20, 40, 35, 0.055)'
+    }}
+  >
+    <AccordionTrigger className="group py-4 px-4 hover:no-underline font-sans hover:bg-slate-50/60 transition-colors">
+      <div className="flex items-center gap-3 text-left min-w-0">
+        <div 
+          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 relative overflow-hidden transition-all duration-300 bg-white"
+          style={{
+            border: '1px solid rgba(20, 180, 140, 0.18)',
+            boxShadow: '0 6px 16px rgba(20, 100, 80, 0.08)',
+            color: '#0D9488'
+          }}
+        >
+          {typeof icon === 'string' ? <span className="material-symbols-outlined text-[19px] font-semibold">{icon}</span> : icon}
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-sm font-bold font-sans tracking-tight transition-colors truncate" style={{ color: '#1A2E28' }}>{title}</h3>
+          {subtitle && <p className="text-[11px] font-medium font-sans transition-colors truncate" style={{ color: 'rgba(20, 70, 60, 0.56)' }}>{subtitle}</p>}
+        </div>
+      </div>
+    </AccordionTrigger>
+    <AccordionContent className="pb-5 px-4 font-sans">
+      <div className="space-y-4 pt-4 border-t" style={{ borderColor: 'rgba(20, 100, 80, 0.08)' }}>
+        {children}
+        {buttonText && (
+          <button 
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onAdd(); }} 
+            className="mt-4 w-full py-2.5 bg-white hover:bg-teal-50/40 border border-dashed border-slate-300 hover:border-teal-300 rounded-xl font-semibold text-slate-700 hover:text-teal-700 transition-all text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[16px]">add</span> {buttonText}
+          </button>
+        )}
+      </div>
+    </AccordionContent>
+  </AccordionItem>
 );
+let hasAutoScrolledGlobal = false;
 
 const EditResume = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [ReactPdf, setReactPdf] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    const loadReactPdf = async () => {
+      try {
+        const [module] = await Promise.all([
+          import('react-pdf'),
+          import('react-pdf/dist/Page/AnnotationLayer.css'),
+          import('react-pdf/dist/Page/TextLayer.css')
+        ]);
+        if (active) {
+          module.pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${module.pdfjs.version}/build/pdf.worker.min.mjs`;
+          setReactPdf(() => module);
+        }
+      } catch (err) {
+        console.error('Failed to dynamically load react-pdf:', err);
+      }
+    };
+    loadReactPdf();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (location.state?.triggerFeedback) {
       setShowFeedback(true);
-      // Clean up navigation state
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location, navigate]);
 
+  useEffect(() => {
+    if (!hasAutoScrolledGlobal) {
+      hasAutoScrolledGlobal = true;
+      const timer = setTimeout(() => {
+        const el = document.getElementById('summary-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setExpandedSections(prev => ({ ...prev, summary: true }));
+        }
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   const [saving, setSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const [editMode] = useState('form');
   const [snack, setSnack] = useState({ open: false, type: 'success', text: '' });
   const [zoom, setZoom] = useState(100);
@@ -71,7 +146,7 @@ const EditResume = () => {
   // LaTeX & PDF state
   const [latexCode, setLatexCode] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
-  const [pdfFilename, setPdfFilename] = useState('editr');
+  const [pdfFilename, setPdfFilename] = useState('resume_draft');
   const [pdfBlob, setPdfBlob] = useState(null);
   const [compiling, setCompiling] = useState(false);
   const [compileError, setCompileError] = useState(null);
@@ -79,55 +154,31 @@ const EditResume = () => {
   const [useOnlineCompiler, setUseOnlineCompiler] = useState(false);
   const autoCompileTimer = useRef(null);
 
-  // Resizer state — use ref for the dragging flag so mousemove reads it instantly
-  const [leftWidth, setLeftWidth] = useState(50);
-  const isResizingRef = useRef(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const rafRef = useRef(null);
+  // Expanded sections state
+  const [expandedSections, setExpandedSections] = useState({
+    personal: true,
+    summary: false,
+    skills: false,
+    experience: false,
+    education: false,
+    projects: false,
+    certifications: false
+  });
 
-  const startResizing = useCallback(() => {
-    isResizingRef.current = true;
-    setIsResizing(true);
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  }, []);
+  const toggleSection = (sec) => {
+    setExpandedSections(prev => ({ ...prev, [sec]: !prev[sec] }));
+  };
 
-  const stopResizing = useCallback(() => {
-    isResizingRef.current = false;
-    setIsResizing(false);
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-  }, []);
-
-  const resize = useCallback((e) => {
-    if (!isResizingRef.current) return;
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      const newWidth = (e.clientX / window.innerWidth) * 100;
-      if (newWidth > 20 && newWidth < 80) {
-        setLeftWidth(newWidth);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    // Always attach listeners — the ref guard inside resize() is instant
-    window.addEventListener('mousemove', resize);
-    window.addEventListener('mouseup', stopResizing);
-    return () => {
-      window.removeEventListener('mousemove', resize);
-      window.removeEventListener('mouseup', stopResizing);
-    };
-  }, [resize, stopResizing]);
+  // Resizer state
+  // react-pdf state
+  const [numPages, setNumPages] = useState(null);
 
   const [formData, setFormData] = useState({
     fullName: '', email: '', phoneNumber: '', location: '', linkedIn: '', gitHub: '', summary: '',
     skills: [], experience: [], education: [], projects: [], certifications: [], achievements: [], languages: [], interests: [],
   });
+  const formDataRef = useRef(formData);
+  formDataRef.current = formData;
 
   const [resumeData, setResumeData] = useState(null);
 
@@ -180,8 +231,6 @@ const EditResume = () => {
     const phone = escapeLatex(pi.phoneNumber || '+1 234 567 8900');
     const location = escapeLatex(pi.location || '');
 
-    // Ensure URL has https:// so \href produces a working hyperlink in the PDF.
-    // The form blur already normalizes to a full URL; this is just a safety net.
     const ensureHttps = (url) => {
       if (!url) return '';
       const u = url.trim();
@@ -441,7 +490,7 @@ ${sections}
         setSnack({ open: true, type: 'info', text: 'Using online compiler (local unavailable)' });
       } catch (onlineError) {
         console.error('Online compile also failed:', onlineError);
-        setCompileError(`Local: ${localError.message}\nOnline: ${onlineError.message}`);
+        setCompileError(`Local Compiler: ${localError.message}\nOnline Compiler: ${onlineError.message}`);
       }
     } finally {
       setCompiling(false);
@@ -476,7 +525,31 @@ ${sections}
           }
         }
 
-        setResumeData(data);
+        const sanitizeInputString = (str) => {
+          if (typeof str !== 'string') return str;
+          return str.replace(/(^|[\s,;])(aa|bb)+/g, '$1')
+                    .replace(/(aa|bb)+([\s,;]|$)/g, '$2')
+                    .trim();
+        };
+
+        const sanitizeObject = (obj) => {
+          if (Array.isArray(obj)) {
+            return obj.map(item => sanitizeObject(item));
+          } else if (obj !== null && typeof obj === 'object') {
+            const newObj = {};
+            for (const key in obj) {
+              // Sanitize both key and value, just in case the category key is corrupted (e.g., "Frameworksaa")
+              const cleanKey = sanitizeInputString(key);
+              newObj[cleanKey] = sanitizeObject(obj[key]);
+            }
+            return newObj;
+          } else if (typeof obj === 'string') {
+            return sanitizeInputString(obj);
+          }
+          return obj;
+        };
+
+        data = sanitizeObject(data);
 
         const formProjects = (data.projects || []).map(project => ({
           title: project.title || '',
@@ -494,7 +567,7 @@ ${sections}
         const langRaw = Array.isArray(data.languages) ? data.languages : [];
         const interestsRaw = Array.isArray(data.interests) ? data.interests : [];
 
-        setFormData({
+        const initialFormData = {
           fullName: pi.fullName || pi.name || '',
           email: pi.email || '',
           phoneNumber: pi.phoneNumber || pi.phone || '',
@@ -532,19 +605,46 @@ ${sections}
           })),
           languages: langRaw.map(lang => ({ name: typeof lang === 'string' ? lang : (lang.name || '') })),
           interests: interestsRaw.map(int => (typeof int === 'string' ? { name: int } : { name: int.name || int.title || '' })),
-        });
+        };
+
+        setFormData(initialFormData);
+
+        const savedProjects = initialFormData.projects?.map(project => ({
+          ...project,
+          technologiesUsed: typeof project.technologiesUsed === 'string'
+            ? project.technologiesUsed.split(',').map(tech => tech.trim()).filter(Boolean)
+            : project.technologiesUsed
+        })) || [];
+
+        const normalizedResumeData = {
+          personalInformation: {
+            fullName: initialFormData.fullName, email: initialFormData.email, phoneNumber: initialFormData.phoneNumber,
+            location: initialFormData.location, linkedIn: initialFormData.linkedIn || null, gitHub: initialFormData.gitHub || null,
+          },
+          summary: initialFormData.summary,
+          skills: initialFormData.skills?.map(s => ({ title: s.title || '', level: s.level || 'Intermediate', items: s.items || null })) || [],
+          experience: initialFormData.experience || [],
+          education: initialFormData.education || [],
+          certifications: initialFormData.certifications || [],
+          projects: savedProjects,
+          achievements: initialFormData.achievements || [],
+          languages: initialFormData.languages?.map((lang, index) => ({ id: index + 1, name: lang.name })) || [],
+          interests: initialFormData.interests?.map((it, index) => ({ id: index + 1, name: it.name })) || [],
+        };
+
+        setResumeData(normalizedResumeData);
 
         setLoading(false);
       } catch (error) {
         console.error('Error parsing resume data:', error);
         setSnack({ open: true, type: 'error', text: 'Error loading resume data.' });
         setLoading(false);
-        navigate('/generate');
+        navigate('/create-resume/prompt');
       }
     } else {
       setSnack({ open: true, type: 'error', text: 'No resume data found. Please generate a resume first.' });
       setLoading(false);
-      navigate('/generate');
+      navigate('/create-resume/prompt');
     }
   }, [navigate]);
 
@@ -557,7 +657,7 @@ ${sections}
 
     if (autoCompile && latex) {
       if (autoCompileTimer.current) clearTimeout(autoCompileTimer.current);
-      autoCompileTimer.current = setTimeout(() => compileToPdf(latex), 1000);
+      autoCompileTimer.current = setTimeout(() => compileToPdf(latex), 500);
     }
   }, [resumeData, editMode, autoCompile, compileToPdf, generateLatexFromData]);
 
@@ -578,9 +678,69 @@ ${sections}
     }
   }, [snack.open]);
 
-  const handleSave = () => {
+  // ATS Score Calculator State
+  const [atsScore, setAtsScore] = useState(85);
+
+  useEffect(() => {
+    let score = 40;
+    
+    // Personal Info components (+5 each, max 30)
+    if (formData.fullName) score += 5;
+    if (formData.email) score += 5;
+    if (formData.phoneNumber) score += 5;
+    if (formData.location) score += 5;
+    if (formData.linkedIn) score += 5;
+    if (formData.gitHub) score += 5;
+
+    // Professional Summary (+10)
+    if (formData.summary && formData.summary.trim().length > 30) score += 10;
+
+    // Work Experience (+5 per entry up to 15, +10 for detailed logs)
+    if (formData.experience && formData.experience.length > 0) {
+      score += Math.min(15, formData.experience.length * 5);
+      const hasLongBullets = formData.experience.some(exp => exp.responsibility && exp.responsibility.trim().length > 120);
+      if (hasLongBullets) score += 10;
+    }
+
+    // Education (+5 per entry up to 10)
+    if (formData.education && formData.education.length > 0) {
+      score += Math.min(10, formData.education.length * 5);
+    }
+
+    // Projects (+5 per entry up to 10)
+    if (formData.projects && formData.projects.length > 0) {
+      score += Math.min(10, formData.projects.length * 5);
+    }
+
+    // Skills category items (+5 per skill list up to 15)
+    if (formData.skills && formData.skills.length > 0) {
+      score += Math.min(15, formData.skills.length * 5);
+    }
+
+    // Certs & Achievements (+5)
+    if ((formData.certifications && formData.certifications.length > 0) || (formData.achievements && formData.achievements.length > 0)) {
+      score += 5;
+    }
+
+    setAtsScore(Math.min(99, score));
+  }, [formData]);
+
+  const activeAccordionSections = Object.entries(expandedSections)
+    .filter(([_, isExpanded]) => isExpanded)
+    .map(([key]) => key);
+
+  const handleAccordionChange = (val) => {
+    const newExpanded = { ...expandedSections };
+    Object.keys(newExpanded).forEach(key => {
+      newExpanded[key] = val.includes(key);
+    });
+    setExpandedSections(newExpanded);
+  };
+
+  const handleSave = useCallback(async () => {
     setSaving(true);
-    const savedProjects = formData.projects?.map(project => ({
+    const currentFormData = formDataRef.current;
+    const savedProjects = currentFormData.projects?.map(project => ({
       ...project,
       technologiesUsed: typeof project.technologiesUsed === 'string'
         ? project.technologiesUsed.split(',').map(tech => tech.trim()).filter(Boolean)
@@ -589,31 +749,33 @@ ${sections}
 
     const updatedResume = {
       personalInformation: {
-        fullName: formData.fullName, email: formData.email, phoneNumber: formData.phoneNumber,
-        location: formData.location, linkedIn: formData.linkedIn || null, gitHub: formData.gitHub || null,
+        fullName: currentFormData.fullName, email: currentFormData.email, phoneNumber: currentFormData.phoneNumber,
+        location: currentFormData.location, linkedIn: currentFormData.linkedIn || null, gitHub: currentFormData.gitHub || null,
       },
-      summary: formData.summary,
-      skills: formData.skills?.map(s => ({ title: s.title || '', level: s.level || 'Intermediate', items: s.items || null })) || [],
-      experience: formData.experience || [],
-      education: formData.education || [],
-      certifications: formData.certifications || [],
+      summary: currentFormData.summary,
+      skills: currentFormData.skills?.map(s => ({ title: s.title || '', level: s.level || 'Intermediate', items: s.items || null })) || [],
+      experience: currentFormData.experience || [],
+      education: currentFormData.education || [],
+      certifications: currentFormData.certifications || [],
       projects: savedProjects,
-      achievements: formData.achievements || [],
-      languages: formData.languages?.map((lang, index) => ({ id: index + 1, name: lang.name })) || [],
-      interests: formData.interests?.map((it, index) => ({ id: index + 1, name: it.name })) || [],
+      achievements: currentFormData.achievements || [],
+      languages: currentFormData.languages?.map((lang, index) => ({ id: index + 1, name: lang.name })) || [],
+      interests: currentFormData.interests?.map((it, index) => ({ id: index + 1, name: it.name })) || [],
     };
 
     setResumeData(updatedResume);
     localStorage.setItem('generatedResume', JSON.stringify(updatedResume));
     setLastSavedAt(new Date());
     setSaving(false);
-    setSnack({ open: true, type: 'success', text: 'SYSTEM: DATA PERSISTED' });
-  };
+    setShowSavedIndicator(true);
+    setTimeout(() => setShowSavedIndicator(false), 2000);
+    setSnack({ open: true, type: 'success', text: 'Resume draft saved successfully' });
+  }, []);
 
-  const handleFieldChange = () => {
+  const handleFieldChange = useCallback(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => handleSave(), 1000);
-  };
+    saveTimer.current = setTimeout(() => handleSave(), 1500);
+  }, [handleSave]);
 
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -630,9 +792,9 @@ ${sections}
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      setSnack({ open: true, type: 'success', text: 'PDF COMPILATION DOWNLOADED' });
+      setSnack({ open: true, type: 'success', text: 'PDF compilation downloaded' });
     } else if (latexCode) {
-      setSnack({ open: true, type: 'info', text: 'INITIATING COMPILATION SEQUENCE...' });
+      setSnack({ open: true, type: 'info', text: 'Initiating LaTeX PDF compilation...' });
       try {
         const blob = useOnlineCompiler ? await compileOnline(latexCode) : await compileLocal(latexCode);
         setPdfBlob(blob);
@@ -649,30 +811,30 @@ ${sections}
         a.click();
         a.remove();
         URL.revokeObjectURL(downloadUrl);
-        setSnack({ open: true, type: 'success', text: 'PDF COMPILATION DOWNLOADED' });
+        setSnack({ open: true, type: 'success', text: 'PDF compilation downloaded' });
       } catch (error) {
-        setSnack({ open: true, type: 'error', text: 'PDF CREATION HALTED: ' + error.message });
+        setSnack({ open: true, type: 'error', text: 'PDF generation failed: ' + error.message });
       }
     } else {
-      setSnack({ open: true, type: 'error', text: 'NO TARGET DATA. SAVE FIRST.' });
+      setSnack({ open: true, type: 'error', text: 'No target data. Save first.' });
     }
   };
 
   const downloadTex = () => {
     if (!latexCode) {
-      setSnack({ open: true, type: 'error', text: 'NO LaTeX SOURCE ACQUIRED.' });
+      setSnack({ open: true, type: 'error', text: 'No LaTeX source acquired.' });
       return;
     }
     const blob = new Blob([latexCode], { type: 'text/x-tex' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${formData.fullName || 'Resume'}.tex`;
+    a.download = `${formDataRef.current.fullName || 'Resume'}.tex`;
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    setSnack({ open: true, type: 'success', text: 'SOURCE TEX ACQUIRED' });
+    setSnack({ open: true, type: 'success', text: 'Source .tex file downloaded' });
   };
 
   const handleManualCompile = () => {
@@ -724,355 +886,576 @@ ${sections}
     handleFieldChange();
   };
 
-
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#ffffff] flex items-center justify-center font-mono selection:bg-[#39ff14] selection:text-black">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-black border-t-[#39ff14] rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="font-bold uppercase tracking-widest animate-pulse">INITIATING DATA_CORE...</p>
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-sans">
+        <div className="text-center p-8 bg-white border border-slate-200 rounded-2xl shadow-sm max-w-sm">
+          <Loader2 className="w-10 h-10 text-teal-600 animate-spin mx-auto mb-4" />
+          <p className="font-bold text-slate-800 uppercase tracking-widest text-xs animate-pulse font-sans">Initializing Data Core...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 top-[64px] bg-[#ffffff] text-black font-sans selection:bg-[#39ff14] selection:text-black flex flex-col lg:flex-row overflow-hidden z-[1]">
+    <div className="h-[calc(100vh-64px)] w-full text-slate-900 font-sans relative overflow-hidden flex flex-col" style={{ background: 'linear-gradient(180deg, #FBFEFC 0%, #F0F9F6 100%)' }}>
       <Helmet>
-        <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
         <style>{`
-          /* Hide scrollbar for cleaner look */
-          ::-webkit-scrollbar { width: 10px; height: 10px; }
-          ::-webkit-scrollbar-track { background: #f0f0f0; border-left: 2px solid #000; }
-          ::-webkit-scrollbar-thumb { background: #000; border: 2px solid #f0f0f0; }
-          ::-webkit-scrollbar-thumb:hover { background: #39ff14; }
-          /* Toast Animation */
+          ::-webkit-scrollbar { width: 6px; height: 6px; }
+          ::-webkit-scrollbar-track { background: transparent; }
+          ::-webkit-scrollbar-thumb { background: rgba(20, 184, 166, 0.2); border-radius: 10px; }
+          ::-webkit-scrollbar-thumb:hover { background: rgba(20, 184, 166, 0.4); }
           @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
           .toast-enter { animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+          .section-card-expanded {
+            background-color: #FFFFFF !important;
+            border-top: 1px solid rgba(20, 100, 80, 0.12) !important;
+            border-right: 1px solid rgba(20, 100, 80, 0.12) !important;
+            border-bottom: 1px solid rgba(20, 100, 80, 0.12) !important;
+            border-left: 3px solid rgb(20, 180, 140) !important;
+            box-shadow: 0 4px 16px -2px rgba(20, 100, 80, 0.06) !important;
+            border-radius: 12px;
+          }
+          .section-card-collapsed {
+            background-color: #FFFFFF !important;
+            border: 1px solid rgba(20, 100, 80, 0.10) !important;
+            border-radius: 12px;
+          }
+          .section-card-collapsed:hover {
+            background-color: rgba(20, 180, 140, 0.02) !important;
+            border-color: rgba(20, 180, 140, 0.35) !important;
+          }
         `}</style>
       </Helmet>
 
-      {/* LEFT PANEL: Form Editor */}
-      <div
-        className="h-full overflow-y-auto border-r-2 border-gray-200 bg-white relative pb-24 lg:pb-0"
-        style={{ width: `${leftWidth}%`, willChange: isResizing ? 'width' : 'auto' }}
-      >
-        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-lg cursor-pointer hover:text-[#39ff14] transition-colors" onClick={() => navigate('/generate')}>arrow_back</span>
-              <h1 className="text-xl font-black uppercase tracking-tight leading-none font-mono">
-                EDIT <span className="text-[#39ff14]">RESUME</span>
-              </h1>
-            </div>
-            <div className="text-[10px] font-medium text-gray-400 uppercase tracking-widest mt-1 flex items-center gap-1.5 font-sans">
-              <span className={`w-1.5 h-1.5 rounded-full ${saving ? 'bg-yellow-500 animate-pulse' : 'bg-[#39ff14]'} inline-block`}></span>
-              {saving ? 'Syncing...' : lastSavedAt ? `Saved ${new Date(lastSavedAt).toLocaleTimeString()}` : 'Awaiting edits'}
+      <PanelGroup orientation="horizontal" direction="horizontal" className="w-full h-full flex">
+        {/* LEFT PANEL: Form Editor */}
+        <Panel defaultSize={48} minSize={32} className="h-full overflow-y-auto border-r border-slate-200 relative pb-24 lg:pb-0" style={{ background: 'linear-gradient(180deg, #FBFEFC 0%, #F0F9F6 100%)' }}>
+          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => navigate('/create-resume/prompt')}
+                className="w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-600 flex items-center justify-center transition-all border border-slate-200 cursor-pointer shadow-sm"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div>
+                <h1 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-1.5 font-sans">
+                  Edit Resume <span className="text-teal-600">Builder</span>
+                </h1>
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="bg-slate-100 border border-slate-200/80 rounded-full px-2.5 py-0.5 flex items-center gap-1.5">
+                    <span className={`w-1.5 h-1.5 rounded-full ${saving ? 'bg-amber-500 animate-pulse' : 'bg-teal-500'} inline-block`}></span>
+                    <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider font-sans">
+                      {saving ? 'Saving...' : showSavedIndicator ? 'Saved ✓' : lastSavedAt ? `Saved ${new Date(lastSavedAt).toLocaleTimeString()}` : 'Draft'}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <button className="px-3 py-2 bg-black text-white font-bold uppercase text-[10px] border border-black hover:bg-[#39ff14] hover:text-black transition-colors lg:hidden flex items-center gap-1.5 font-sans">
-            <span className="material-symbols-outlined text-[14px]">visibility</span> PREVIEW
-          </button>
-        </div>
 
-        <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-8">
-          <SectionCard icon="person" title="BASE IDENTITY" subtitle="CONTACT COMMUNIQUE">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <FormItem label="FULL NAME" value={formData.fullName} onChange={(e) => updateField('fullName', e.target.value)} placeholder="JOHN DOE" />
-              <FormItem label="EMAIL" type="email" value={formData.email} onChange={(e) => updateField('email', e.target.value)} placeholder="USER@DOMAIN.COM" />
-              <FormItem label="PHONE NUMBER" value={formData.phoneNumber} onChange={(e) => updateField('phoneNumber', e.target.value)} placeholder="000-000-0000" />
-              <FormItem label="LOCATION" value={formData.location} onChange={(e) => updateField('location', e.target.value)} placeholder="CITY, NATION" />
-              {/* LinkedIn */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold uppercase tracking-widest">
-                  LINKEDIN <span className="normal-case text-[10px] bg-black text-[#39ff14] px-1 py-0.5 ml-1">🔗 CLICKABLE IN RESUME</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.linkedIn || ''}
-                  onChange={(e) => updateField('linkedIn', e.target.value)}
-                  onBlur={(e) => {
-                    const v = e.target.value.trim();
-                    if (!v) return;
-                    if (/^https?:\/\/(www\.)?linkedin\.com/i.test(v)) return; // already correct
-                    if (/^(www\.)?linkedin\.com/i.test(v)) { updateField('linkedIn', `https://${v}`); return; }
-                    if (/^in\//i.test(v)) { updateField('linkedIn', `https://www.linkedin.com/${v}`); return; }
-                    updateField('linkedIn', `https://www.linkedin.com/in/${v}`);
-                  }}
-                  placeholder="linkedin.com/in/yourname or yourname"
-                  className="border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[4px_4px_0px_0px_#39ff14] p-3 text-sm font-mono transition-all h-12"
-                />
-                {formData.linkedIn && (
-                  <a href={formData.linkedIn} target="_blank" rel="noopener noreferrer"
-                    className="text-[11px] font-bold text-blue-600 hover:text-[#39ff14] hover:underline mt-0.5">
-                    ↗ Preview link
-                  </a>
+          <Accordion type="multiple" value={activeAccordionSections} onValueChange={handleAccordionChange} className="p-6 sm:p-8 max-w-3xl mx-auto space-y-3 w-full">
+            <SectionCard 
+              icon={<User className="w-5 h-5" />}
+              title="Personal Information" 
+              subtitle="Contact Details"
+              value="personal"
+              isExpanded={activeAccordionSections.includes('personal')}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <FormItem label="Full Name" value={formData.fullName} onChange={(e) => updateField('fullName', e.target.value)} placeholder="e.g. John Doe" />
+                <FormItem label="Email" type="email" value={formData.email} onChange={(e) => updateField('email', e.target.value)} placeholder="e.g. john.doe@example.com" />
+                <FormItem label="Phone Number" value={formData.phoneNumber} onChange={(e) => updateField('phoneNumber', e.target.value)} placeholder="e.g. (555) 123-4567" />
+                <FormItem label="Location" value={formData.location} onChange={(e) => updateField('location', e.target.value)} placeholder="e.g. San Francisco, CA" />
+                
+                {/* LinkedIn */}
+                <div className="flex flex-col gap-1.5 mt-2 sm:col-span-1">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="linkedin-input" className="text-xs font-semibold font-sans flex items-center gap-1.5" style={{ color: '#3D5751' }}>
+                      LinkedIn Profile URL
+                      <span className="text-[10px] font-semibold text-teal-600 bg-teal-50 border border-teal-200/60 rounded-full px-2 py-0.5">Clickable</span>
+                    </label>
+                    {formData.linkedIn && (
+                      <a href={formData.linkedIn} target="_blank" rel="noopener noreferrer"
+                        className="text-xs font-semibold text-teal-600 hover:underline flex items-center gap-1 select-none">
+                        <span className="material-symbols-outlined text-[14px]">open_in_new</span> Preview
+                      </a>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    id="linkedin-input"
+                    value={formData.linkedIn || ''}
+                    onChange={(e) => updateField('linkedIn', e.target.value)}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (!v) return;
+                      if (/^https?:\/\/(www\.)?linkedin\.com/i.test(v)) return;
+                      if (/^(www\.)?linkedin\.com/i.test(v)) { updateField('linkedIn', `https://${v}`); return; }
+                      if (/^in\//i.test(v)) { updateField('linkedIn', `https://www.linkedin.com/${v}`); return; }
+                      updateField('linkedIn', `https://www.linkedin.com/in/${v}`);
+                    }}
+                    placeholder="linkedin.com/in/johndoe"
+                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus-visible:outline-none focus-visible:border-teal-600 focus-visible:ring-1 focus-visible:ring-teal-600 font-sans"
+                  />
+                </div>
+
+                {/* GitHub */}
+                <div className="flex flex-col gap-1.5 mt-2 sm:col-span-1">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="github-input" className="text-xs font-semibold font-sans flex items-center gap-1.5" style={{ color: '#3D5751' }}>
+                      GitHub Profile URL
+                      <span className="text-[10px] font-semibold text-teal-600 bg-teal-50 border border-teal-200/60 rounded-full px-2 py-0.5">Clickable</span>
+                    </label>
+                    {formData.gitHub && (
+                      <a href={formData.gitHub} target="_blank" rel="noopener noreferrer"
+                        className="text-xs font-semibold text-teal-600 hover:underline flex items-center gap-1 select-none">
+                        <span className="material-symbols-outlined text-[14px]">open_in_new</span> Preview
+                      </a>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    id="github-input"
+                    value={formData.gitHub || ''}
+                    onChange={(e) => updateField('gitHub', e.target.value)}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (!v) return;
+                      if (/^https?:\/\/(www\.)?github\.com/i.test(v)) return;
+                      if (/^(www\.)?github\.com/i.test(v)) { updateField('gitHub', `https://${v}`); return; }
+                      updateField('gitHub', `https://github.com/${v}`);
+                    }}
+                    placeholder="github.com/johndoe"
+                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus-visible:outline-none focus-visible:border-teal-600 focus-visible:ring-1 focus-visible:ring-teal-600 font-sans"
+                  />
+                </div>
+              </div>
+            </SectionCard>
+
+            <SectionCard 
+              icon="history_edu" 
+              title="Professional Summary" 
+              subtitle="Executive Abstract"
+              value="summary"
+              isExpanded={activeAccordionSections.includes('summary')}
+            >
+              <FormItem label="Executive Summary" value={formData.summary} onChange={(e) => updateField('summary', e.target.value)} type="textarea" placeholder="Detail your career objectives, core strengths, and what sets you apart..." />
+            </SectionCard>
+
+            <SectionCard 
+              icon="code" 
+              title="Skills" 
+              subtitle="Core Competencies" 
+              buttonText="Add Skill Category" 
+              onAdd={addSkill}
+              value="skills"
+              isExpanded={activeAccordionSections.includes('skills')}
+            >
+              {formData.skills.map((skill, index) => (
+                <div key={index} className="relative border-l-2 border-teal-500/20 pl-5 py-2 mb-6 group transition-all hover:border-teal-500">
+                  <button 
+                    onClick={() => removeSkill(index)} 
+                    className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-50 border border-transparent hover:border-rose-100 text-slate-500 hover:text-rose-500 flex items-center justify-center transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormItem label="Category Name" value={skill.title} onChange={(e) => {
+                      const newSkills = [...formData.skills];
+                      newSkills[index] = { ...newSkills[index], title: e.target.value };
+                      updateField('skills', newSkills);
+                    }} placeholder="e.g. Languages / Tools" />
+                    <FormItem label="Skills (Comma Separated)" value={skill.items ? (Array.isArray(skill.items) ? skill.items.join(', ') : skill.items) : (skill.level || '')} onChange={(e) => {
+                      const newSkills = [...formData.skills];
+                      newSkills[index] = { ...newSkills[index], items: e.target.value.split(',').map(s => s.trim()).filter(Boolean), level: e.target.value };
+                      updateField('skills', newSkills);
+                    }} placeholder="e.g. Java, Rust, Golang" />
+                  </div>
+                </div>
+              ))}
+            </SectionCard>
+
+            <SectionCard 
+              icon="work" 
+              title="Work Experience" 
+              subtitle="Professional History" 
+              buttonText="Add Work Experience" 
+              onAdd={addExperience}
+              value="experience"
+              isExpanded={activeAccordionSections.includes('experience')}
+            >
+              {formData.experience.map((exp, index) => (
+                <div key={index} className="relative border border-slate-200/60 rounded-2xl pl-5 pr-5 py-5 mb-8 group bg-white transition-all hover:border-teal-500/40 shadow-sm">
+                  <button 
+                    onClick={() => removeExperience(index)} 
+                    className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-50 border border-transparent hover:border-rose-100 text-slate-500 hover:text-rose-500 flex items-center justify-center transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <FormItem label="Job Title" value={exp.jobTitle} onChange={(e) => {
+                      const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], jobTitle: e.target.value }; updateField('experience', newExp);
+                    }} placeholder="e.g. Senior Software Engineer" />
+                    <FormItem label="Company" value={exp.company} onChange={(e) => {
+                      const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], company: e.target.value }; updateField('experience', newExp);
+                    }} placeholder="e.g. Acme Corp" />
+                    <FormItem label="Location" value={exp.location} onChange={(e) => {
+                      const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], location: e.target.value }; updateField('experience', newExp);
+                    }} placeholder="e.g. San Francisco, CA" />
+                    <FormItem label="Duration" value={exp.duration} onChange={(e) => {
+                      const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], duration: e.target.value }; updateField('experience', newExp);
+                    }} placeholder="e.g. 2022 - Present" />
+                  </div>
+                  <FormItem label="Description" type="textarea" value={exp.responsibility} onChange={(e) => {
+                    const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], responsibility: e.target.value }; updateField('experience', newExp);
+                  }} placeholder="Describe your achievements and impact..." colspan={2} />
+                </div>
+              ))}
+            </SectionCard>
+
+            <SectionCard 
+              icon="school" 
+              title="Education" 
+              subtitle="Academic Background" 
+              buttonText="Add Education" 
+              onAdd={addEducation}
+              value="education"
+              isExpanded={activeAccordionSections.includes('education')}
+            >
+              {formData.education.map((edu, index) => (
+                <div key={index} className="relative border-l-2 border-teal-500/20 pl-5 py-2 mb-6 group transition-all hover:border-teal-500">
+                  <button 
+                    onClick={() => removeEducation(index)} 
+                    className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-50 border border-transparent hover:border-rose-100 text-slate-500 hover:text-rose-500 flex items-center justify-center transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormItem label="Degree" value={edu.degree} onChange={(e) => {
+                      const newEdu = [...formData.education]; newEdu[index] = { ...newEdu[index], degree: e.target.value }; updateField('education', newEdu);
+                    }} placeholder="e.g. B.S. in Computer Science" />
+                    <FormItem label="School / University" value={edu.university} onChange={(e) => {
+                      const newEdu = [...formData.education]; newEdu[index] = { ...newEdu[index], university: e.target.value }; updateField('education', newEdu);
+                    }} placeholder="e.g. Stanford University" />
+                    <FormItem label="Location" value={edu.location} onChange={(e) => {
+                      const newEdu = [...formData.education]; newEdu[index] = { ...newEdu[index], location: e.target.value }; updateField('education', newEdu);
+                    }} placeholder="e.g. Stanford, CA" />
+                    <FormItem label="Graduation Year" value={edu.graduationYear} onChange={(e) => {
+                      const newEdu = [...formData.education]; newEdu[index] = { ...newEdu[index], graduationYear: e.target.value }; updateField('education', newEdu);
+                    }} placeholder="e.g. 2021" />
+                  </div>
+                </div>
+              ))}
+            </SectionCard>
+
+            <SectionCard 
+              icon="terminal" 
+              title="Projects" 
+              subtitle="Technical Portfolio" 
+              buttonText="Add Project" 
+              onAdd={addProject}
+              value="projects"
+              isExpanded={activeAccordionSections.includes('projects')}
+            >
+              {formData.projects.map((project, index) => (
+                <div key={index} className="relative border border-slate-200/60 rounded-2xl pl-5 pr-5 py-5 mb-8 group bg-white transition-all hover:border-teal-500/40 shadow-sm">
+                  <button 
+                    onClick={() => removeProject(index)} 
+                    className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-50 border border-transparent hover:border-rose-100 text-slate-500 hover:text-rose-500 flex items-center justify-center transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <FormItem label="Project Title" value={project.title} onChange={(e) => {
+                      const newProjects = [...formData.projects]; newProjects[index] = { ...newProjects[index], title: e.target.value }; updateField('projects', newProjects);
+                    }} placeholder="e.g. Cloud Resume Platform" />
+                    <FormItem label="Technologies Used" value={project.technologiesUsed} onChange={(e) => {
+                      const newProjects = [...formData.projects]; newProjects[index] = { ...newProjects[index], technologiesUsed: e.target.value }; updateField('projects', newProjects);
+                    }} placeholder="e.g. React, Node.js, Spring Boot" />
+                  </div>
+                  <FormItem label="Description" type="textarea" value={project.description} onChange={(e) => {
+                    const newProjects = [...formData.projects]; newProjects[index] = { ...newProjects[index], description: e.target.value }; updateField('projects', newProjects);
+                  }} placeholder="Detail build specs and outcomes..." colspan={2} />
+                </div>
+              ))}
+            </SectionCard>
+
+            <SectionCard 
+              icon="workspace_premium" 
+              title="Certifications" 
+              subtitle="Professional Credentials" 
+              buttonText="Add Certification" 
+              onAdd={addCertification}
+              value="certifications"
+              isExpanded={activeAccordionSections.includes('certifications')}
+            >
+              {/* Certifications Sub-Section */}
+              <div className="mb-8">
+                <div className="flex justify-between items-center mb-4 pb-1.5 border-b border-slate-200/50">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#3D5751' }}>Certifications</h4>
+                  <button 
+                    onClick={addCertification}
+                    className="px-2.5 py-1 text-[10px] font-bold text-teal-600 hover:text-teal-800 bg-teal-50 hover:bg-teal-100/50 border border-teal-200/40 rounded-lg flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+                  >
+                    <span className="material-symbols-outlined text-[12px]">add</span> Add Cert
+                  </button>
+                </div>
+                
+                {formData.certifications.length === 0 ? (
+                  <p className="text-[11px] text-slate-400 italic">No certifications added yet.</p>
+                ) : (
+                  formData.certifications.map((cert, index) => (
+                    <div key={index} className="relative border-l-2 border-teal-500/20 pl-5 py-2 mb-4 group transition-all hover:border-teal-500">
+                      <button 
+                        onClick={() => removeCertification(index)} 
+                        className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-50 border border-transparent hover:border-rose-100 text-slate-500 hover:text-rose-500 flex items-center justify-center transition-all cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <span className="col-span-1 sm:col-span-3">
+                          <FormItem label="Certification Title" value={cert.title} onChange={(e) => {
+                            const newCerts = [...formData.certifications]; newCerts[index] = { ...newCerts[index], title: e.target.value }; updateField('certifications', newCerts);
+                          }} placeholder="e.g. AWS Certified Cloud Practitioner" />
+                        </span>
+                        <span className="col-span-2">
+                          <FormItem label="Issuing Organization" value={cert.issuingOrganization} onChange={(e) => {
+                            const newCerts = [...formData.certifications]; newCerts[index] = { ...newCerts[index], issuingOrganization: e.target.value }; updateField('certifications', newCerts);
+                          }} placeholder="e.g. Amazon Web Services" />
+                        </span>
+                        <FormItem label="Year" value={cert.year} onChange={(e) => {
+                          const newCerts = [...formData.certifications]; newCerts[index] = { ...newCerts[index], year: e.target.value }; updateField('certifications', newCerts);
+                        }} placeholder="e.g. 2023" />
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
-              {/* GitHub */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold uppercase tracking-widest">
-                  GITHUB <span className="normal-case text-[10px] bg-black text-[#39ff14] px-1 py-0.5 ml-1">🔗 CLICKABLE IN RESUME</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.gitHub || ''}
-                  onChange={(e) => updateField('gitHub', e.target.value)}
-                  onBlur={(e) => {
-                    const v = e.target.value.trim();
-                    if (!v) return;
-                    if (/^https?:\/\/(www\.)?github\.com/i.test(v)) return; // already correct
-                    if (/^(www\.)?github\.com/i.test(v)) { updateField('gitHub', `https://${v}`); return; }
-                    updateField('gitHub', `https://github.com/${v}`);
-                  }}
-                  placeholder="github.com/yourname or yourname"
-                  className="border-2 border-black bg-white focus:outline-none focus:border-[#39ff14] focus:shadow-[4px_4px_0px_0px_#39ff14] p-3 text-sm font-mono transition-all h-12"
-                />
-                {formData.gitHub && (
-                  <a href={formData.gitHub} target="_blank" rel="noopener noreferrer"
-                    className="text-[11px] font-bold text-blue-600 hover:text-[#39ff14] hover:underline mt-0.5">
-                    ↗ Preview link
-                  </a>
+
+              {/* Achievements Sub-Section */}
+              <div>
+                <div className="flex justify-between items-center mb-4 pb-1.5 border-b border-slate-200/50">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-teal-700">Achievements</h4>
+                  <button 
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, achievements: [...prev.achievements, { title: '', year: '' }] }));
+                      handleFieldChange();
+                    }}
+                    className="px-2.5 py-1 text-[10px] font-bold text-teal-600 hover:text-teal-800 bg-teal-50 hover:bg-teal-100/50 border border-teal-200/40 rounded-lg flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+                  >
+                    <span className="material-symbols-outlined text-[12px]">add</span> Add Achievement
+                  </button>
+                </div>
+                
+                {formData.achievements.length === 0 ? (
+                  <p className="text-[11px] text-slate-400 italic">No achievements added yet.</p>
+                ) : (
+                  formData.achievements.map((ach, index) => (
+                    <div key={index} className="relative border-l-2 border-teal-500/20 pl-5 py-2 mb-4 group transition-all hover:border-teal-500">
+                      <button 
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, achievements: prev.achievements.filter((_, i) => i !== index) }));
+                          handleFieldChange();
+                        }} 
+                        className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-50 border border-transparent hover:border-rose-100 text-slate-500 hover:text-rose-500 flex items-center justify-center transition-all cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <span className="col-span-2">
+                          <FormItem label="Achievement Title" value={ach.title} onChange={(e) => {
+                            const newAchs = [...formData.achievements]; newAchs[index] = { ...newAchs[index], title: e.target.value }; updateField('achievements', newAchs);
+                          }} placeholder="e.g. Won 1st place in National Hackathon" />
+                        </span>
+                        <FormItem label="Year" value={ach.year} onChange={(e) => {
+                          const newAchs = [...formData.achievements]; newAchs[index] = { ...newAchs[index], year: e.target.value }; updateField('achievements', newAchs);
+                        }} placeholder="e.g. 2024" />
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
-            </div>
-          </SectionCard>
+            </SectionCard>
+          </Accordion>
 
-          <SectionCard icon="history_edu" title="MISSION BRIEF" subtitle="EXECUTIVE SUMMARY">
-            <FormItem label="PROFESSIONAL SUMMARY" value={formData.summary} onChange={(e) => updateField('summary', e.target.value)} type="textarea" placeholder="DESCRIBE YOUR OBJECTIVES AND STRENGTHS..." />
-          </SectionCard>
-
-          <SectionCard icon="code" title="SKILL MATRIX" subtitle="CORE COMPETENCIES" buttonText="ADD SKILLSET" onAdd={addSkill}>
-            {formData.skills.map((skill, index) => (
-              <div key={index} className="relative border-l-4 border-black pl-4 py-2 mb-6 group">
-                <button onClick={() => removeSkill(index)} className="absolute -left-[14px] top-4 w-6 h-6 bg-red-600 text-white flex items-center justify-center font-bold text-xs opacity-0 group-hover:opacity-100 transition-opacity"><span className="material-symbols-outlined text-[14px]">close</span></button>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormItem label="CLASS" value={skill.title} onChange={(e) => {
-                    const newSkills = [...formData.skills];
-                    newSkills[index] = { ...newSkills[index], title: e.target.value };
-                    updateField('skills', newSkills);
-                  }} placeholder="LANGUAGES / TOOLS" />
-                  <FormItem label="VARIABLES (COMMA SEPARATED)" value={skill.items ? (Array.isArray(skill.items) ? skill.items.join(', ') : skill.items) : (skill.level || '')} onChange={(e) => {
-                    const newSkills = [...formData.skills];
-                    newSkills[index] = { ...newSkills[index], items: e.target.value.split(',').map(s => s.trim()).filter(Boolean), level: e.target.value };
-                    updateField('skills', newSkills);
-                  }} placeholder="JAVA, RUST, GOLANG" />
-                </div>
-              </div>
-            ))}
-          </SectionCard>
-
-          <SectionCard icon="work" title="CAREER LOG" subtitle="PAST DIRECTIVES" buttonText="ADD DEPLOYMENT" onAdd={addExperience}>
-            {formData.experience.map((exp, index) => (
-              <div key={index} className="relative border-l-4 border-black pl-4 py-4 mb-8 group bg-white shadow-[4px_4px_0px_0px_#f0f0f0] border-t-2 border-r-2 border-b-2">
-                <button onClick={() => removeExperience(index)} className="absolute top-2 right-2 p-1 text-red-600 hover:bg-black transition-colors"><span className="material-symbols-outlined">delete</span></button>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  <FormItem label="RANK / DESIGNATION" value={exp.jobTitle} onChange={(e) => {
-                    const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], jobTitle: e.target.value }; updateField('experience', newExp);
-                  }} placeholder="SOFTWARE ARCHITECT" />
-                  <FormItem label="CORPORATION" value={exp.company} onChange={(e) => {
-                    const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], company: e.target.value }; updateField('experience', newExp);
-                  }} placeholder="CYBERDYNE" />
-                  <FormItem label="SECTOR" value={exp.location} onChange={(e) => {
-                    const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], location: e.target.value }; updateField('experience', newExp);
-                  }} placeholder="SILICON VALLEY" />
-                  <FormItem label="TIMEFRAME" value={exp.duration} onChange={(e) => {
-                    const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], duration: e.target.value }; updateField('experience', newExp);
-                  }} placeholder="2020 - 2024" />
-                </div>
-                <FormItem label="OPERATIONAL MANIFEST" type="textarea" value={exp.responsibility} onChange={(e) => {
-                  const newExp = [...formData.experience]; newExp[index] = { ...newExp[index], responsibility: e.target.value }; updateField('experience', newExp);
-                }} placeholder="DETAILED LOG OF ACTIONS AND IMPACT..." colspan={2} />
-              </div>
-            ))}
-          </SectionCard>
-
-          <SectionCard icon="school" title="ACADEMIC RECORDS" subtitle="KNOWLEDGE ACQUISITION" buttonText="ADD INSTITUTE" onAdd={addEducation}>
-            {formData.education.map((edu, index) => (
-              <div key={index} className="relative border-l-4 border-black pl-4 py-2 mb-6 group">
-                <button onClick={() => removeEducation(index)} className="absolute -left-[14px] top-4 w-6 h-6 bg-red-600 text-white flex items-center justify-center font-bold text-xs opacity-0 group-hover:opacity-100 transition-opacity"><span className="material-symbols-outlined text-[14px]">close</span></button>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormItem label="DEGREE" value={edu.degree} onChange={(e) => {
-                    const newEdu = [...formData.education]; newEdu[index] = { ...newEdu[index], degree: e.target.value }; updateField('education', newEdu);
-                  }} placeholder="B.S. COMPUTER SCIENCE" />
-                  <FormItem label="INSTITUTE" value={edu.university} onChange={(e) => {
-                    const newEdu = [...formData.education]; newEdu[index] = { ...newEdu[index], university: e.target.value }; updateField('education', newEdu);
-                  }} placeholder="MIT" />
-                  <FormItem label="REGION" value={edu.location} onChange={(e) => {
-                    const newEdu = [...formData.education]; newEdu[index] = { ...newEdu[index], location: e.target.value }; updateField('education', newEdu);
-                  }} placeholder="BOSTON, MA" />
-                  <FormItem label="GRADUATION CYCLE" value={edu.graduationYear} onChange={(e) => {
-                    const newEdu = [...formData.education]; newEdu[index] = { ...newEdu[index], graduationYear: e.target.value }; updateField('education', newEdu);
-                  }} placeholder="2024" />
-                </div>
-              </div>
-            ))}
-          </SectionCard>
-
-          <SectionCard icon="folder_open" title="PROJECT ARCHIVE" subtitle="BUILT ASSETS" buttonText="NEW PROJECT MODULE" onAdd={addProject}>
-            {formData.projects.map((project, index) => (
-              <div key={index} className="relative border-l-4 border-black pl-4 py-4 mb-8 group bg-white shadow-[4px_4px_0px_0px_#f0f0f0] border-t-2 border-r-2 border-b-2">
-                <button onClick={() => removeProject(index)} className="absolute top-2 right-2 p-1 text-red-600 hover:bg-black transition-colors"><span className="material-symbols-outlined">delete</span></button>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  <FormItem label="PROJECT DESIGNATION" value={project.title} onChange={(e) => {
-                    const newProjects = [...formData.projects]; newProjects[index] = { ...newProjects[index], title: e.target.value }; updateField('projects', newProjects);
-                  }} placeholder="NEXUS CORE" />
-                  <FormItem label="STACK" value={project.technologiesUsed} onChange={(e) => {
-                    const newProjects = [...formData.projects]; newProjects[index] = { ...newProjects[index], technologiesUsed: e.target.value }; updateField('projects', newProjects);
-                  }} placeholder="REACT, NODE, MYSQL" />
-                </div>
-                <FormItem label="ARCHITECTURE OVERVIEW" type="textarea" value={project.description} onChange={(e) => {
-                  const newProjects = [...formData.projects]; newProjects[index] = { ...newProjects[index], description: e.target.value }; updateField('projects', newProjects);
-                }} placeholder="DOCUMENT THE BUILD SPECIFICATIONS..." colspan={2} />
-              </div>
-            ))}
-          </SectionCard>
-
-          <SectionCard icon="verified" title="CERTIFICATIONS" subtitle="VALIDATED PROOFS" buttonText="ADD CREDENTIAL" onAdd={addCertification}>
-            {formData.certifications.map((cert, index) => (
-              <div key={index} className="relative border-l-4 border-black pl-4 py-2 mb-6 group">
-                <button onClick={() => removeCertification(index)} className="absolute -left-[14px] top-4 w-6 h-6 bg-red-600 text-white flex items-center justify-center font-bold text-xs opacity-0 group-hover:opacity-100 transition-opacity"><span className="material-symbols-outlined text-[14px]">close</span></button>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <span className="col-span-1 sm:col-span-3">
-                    <FormItem label="CREDENTIAL ID" value={cert.title} onChange={(e) => {
-                      const newCerts = [...formData.certifications]; newCerts[index] = { ...newCerts[index], title: e.target.value }; updateField('certifications', newCerts);
-                    }} placeholder="AWS CLOUD PRACTITIONER" />
-                  </span>
-                  <FormItem label="ISSUING ORG" value={cert.issuingOrganization} onChange={(e) => {
-                    const newCerts = [...formData.certifications]; newCerts[index] = { ...newCerts[index], issuingOrganization: e.target.value }; updateField('certifications', newCerts);
-                  }} placeholder="AMAZON" />
-                  <FormItem label="CYCLE" value={cert.year} onChange={(e) => {
-                    const newCerts = [...formData.certifications]; newCerts[index] = { ...newCerts[index], year: e.target.value }; updateField('certifications', newCerts);
-                  }} placeholder="2023" />
-                </div>
-              </div>
-            ))}
-          </SectionCard>
-        </div>
-
-        {/* Floating Action Bar (Mobile only, hidden on large screens where right panel is visible) */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-black border-t-4 border-[#39ff14] lg:hidden z-20 flex gap-4">
-          <button onClick={handleSave} className="flex-1 bg-[#39ff14] text-black font-bold uppercase py-3 border-2 border-black flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined">save</span> COMMIT
-          </button>
-          <button onClick={downloadPDF} disabled={compiling} className="flex-1 bg-white text-black font-bold uppercase py-3 border-2 border-black flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined">download</span> {compiling ? 'BUSY' : 'EXPORT'}
-          </button>
-        </div>
-      </div>
-
-      {/* DRAGGABLE RESIZER */}
-      <div
-        onMouseDown={startResizing}
-        className={`hidden lg:flex w-2 hover:w-3 cursor-col-resize z-50 h-full items-center justify-center group transition-colors ${isResizing ? 'bg-[#39ff14]' : 'bg-gray-200 hover:bg-[#39ff14]/50'}`}
-      >
-        <div className="flex flex-col gap-1 items-center">
-          <div className="w-0.5 h-1.5 bg-gray-400 group-hover:bg-black rounded-full"></div>
-          <div className="w-0.5 h-1.5 bg-gray-400 group-hover:bg-black rounded-full"></div>
-          <div className="w-0.5 h-1.5 bg-gray-400 group-hover:bg-black rounded-full"></div>
-        </div>
-      </div>
-
-      {/* RIGHT PANEL: PDF Preview */}
-      <div
-        className={`hidden lg:flex flex-col h-full bg-[#f0f0f0] pb-0 relative ${isResizing ? 'pointer-events-none' : ''}`}
-        style={{ width: `${100 - leftWidth}%`, willChange: isResizing ? 'width' : 'auto' }}
-      >
-        <div className="bg-black text-[#39ff14] px-4 py-2.5 flex items-center justify-between z-10 shrink-0">
-          <div className="flex items-center gap-2 flex-grow mr-4">
-            <span className={`w-2 h-2 rounded-full ${compiling ? 'bg-yellow-500 animate-pulse' : pdfUrl ? 'bg-[#39ff14]' : 'bg-red-500'} inline-block shrink-0`}></span>
-            {compiling ? (
-              <span className="font-bold uppercase tracking-widest text-xs text-white font-mono">
-                RENDERING...
-              </span>
-            ) : (
-              <div className="flex items-center text-xs font-mono font-bold text-white uppercase tracking-widest">
-                <input
-                  type="text"
-                  value={pdfFilename}
-                  onChange={(e) => setPdfFilename(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
-                  className="bg-transparent border-b border-transparent hover:border-[#39ff14] focus:border-[#39ff14] focus:outline-none text-[#39ff14] text-xs font-mono font-bold uppercase tracking-widest px-1 py-0.5 w-32 focus:w-48 transition-all"
-                  placeholder="FILENAME"
-                />
-                <span className="opacity-50 font-sans text-[10px] text-gray-400">.pdf</span>
-              </div>
-            )}
-            {useOnlineCompiler && <span className="bg-blue-600 text-white text-[8px] px-1.5 py-0.5 font-mono">EXT</span>}
-          </div>
-          <div className="flex items-center gap-1 bg-white/10 text-white p-0.5 rounded">
-            <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded transition-colors"><span className="material-symbols-outlined text-[16px]">remove</span></button>
-            <span className="font-bold text-[10px] w-10 text-center font-mono">{zoom}%</span>
-            <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded transition-colors"><span className="material-symbols-outlined text-[16px]">add</span></button>
-            <div className="w-px h-5 bg-white/20 mx-0.5"></div>
-            <button onClick={handleManualCompile} disabled={compiling} className="w-7 h-7 flex items-center justify-center hover:bg-[#39ff14]/30 rounded transition-colors">
-              <span className={`material-symbols-outlined text-[16px] ${compiling ? 'animate-spin opacity-50' : ''}`}>sync</span>
+          {/* Floating Action Bar (Mobile only, hidden on large screens) */}
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-200 lg:hidden z-20 flex gap-4 font-sans">
+            <button onClick={handleSave} className="flex-1 bg-[#1A2E28] hover:bg-[#14241f] text-white font-bold uppercase py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-sm text-xs transition-colors">
+              <Save className="w-4 h-4" /> Save
+            </button>
+            <button 
+              onClick={downloadPDF} 
+              disabled={compiling} 
+              className="flex-1 font-bold uppercase py-3 flex items-center justify-center gap-2 cursor-pointer text-xs rounded-xl shadow-sm transition-colors disabled:opacity-50"
+              style={{
+                backgroundColor: 'rgba(20,180,140,0.08)',
+                color: 'rgb(20,180,140)',
+                border: '1px solid rgba(20,180,140,0.3)'
+              }}
+            >
+              <Download className="w-4 h-4" /> {compiling ? 'Compiling...' : 'Export'}
             </button>
           </div>
-        </div>
+        </Panel>
 
-        <div className="flex-grow bg-[#d1d5db] relative overflow-hidden flex items-center justify-center p-8 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZDFkNWRiIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDBMOCA4Wk04IDBMMCA4WiIgc3Ryb2tlPSIjY2JjY2QwIiBzdHJva2Utd2lkdGg9IjEiPjwvcGF0aD4KPC9zdmc+')]">
-          {compiling ? (
-            <div className="bg-black text-[#39ff14] border-4 border-[#39ff14] p-8 max-w-sm w-full font-mono text-center shadow-[12px_12px_0px_0px_#000]">
-              <div className="w-12 h-12 border-4 border-transparent border-t-[#39ff14] border-l-[#39ff14] rounded-full animate-spin mx-auto mb-4"></div>
-              <div className="uppercase font-bold tracking-widest text-sm">COMPILING LATEX.TEX</div>
-              <div className="text-xs mt-2 text-gray-500 animate-pulse">Running pdflatex...</div>
-            </div>
-          ) : compileError ? (
-            <div className="bg-white border-4 border-black p-8 max-w-md w-full shadow-[12px_12px_0px_0px_#ff0000]">
-              <div className="flex items-center gap-3 border-b-4 border-black pb-4 mb-4">
-                <span className="material-symbols-outlined text-red-600 text-4xl">gavel</span>
-                <h3 className="text-xl font-black uppercase text-red-600">FATAL ERROR</h3>
+        {/* DRAGGABLE RESIZER HANDLE */}
+        <PanelResizeHandle className="hidden lg:flex w-2 hover:w-2 bg-slate-100 hover:bg-slate-200 active:bg-teal-500/20 transition-colors cursor-col-resize z-30 items-center justify-center relative group">
+          <div className="w-1 h-8 rounded-full bg-slate-300 group-hover:bg-slate-400 group-active:bg-teal-600 transition-colors" />
+        </PanelResizeHandle>
+
+        {/* RIGHT PANEL: PDF Preview */}
+        <Panel defaultSize={52} minSize={35} className="hidden lg:flex flex-col h-full pb-0 relative font-sans" style={{ background: 'linear-gradient(180deg, #FBFEFC 0%, #F0F9F6 100%)' }}>
+          {/* Top bar with resume status and controls */}
+          <div className="bg-white border-b border-slate-200 p-4 flex items-center justify-between gap-4 shrink-0 z-10 font-sans">
+            <div className="min-w-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center text-xs font-sans font-bold text-slate-800 uppercase tracking-wider">
+                  <input
+                    type="text"
+                    value={pdfFilename}
+                    onChange={(e) => setPdfFilename(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
+                    className="bg-transparent border-b border-transparent hover:border-[#14B8A6]/40 focus:border-[#14B8A6] focus:outline-none text-slate-800 text-xs font-bold uppercase tracking-wider px-1 py-0.5 w-32 focus:w-48 transition-all font-sans"
+                    placeholder="FILENAME"
+                  />
+                  <span className="opacity-50 text-[10px] text-slate-400">.pdf</span>
+                </div>
               </div>
-              <div className="bg-red-950/10 border-2 border-red-500 p-3 font-mono text-xs text-red-700 h-32 overflow-y-auto mb-6 whitespace-pre-wrap">
-                {compileError}
-              </div>
-              <div className="flex gap-4">
-                <button onClick={handleManualCompile} className="flex-1 bg-black text-white px-4 py-2 font-bold uppercase text-xs border-2 border-black hover:bg-[#39ff14] hover:text-black transition-colors flex items-center justify-center gap-2">
-                  <span className="material-symbols-outlined text-[16px]">restart_alt</span> RETRY
-                </button>
-                <button onClick={downloadTex} className="flex-1 bg-white text-black px-4 py-2 font-bold uppercase text-xs border-2 border-black hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2">
-                  <span className="material-symbols-outlined text-[16px]">code</span> EXTRACT .TEX
-                </button>
+              <div className="mt-1.5 flex items-center gap-2.5 min-w-0">
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-1 font-sans whitespace-nowrap">
+                  <span className={`w-1.5 h-1.5 rounded-full ${compiling ? 'bg-yellow-500 animate-pulse' : pdfUrl ? 'bg-teal-500' : 'bg-red-500'} inline-block`}></span>
+                  {compiling ? 'Rendering PDF...' : pdfUrl ? 'Preview Compiled' : 'Ready'}
+                </p>
               </div>
             </div>
-          ) : pdfUrl ? (
-            <div className="w-full h-full bg-white border-2 border-black shadow-[16px_16px_0px_0px_rgba(0,0,0,0.3)] flex overflow-hidden">
-              <iframe
-                src={`${pdfUrl}#view=FitH`}
-                className="w-full h-full border-none custom-scrollbar"
-                title="PDF Preview"
-                style={{
-                  transform: `scale(${zoom / 100})`,
-                  transformOrigin: 'top center',
-                  width: `${(100 / (zoom / 100))}%`,
-                  height: `${(100 / (zoom / 100))}%`
-                }}
-              />
-            </div>
-          ) : (
-            <div className="bg-white border-4 border-black p-8 max-w-sm w-full text-center shadow-[12px_12px_0px_0px_#000]">
-              <span className="material-symbols-outlined text-6xl mb-4 opacity-50">description</span>
-              <h3 className="text-lg font-black uppercase mb-2">NO PDF AVAILABLE</h3>
-              <p className="text-xs font-bold text-gray-500 mb-6 uppercase">AWAITING COMPILATION TRIGGER</p>
-              <button onClick={handleManualCompile} className="bg-[#39ff14] text-black px-6 py-3 font-bold uppercase border-2 border-black w-full hover:bg-black hover:text-white transition-colors shadow-[4px_4px_0px_0px_#000]">
-                INITIALIZE RENDER
+
+            {/* Zoom and manual sync */}
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1.5 rounded-xl">
+              <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="w-8 h-8 flex items-center justify-center hover:bg-white text-slate-600 rounded-lg transition-all border border-transparent hover:border-slate-200/60 hover:shadow-sm cursor-pointer"><span className="material-symbols-outlined text-[16px]">remove</span></button>
+              <span className="font-bold text-xs text-slate-700 w-11 text-center font-sans">{zoom}%</span>
+              <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="w-8 h-8 flex items-center justify-center hover:bg-white text-slate-600 rounded-lg transition-all border border-transparent hover:border-slate-200/60 hover:shadow-sm cursor-pointer"><span className="material-symbols-outlined text-[16px]">add</span></button>
+              <div className="w-px h-5 bg-slate-200/80 mx-1"></div>
+              <button onClick={handleManualCompile} disabled={compiling} className="w-8 h-8 flex items-center justify-center hover:bg-teal-50 text-teal-600 rounded-lg transition-all border border-transparent hover:border-teal-200/50 hover:shadow-sm cursor-pointer">
+                <span className={`material-symbols-outlined text-[16px] ${compiling ? 'animate-spin opacity-50' : ''}`}>sync</span>
               </button>
             </div>
-          )}
-        </div>
+          </div>
 
-        <div className="bg-white border-t border-gray-200 p-3 flex gap-3 shrink-0 z-10">
-          <button onClick={handleSave} className="flex-1 bg-black text-[#39ff14] font-bold uppercase tracking-wider py-2.5 text-xs border-2 border-black hover:bg-[#39ff14] hover:text-black transition-colors flex items-center justify-center gap-2 font-mono">
-            <span className="material-symbols-outlined text-lg">save</span> SAVE
-          </button>
-          <button onClick={downloadPDF} disabled={compiling} className="flex-1 bg-white text-black font-bold uppercase tracking-wider py-2.5 text-xs border-2 border-black hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-mono">
-            <span className="material-symbols-outlined text-lg">download</span> {compiling ? 'BUSY' : 'DOWNLOAD'}
-          </button>
-        </div>
-      </div>
+          {/* Live Preview compilation and view wrapper */}
+          <div className="flex-grow relative overflow-auto flex flex-col items-center p-4 sm:p-8" style={{ background: 'linear-gradient(180deg, #FBFEFC 0%, #F0F9F6 100%)' }}>
+            {pdfUrl && !compileError ? (
+              <div className="w-full h-full flex flex-col items-center justify-start relative min-h-[500px]">
+                <div 
+                  className="transition-all duration-200 flex flex-col items-center justify-center w-full"
+                  style={{
+                    transform: `scale(${zoom / 100})`,
+                    transformOrigin: 'top center'
+                  }}
+                >
+                  {ReactPdf ? (
+                    <ReactPdf.Document
+                      file={pdfUrl}
+                      onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                      loading={
+                        <div className="flex items-center justify-center p-16">
+                          <Loader2 className="w-8 h-8 text-teal-600 animate-spin" />
+                        </div>
+                      }
+                      error={
+                        <iframe
+                          key={pdfUrl}
+                          src={`${pdfUrl}#view=FitH`}
+                          className="w-full min-h-[800px] border-none rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] bg-white"
+                          title="PDF Preview Fallback"
+                        />
+                      }
+                      className="flex flex-col items-center gap-6"
+                    >
+                      <div className="shadow-[0_8px_30px_rgba(0,0,0,0.08)] rounded-xl overflow-hidden border border-slate-200/80 bg-white">
+                        <ReactPdf.Page 
+                          pageNumber={1} 
+                          renderAnnotationLayer={false}
+                          renderTextLayer={false}
+                          className="max-w-full"
+                        />
+                      </div>
+                    </ReactPdf.Document>
+                  ) : (
+                    <div className="flex items-center justify-center p-16">
+                      <Loader2 className="w-8 h-8 text-teal-600 animate-spin" />
+                    </div>
+                  )}
+                </div>
+                {compiling && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-white/40 backdrop-blur-[2px] rounded-xl z-20">
+                    <div className="bg-white border border-teal-100 p-6 max-w-xs w-full text-center shadow-2xl rounded-2xl">
+                      <Loader2 className="w-8 h-8 text-teal-600 animate-spin mx-auto mb-3" />
+                      <div className="uppercase font-bold tracking-widest text-xs text-slate-800 font-sans">Compiling...</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : compileError ? (
+              <div className="bg-white p-8 max-w-md w-full text-center shadow-lg border border-rose-200 rounded-2xl my-auto">
+                <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center mx-auto mb-4">
+                  <span className="material-symbols-outlined text-2xl">warning</span>
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 font-sans">Couldn't render preview</h3>
+                <p className="text-xs text-slate-500 mt-2 font-sans leading-relaxed">
+                  We encountered an issue during compilation. Check your inputs (e.g. special characters like &, %, $, #, _) and try compiling again.
+                </p>
+                <div className="mt-4 p-3 bg-rose-50/50 border border-rose-100 rounded-xl font-mono text-[10px] text-rose-700 text-left max-h-32 overflow-y-auto whitespace-pre-wrap">
+                  {compileError}
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button onClick={handleManualCompile} className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-2.5 font-bold uppercase text-xs rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                    <span className="material-symbols-outlined text-[16px]">refresh</span> RETRY
+                  </button>
+                  <button onClick={downloadTex} className="flex-1 bg-white hover:bg-slate-50 text-slate-700 py-2.5 font-bold uppercase text-xs rounded-xl border border-slate-200 transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                    <span className="material-symbols-outlined text-[16px]">code</span> EXTRACT .TEX
+                  </button>
+                </div>
+              </div>
+            ) : compiling ? (
+              <div className="bg-white p-8 max-w-sm w-full text-center shadow-lg border border-teal-100 rounded-2xl my-auto">
+                <Loader2 className="w-10 h-10 text-teal-600 animate-spin mx-auto mb-4" />
+                <div className="uppercase font-bold tracking-widest text-xs text-slate-800 font-sans">Compiling Latex Source</div>
+              </div>
+            ) : (
+              <div className="bg-white p-8 max-w-sm w-full text-center shadow-lg border border-slate-200 rounded-2xl my-auto">
+                <span className="material-symbols-outlined text-5xl mb-3 text-slate-400">description</span>
+                <h3 className="text-md font-bold text-slate-800 font-sans">No PDF Available</h3>
+                <p className="text-xs font-semibold text-slate-400 mb-6 uppercase tracking-wider font-sans">Awaiting Compilation Trigger</p>
+                <button onClick={handleManualCompile} className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 font-bold uppercase text-xs border border-transparent rounded-xl w-full transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm font-sans">
+                  <RefreshCw className="w-4 h-4" /> Initialize Render
+                </button>
+              </div>
+            )}
+          </div>
 
-      {/* AI Agent Chat overlay is rendered normally */}
+          {/* Bottom Actions */}
+          <div className="bg-white border-t border-slate-200 p-4 flex gap-3 shrink-0 z-10 font-sans">
+            <button onClick={handleSave} className="flex-1 bg-[#1A2E28] hover:bg-[#14241f] text-white font-bold uppercase tracking-wider py-2.5 text-xs rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+              <Save className="w-4.5 h-4.5" /> Save
+            </button>
+            <button 
+              onClick={downloadPDF} 
+              disabled={compiling} 
+              className="flex-1 font-bold uppercase tracking-wider py-2.5 text-xs rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+              style={{
+                backgroundColor: 'rgba(20,180,140,0.08)',
+                color: 'rgb(20,180,140)',
+                border: '1px solid rgba(20,180,140,0.3)'
+              }}
+            >
+              <Download className="w-4.5 h-4.5" /> {compiling ? 'Compiling...' : 'Download'}
+            </button>
+          </div>
+        </Panel>
+      </PanelGroup>
+
+      {/* AI Agent Chat overlay */}
       <div className="hidden lg:block">
         <AgentChat
           formData={formData}
@@ -1091,16 +1474,22 @@ ${sections}
       {/* Global Snackbar replacement */}
       {snack.open && (
         <div className="fixed top-[80px] left-1/2 -translate-x-1/2 z-[100] toast-enter w-[90%] sm:w-auto max-w-md pointer-events-none">
-          <div className={`border-4 border-black p-4 font-bold uppercase text-sm shadow-[8px_8px_0px_0px_#000] flex items-center gap-3 ${snack.type === 'error' ? 'bg-red-600 text-white' : snack.type === 'info' ? 'bg-cyan-400 text-black' : 'bg-[#39ff14] text-black'}`}>
+          <div className={`p-4 rounded-2xl border font-bold text-xs shadow-lg flex items-center gap-3 ${
+            snack.type === 'error' 
+              ? 'bg-rose-50 border-rose-200 text-rose-600' 
+              : snack.type === 'info' 
+                ? 'bg-sky-50 border-sky-200 text-sky-600' 
+                : 'bg-teal-50 border-teal-200 text-teal-700'
+          }`}>
             <span className="material-symbols-outlined text-[20px]">
-              {snack.type === 'error' ? 'gavel' : snack.type === 'info' ? 'info' : 'task_alt'}
+              {snack.type === 'error' ? 'error' : snack.type === 'info' ? 'info' : 'check_circle'}
             </span>
-            <div className="flex-grow">{snack.text}</div>
+            <div className="flex-grow leading-relaxed font-sans">{snack.text}</div>
           </div>
         </div>
       )}
 
-      <FeedbackPopup isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
+      {showFeedback && <FeedbackPopup onClose={() => setShowFeedback(false)} />}
     </div>
   );
 };

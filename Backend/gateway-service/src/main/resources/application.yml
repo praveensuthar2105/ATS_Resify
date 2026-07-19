@@ -27,26 +27,24 @@ spring:
               - PATCH
             allowedHeaders: "*"
             allowCredentials: true
-      server:
-        webflux:
-          routes:
-            # Identity Service Routes (Auth, User, Admin, Support, Health)
-            - id: identity-route
-              uri: lb://identity-service
-              predicates:
-                - Path=/oauth2/**, /login/**, /auth/**, /api/auth/**, /api/user/**, /api/admin/**, /api/public/**, /api/health/**
-                
-            # Resume Service Routes (Resume Generation, Sync, LaTeX Compile, WebSockets)
-            - id: resume-route
-              uri: ${RESUME_SERVICE_URI:lb://resume-service}
-              predicates:
-                - Path=/api/resume/generate, /api/latex/**, /api/resume-sync/**, /ws-resume/**, /ws-sync/**
-                
-            # Intelligence Service Routes (ATS Score, Agent Chat, Imports)
-            - id: intelligence-route
-              uri: lb://intelligence-service
-              predicates:
-                - Path=/api/resume/ats-score, /api/agent/**, /api/resume/import/**
+      routes:
+        # Identity Service Routes (Auth, User, Admin, Support, Health)
+        - id: identity-route
+          uri: lb://identity-service
+          predicates:
+            - Path=/oauth2/**, /login/**, /auth/**, /api/auth/**, /api/user/**, /api/admin/**, /api/public/**, /api/health/**
+            
+        # Resume Service Routes (Resume Generation, Sync, LaTeX Compile, WebSockets)
+        - id: resume-route
+          uri: ${RESUME_SERVICE_URI:lb://resume-service}
+          predicates:
+            - Path=/api/resume/generate, /api/latex/**, /api/resume-sync/**, /ws-resume/**, /ws-sync/**
+            
+        # Intelligence Service Routes (ATS Score, Agent Chat, Imports)
+        - id: intelligence-route
+          uri: lb://intelligence-service
+          predicates:
+            - Path=/api/resume/ats-score, /api/agent/**, /api/resume/import/**
 
 eureka:
   instance:

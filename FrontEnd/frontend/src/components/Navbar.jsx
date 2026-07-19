@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { API_ROOT_URL } from '../services/api';
+import Logo from './Logo';
 
 const Navbar = () => {
   const location = useLocation();
@@ -67,25 +68,25 @@ const Navbar = () => {
       title: 'Start from scratch',
       description: 'Build step by step with guided prompts',
       icon: 'note_add',
-      route: '/generate?mode=scratch'
+      route: '/create-resume/scratch'
     },
     {
       title: 'Import existing resume',
       description: "Upload a PDF or Word file — we'll restructure it for ATS",
       icon: 'upload_file',
-      route: '/generate?mode=upload'
+      route: '/create-resume/import'
     },
     {
       title: 'Import from LinkedIn',
       description: 'Pull your experience directly from your profile',
       icon: 'work',
-      route: '/generate?mode=linkedin'
+      route: '/create-resume/linkedin'
     },
     {
       title: 'Generate from a prompt',
       description: 'Describe your background — AI drafts the first version',
       icon: 'auto_awesome',
-      route: '/generate?mode=prompt'
+      route: '/create-resume/prompt'
     }
   ];
 
@@ -111,30 +112,29 @@ const Navbar = () => {
   ];
 
   const isActive = (path) => location.pathname === path;
-  const isCreateActive = location.pathname.startsWith('/generate') || location.pathname.startsWith('/edit-resume');
+  const isCreateActive = location.pathname.startsWith('/create-resume') || location.pathname.startsWith('/edit-resume');
   const isAtsActive = location.pathname.startsWith('/ats-checker');
 
   return (
     <header
-      className="sticky top-0 left-0 right-0 z-[1000] transition-all duration-500 ease-out py-3 px-4 sm:px-6"
+      className="sticky top-0 left-0 right-0 z-[1000] transition-all duration-500 ease-out pt-3 pb-0 px-4 sm:px-6"
     >
       {/* ── Glass Container Anchor ── */}
       <div
-        className={`max-w-[1200px] mx-auto transition-all duration-500 ease-out rounded-2xl px-5 sm:px-6 py-3 flex items-center justify-between border ${
-          scrolled
-            ? 'bg-white/80 backdrop-blur-xl border-slate-200/80 shadow-lg shadow-slate-900/5'
-            : 'bg-white/60 backdrop-blur-md border-white/70 shadow-sm shadow-slate-900/5'
-        }`}
+        className="max-w-[1200px] mx-auto transition-all duration-500 ease-out rounded-2xl px-5 sm:px-6 py-3 flex items-center justify-between"
+        style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderBottom: '1px solid rgba(20, 100, 80, 0.08)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.7)',
+          borderLeft: '1px solid rgba(255, 255, 255, 0.7)',
+          borderRight: '1px solid rgba(255, 255, 255, 0.7)',
+          boxShadow: scrolled ? '0 10px 25px -5px rgba(20, 100, 80, 0.08)' : '0 1px 3px rgba(20, 100, 80, 0.04)'
+        }}
       >
         {/* ── Logo ── */}
-        <RouterLink to="/" className="flex items-center gap-3 no-underline group flex-shrink-0" onClick={() => setMobileNavOpen(false)}>
-          <div className="w-9 h-9 rounded-xl bg-[#0F1115] flex items-center justify-center shadow-md shadow-slate-900/15 group-hover:bg-[#14B8A6] transition-all duration-300">
-            <span className="material-symbols-outlined text-white text-lg">description</span>
-          </div>
-          <span className="text-lg font-bold tracking-tight text-[#0F1115]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            ATS <span className="text-[#14B8A6] font-extrabold">Resify</span>
-          </span>
-        </RouterLink>
+        <Logo onClick={() => setMobileNavOpen(false)} />
 
         {/* ── Desktop Nav Links & Dropdowns ── */}
         <nav className="hidden lg:flex items-center gap-1.5">
@@ -158,20 +158,25 @@ const Navbar = () => {
           >
             <button
               onClick={() => setActiveDropdown(activeDropdown === 'create' ? null : 'create')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-300 border cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] transition-all duration-300 cursor-pointer ${
                 isCreateActive || activeDropdown === 'create'
-                  ? 'bg-[#14B8A6]/10 text-[#14B8A6] border-[#14B8A6]/20 font-bold shadow-sm'
-                  : 'text-slate-600 hover:text-[#0F1115] hover:bg-slate-100/80 border-transparent bg-transparent'
+                  ? 'font-bold shadow-sm'
+                  : 'font-semibold text-slate-600 hover:text-[#0F1115] hover:bg-slate-100/80 border-transparent bg-transparent'
               }`}
+              style={isCreateActive || activeDropdown === 'create' ? {
+                backgroundColor: 'rgba(20, 180, 140, 0.12)',
+                color: 'rgb(20, 180, 140)',
+                border: 'none'
+              } : { border: '1px solid transparent' }}
             >
-              <span className="material-symbols-outlined text-[16px] text-[#14B8A6]">auto_awesome</span>
+              <span className="material-symbols-outlined text-[16px]" style={{ color: isCreateActive || activeDropdown === 'create' ? 'rgb(20, 180, 140)' : '#14B8A6' }}>auto_awesome</span>
               Create Resume
               <span className={`material-symbols-outlined text-[14px] transition-transform duration-200 ${activeDropdown === 'create' ? 'rotate-180' : ''}`}>expand_more</span>
             </button>
 
             {/* Create Resume Mega-Menu Panel */}
             <div
-              className={`absolute top-[calc(100%+10px)] -left-20 min-w-[540px] bg-white/90 backdrop-blur-2xl rounded-2xl p-4 z-[1001] border border-slate-200/80 shadow-2xl transition-all duration-200 origin-top ${
+              className={`absolute top-[calc(100%+10px)] -left-20 min-w-[540px] glass-panel-tier-3 p-4 z-[1001] transition-all duration-200 origin-top ${
                 activeDropdown === 'create'
                   ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
                   : 'opacity-0 scale-98 -translate-y-2 pointer-events-none'
@@ -212,20 +217,25 @@ const Navbar = () => {
           >
             <button
               onClick={() => setActiveDropdown(activeDropdown === 'ats' ? null : 'ats')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-300 border cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] transition-all duration-300 cursor-pointer ${
                 isAtsActive || activeDropdown === 'ats'
-                  ? 'bg-[#14B8A6]/10 text-[#14B8A6] border-[#14B8A6]/20 font-bold shadow-sm'
-                  : 'text-slate-600 hover:text-[#0F1115] hover:bg-slate-100/80 border-transparent bg-transparent'
+                  ? 'font-bold shadow-sm'
+                  : 'font-semibold text-slate-600 hover:text-[#0F1115] hover:bg-slate-100/80 border-transparent bg-transparent'
               }`}
+              style={isAtsActive || activeDropdown === 'ats' ? {
+                backgroundColor: 'rgba(20, 180, 140, 0.12)',
+                color: 'rgb(20, 180, 140)',
+                border: 'none'
+              } : { border: '1px solid transparent' }}
             >
-              <span className="material-symbols-outlined text-[16px] text-[#14B8A6]">query_stats</span>
+              <span className="material-symbols-outlined text-[16px]" style={{ color: isAtsActive || activeDropdown === 'ats' ? 'rgb(20, 180, 140)' : '#14B8A6' }}>query_stats</span>
               ATS Checker
               <span className={`material-symbols-outlined text-[14px] transition-transform duration-200 ${activeDropdown === 'ats' ? 'rotate-180' : ''}`}>expand_more</span>
             </button>
 
             {/* ATS Checker Mega-Menu Panel */}
             <div
-              className={`absolute top-[calc(100%+10px)] -left-12 min-w-[360px] bg-white/90 backdrop-blur-2xl rounded-2xl p-3 z-[1001] border border-slate-200/80 shadow-2xl transition-all duration-200 origin-top ${
+              className={`absolute top-[calc(100%+10px)] -left-12 min-w-[360px] glass-panel-tier-3 p-3 z-[1001] transition-all duration-200 origin-top ${
                 activeDropdown === 'ats'
                   ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
                   : 'opacity-0 scale-98 -translate-y-2 pointer-events-none'
@@ -270,19 +280,7 @@ const Navbar = () => {
             Features
           </RouterLink>
 
-          {localStorage.getItem('userRole') === 'ADMIN' && (
-            <RouterLink
-              to="/admin"
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-300 no-underline cursor-pointer ${
-                isActive('/admin')
-                  ? 'bg-[#14B8A6]/10 text-[#14B8A6] border border-[#14B8A6]/20 font-bold shadow-sm'
-                  : 'text-slate-600 hover:text-[#0F1115] hover:bg-slate-100/80 border border-transparent'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
-              Admin
-            </RouterLink>
-          )}
+
         </nav>
 
         {/* ── Right Actions ── */}
@@ -313,7 +311,7 @@ const Navbar = () => {
                     <span className="text-xs text-slate-400 truncate">{user.email}</span>
                   </div>
                 </div>
-                <RouterLink to="/generate?mode=scratch" onClick={() => setUserMenuOpen(false)}
+                <RouterLink to="/create-resume/scratch" onClick={() => setUserMenuOpen(false)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 text-sm font-medium no-underline transition-all duration-200 hover:bg-[#14B8A6]/10 hover:text-[#0D9488]">
                   <span className="material-symbols-outlined text-[#14B8A6] text-lg">auto_awesome</span>
                   Create new resume

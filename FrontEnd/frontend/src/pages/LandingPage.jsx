@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import SEO from '../components/SEO';
+import Navbar from '../components/Navbar';
 import { Sparkles, FileCode, ScanSearch, Bot, RefreshCw, FileUp, ChevronLeft, ChevronRight, ArrowDown, XCircle, CheckCircle2, Check, User, Braces, FileText, Radar, FileSymlink, ArrowLeftRight, ArrowRight, Play, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { BackgroundGradientAnimation } from '../components/ui/background-gradient-animation';
 
 /* ── Scroll-reveal hook ── */
 const useReveal = (delay = 0) => {
@@ -37,11 +39,21 @@ const GlassCard = ({ children, className = '' }) => {
   );
 };
 
-/* ── Reusable feature icon component with premium duotone rendering ── */
-const FeatureIcon = ({ icon: Icon }) => {
+/* ── Reusable secondary glassmorphism button ── */
+const SecondaryButton = ({ onClick, children, icon: Icon, className = '' }) => {
   return (
-    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#E6F8F3] to-[#BFEFE3] border border-[#14B8A6]/20 shadow-[0_2px_6px_rgba(20,184,166,0.12)] flex items-center justify-center text-[#0D9488] flex-shrink-0">
-      <Icon className="w-5 h-5" fill="rgba(20, 184, 166, 0.25)" strokeWidth={1.75} />
+    <button onClick={onClick} className={`cta-secondary ${className}`}>
+      {Icon && <Icon className="w-4 h-4 text-teal-600 flex-shrink-0" />}
+      {children}
+    </button>
+  );
+};
+
+/* ── Reusable feature icon component with premium duotone rendering ── */
+const FeatureIcon = ({ icon: Icon, variant = 'mint' }) => {
+  return (
+    <div className="feature-icon-chip">
+      <Icon className="w-[22px] h-[22px]" fill="rgba(13, 148, 136, 0.35)" strokeWidth={2} />
     </div>
   );
 };
@@ -233,17 +245,26 @@ const LandingPage = () => {
         </script>
       </Helmet>
 
-      {/* Deep Ambient Mesh Gradient Layer */}
-      <div className="ambient-layer" aria-hidden="true">
-        <div className="ambient-blob blob-lavender" />
-        <div className="ambient-blob blob-turquoise" />
-        <div className="ambient-blob blob-mint" />
-      </div>
-
-      {/* Hero Section */}
-      <section className="hero-section" ref={r1}>
+      <BackgroundGradientAnimation
+        gradientBackgroundStart="rgb(247, 253, 251)"
+        gradientBackgroundEnd="rgb(213, 245, 236)"
+        firstColor="18, 194, 150"
+        secondColor="52, 211, 175"
+        thirdColor="16, 160, 130"
+        fourthColor="130, 235, 200"
+        fifthColor="80, 220, 190"
+        pointerColor="18, 194, 150"
+        size="80%"
+        blendingValue="hard-light"
+        containerClassName="hero"
+      >
+        <Navbar />
+        <div className="hero-content">
+          
+          {/* Hero Section */}
+          <section className="hero-section" ref={r1}>
         <div className="hero-container max-w-[1100px] mx-auto px-6 text-center relative z-10">
-          <div className="hero-eyebrow-badge inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200/50 text-teal-700 font-medium text-xs mb-5">
+          <div className="hero-eyebrow-badge inline-flex items-center gap-2 px-3 py-1 rounded-full text-teal-800 font-semibold text-xs mb-5">
             <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
             AI Career Suite — free & unlimited
           </div>
@@ -251,7 +272,7 @@ const LandingPage = () => {
           <h1 className="hero-h1 font-medium">
             Your resume, rewritten for <span className="hero-gradient-text font-black tracking-tight">the algorithms</span>
           </h1>
-          <p className="hero-p text-slate-600 max-w-2xl mx-auto">
+          <p className="hero-p text-slate-800 font-medium max-w-2xl mx-auto">
             Build a resume tailored for <strong>{typed}</strong>
           </p>
 
@@ -274,7 +295,7 @@ const LandingPage = () => {
                   </div>
                   
                   {/* AI Enhancement indicator */}
-                  <div className="flex items-center justify-center gap-2 py-2 text-xs font-semibold text-[#0D9488] animate-pulse">
+                  <div className="flex items-center justify-center gap-2 py-2 text-xs font-semibold text-[#0D9488] animate-subtle-pulse">
                     <ArrowDown className="w-4 h-4" />
                     AI Enhancement
                   </div>
@@ -373,14 +394,13 @@ const LandingPage = () => {
 
           {/* CTA Buttons */}
           <div className="hero-ctas">
-            <button onClick={() => navigate('/generate')} className="cta-primary">
+            <button onClick={() => navigate('/create-resume/prompt')} className="cta-primary">
               <Sparkles className="w-4 h-4 text-white" />
               Build my resume
             </button>
-            <button onClick={() => navigate('/ats-checker')} className="cta-secondary">
-              <ScanSearch className="w-4 h-4 text-teal" />
+            <SecondaryButton onClick={() => navigate('/ats-checker')} icon={ScanSearch}>
               Check ATS score
-            </button>
+            </SecondaryButton>
           </div>
           <p className="hero-footnote">No signup required · Export to PDF · Always free</p>
         </div>
@@ -402,6 +422,8 @@ const LandingPage = () => {
           ))}
         </div>
       </section>
+      </div>
+    </BackgroundGradientAnimation>
 
       {/* VERTICAL TIMELINE SHOWCASE */}
       <section className="feature-showcase bg-transparent py-20 overflow-hidden" ref={r3} aria-label="Key Capabilities">
@@ -655,7 +677,7 @@ const LandingPage = () => {
       {/* GAMIFIED ATS SCORE SIMULATOR */}
       <section className="simulator-section">
         <div ref={r4} className="reveal simulator-wrapper">
-          <div className="section-eyebrow">Live demonstration</div>
+          <div className="section-eyebrow">LIVE DEMONSTRATION</div>
           <h2 className="section-h2">Watch AI optimize a bullet in real time</h2>
 
           <div className="sim-panel">
@@ -731,13 +753,13 @@ const LandingPage = () => {
               <h2 className="cta-h2">Ready to build a resume that actually gets read?</h2>
               <p className="cta-sub text-slate-500">Join thousands landing interviews at companies they thought were out of reach.</p>
               <div className="cta-btns">
-                <button onClick={() => navigate('/generate')} className="cta-primary">
+                <button onClick={() => navigate('/create-resume/prompt')} className="cta-primary">
                   <span className="material-symbols-outlined">auto_awesome</span>
                   Start building — it's free
                 </button>
-                <button onClick={() => navigate('/ats-checker')} className="cta-secondary">
+                <SecondaryButton onClick={() => navigate('/ats-checker')} icon={ScanSearch}>
                   Check my current score
-                </button>
+                </SecondaryButton>
               </div>
             </div>
           </div>

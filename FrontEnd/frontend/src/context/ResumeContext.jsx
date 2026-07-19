@@ -725,12 +725,12 @@ ${sections}
         console.error('Error parsing resume data:', error);
         setSnack({ open: true, type: 'error', text: 'Error loading resume data.' });
         setLoading(false);
-        navigate('/generate');
+        navigate('/create-resume/prompt');
       }
     } else {
       setSnack({ open: true, type: 'error', text: 'No resume data found. Please generate a resume first.' });
       setLoading(false);
-      navigate('/generate');
+      navigate('/create-resume/prompt');
     }
   }, [navigate]);
 

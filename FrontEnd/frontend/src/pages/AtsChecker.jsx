@@ -540,7 +540,7 @@ const AtsChecker = () => {
 
                 <button
                   className="w-full bg-neon-green text-black font-black py-4 border-2 border-brutal-white btn-brutal transition-all flex items-center justify-center gap-2 text-sm font-mono uppercase"
-                  onClick={() => navigate('/generate')}
+                  onClick={() => navigate('/create-resume/prompt')}
                 >
                   <span className="material-symbols-outlined">auto_fix_high</span>
                   AUTO-REPAIR RESUME

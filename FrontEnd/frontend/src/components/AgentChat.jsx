@@ -1,12 +1,41 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { ArrowLeft, Bot, Check, ChevronDown, Lightbulb, Plus, Send, Settings, Sparkles, Star, Target, User, X } from 'lucide-react';
 import agentAPI from '../services/agentApi';
 import './AgentChat.css';
 
 const QUICK_ACTIONS = [
-  { text: 'How can I improve my resume?', label: 'General Tips', icon: '💡' },
-  { text: 'Improve my experience bullet points using STAR method', label: 'STAR Method', icon: '⭐' },
-  { text: 'Analyze how well my resume matches the job description', label: 'Match Analysis', icon: '🎯' },
-  { text: 'Generate a professional summary for my target role', label: 'Pro Summary', icon: '📝' }
+  { text: 'How can I improve my resume?', label: 'General Tips', icon: Lightbulb },
+  { text: 'Improve my experience bullet points using STAR method', label: 'STAR Method', icon: Star },
+  { text: 'Analyze how well my resume matches the job description', label: 'Match Analysis', icon: Target },
+  { text: 'Generate a professional summary for my target role', label: 'Pro Summary', icon: Sparkles }
+];
+
+const DEFAULT_PREFERENCES = {
+  tone: '',
+  verbosity: '',
+  targetRole: '',
+  targetIndustry: '',
+  experienceLevel: '',
+  preferredTemplate: '',
+  targetCompanies: '',
+  customNotes: '',
+  preferActionVerbs: true,
+  preferMetrics: true,
+  atsOptimized: true,
+};
+
+const EXPERIENCE_LEVEL_OPTIONS = [
+  { value: '', label: 'Agent Default' },
+  { value: 'entry', label: 'Entry Level / New Grad' },
+  { value: 'mid', label: 'Mid Level (2-5 years)' },
+  { value: 'senior', label: 'Senior (5-10 years)' },
+  { value: 'staff_principal', label: 'Staff / Principal (10+ years)' },
+];
+
+const TEMPLATE_OPTIONS = [
+  { value: '', label: 'Agent Default' },
+  { value: 'ats', label: 'ATS Optimized' },
+  { value: 'minimal', label: 'Minimal Serif' },
 ];
 
 // Format timestamp
@@ -42,6 +71,20 @@ const renderSafeMessage = (text) => {
   });
 };
 
+const SettingsSelect = ({ name, defaultValue, options }) => (
+  <div className="settings-select-wrap">
+    <select className="settings-input settings-select" name={name} defaultValue={defaultValue || ''}>
+      {options.map(option => (
+        <option key={option.value || 'default'} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+    <ChevronDown className="settings-select-chevron" size={16} aria-hidden="true" />
+    <Check className="settings-select-check" size={14} aria-hidden="true" />
+  </div>
+);
+
 const AgentChat = ({ resumeContext, formData, userId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -50,22 +93,19 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
   const [sessionId, setSessionId] = useState(null);
   const [showPulse, setShowPulse] = useState(true);
 
-  // Draggable button state
-  const [btnPos, setBtnPos] = useState({ right: 28, bottom: 28 });
-  const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef({ startX: 0, startY: 0, startRight: 0, startBottom: 0, moved: false });
-
   // Resizable panel state — use ref for instant reads in mousemove
-  const [panelSize, setPanelSize] = useState({ width: 360, height: 460 });
+  const [panelSize, setPanelSize] = useState({ width: 380, height: 520 });
+  const [panelPos, setPanelPos] = useState({ right: 24, bottom: 24 });
   const [isResizing, setIsResizing] = useState(false);
+  const [isDraggingPanel, setIsDraggingPanel] = useState(false);
   const isResizingRef = useRef(false);
   const resizeRef = useRef({ startX: 0, startY: 0, startW: 0, startH: 0, edge: '' });
+  const dragPanelRef = useRef({ startX: 0, startY: 0, startRight: 24, startBottom: 24 });
   const resizeRafRef = useRef(null);
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const panelRef = useRef(null);
-  const toggleBtnRef = useRef(null);
 
   // ==================== User Preferences State ====================
   const [showSettings, setShowSettings] = useState(false);
@@ -75,22 +115,30 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
   const [prefError, setPrefError] = useState(null);
 
   // Load preferences helper
-  const loadUserPreferences = useCallback((uid) => {
-    if (!uid || uid === 'anonymous') return;
+  const loadUserPreferences = useCallback(async (uid) => {
+    if (!uid || uid === 'anonymous') {
+      setPrefLoading(false);
+      setPrefError('Sign in to save preferences');
+      return;
+    }
     setPrefLoading(true);
     setPrefError(null);
-    agentAPI.getPreferences(uid)
-      .then(setPreferences)
-      .catch(() => setPrefError('Failed to load preferences'))
-      .finally(() => setPrefLoading(false));
+    try {
+      const userPreferences = await agentAPI.getPreferences(uid);
+      setPreferences({ ...DEFAULT_PREFERENCES, ...(userPreferences || {}) });
+    } catch {
+      setPrefError('Could not sync preferences. You can still adjust them here.');
+    } finally {
+      setPrefLoading(false);
+    }
   }, []);
 
-  // Load preferences on open/settings
+  // Load preferences only when the settings panel is requested.
   useEffect(() => {
-    if (isOpen || showSettings) {
+    if (showSettings && !preferences && !prefLoading && !prefError) {
       loadUserPreferences(userId);
     }
-  }, [isOpen, showSettings, userId, loadUserPreferences]);
+  }, [showSettings, preferences, prefLoading, prefError, userId, loadUserPreferences]);
 
   // Save preferences
   const handleSavePreferences = async (updates) => {
@@ -121,46 +169,47 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
     if (isOpen) setShowPulse(false);
   }, [isOpen]);
 
-  // ==================== Drag logic for toggle button ====================
-  const handleDragStart = useCallback((e) => {
-    // Support both mouse and touch
+  // ==================== Resize logic for chat panel ====================
+  const clampPanelPosition = useCallback((right, bottom, width = panelSize.width, height = panelSize.height) => {
+    const margin = 24;
+    const maxRight = Math.max(margin, window.innerWidth - width - margin);
+    const maxBottom = Math.max(margin, window.innerHeight - height - margin);
+    return {
+      right: Math.max(margin, Math.min(maxRight, right)),
+      bottom: Math.max(margin, Math.min(maxBottom, bottom)),
+    };
+  }, [panelSize.height, panelSize.width]);
+
+  const handlePanelDragStart = useCallback((e) => {
+    if (e.target.closest('button')) return;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    dragRef.current = {
+    dragPanelRef.current = {
       startX: clientX,
       startY: clientY,
-      startRight: btnPos.right,
-      startBottom: btnPos.bottom,
-      moved: false,
+      startRight: panelPos.right,
+      startBottom: panelPos.bottom,
     };
-    setIsDragging(true);
+    setIsDraggingPanel(true);
     e.preventDefault();
-  }, [btnPos]);
+  }, [panelPos]);
 
   useEffect(() => {
-    if (!isDragging) return;
+    if (!isDraggingPanel) return;
 
     const handleDragMove = (e) => {
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const dx = dragRef.current.startX - clientX;
-      const dy = dragRef.current.startY - clientY;
-
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-        dragRef.current.moved = true;
-      }
-
-      const newRight = Math.max(8, Math.min(window.innerWidth - 64, dragRef.current.startRight + dx));
-      const newBottom = Math.max(8, Math.min(window.innerHeight - 64, dragRef.current.startBottom + dy));
-      setBtnPos({ right: newRight, bottom: newBottom });
+      const dx = dragPanelRef.current.startX - clientX;
+      const dy = dragPanelRef.current.startY - clientY;
+      setPanelPos(clampPanelPosition(
+        dragPanelRef.current.startRight + dx,
+        dragPanelRef.current.startBottom + dy
+      ));
     };
 
     const handleDragEnd = () => {
-      setIsDragging(false);
-      // If barely moved, treat as a click → toggle panel
-      if (!dragRef.current.moved) {
-        setIsOpen(prev => !prev);
-      }
+      setIsDraggingPanel(false);
     };
 
     window.addEventListener('mousemove', handleDragMove);
@@ -173,9 +222,8 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
       window.removeEventListener('touchmove', handleDragMove);
       window.removeEventListener('touchend', handleDragEnd);
     };
-  }, [isDragging]);
+  }, [clampPanelPosition, isDraggingPanel]);
 
-  // ==================== Resize logic for chat panel ====================
   const handleResizeStart = useCallback((edge, e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -204,10 +252,13 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
         const { edge, startW, startH } = resizeRef.current;
 
         let newW = startW, newH = startH;
-        if (edge.includes('left')) newW = Math.max(320, Math.min(800, startW + dx));
-        if (edge.includes('top')) newH = Math.max(350, Math.min(900, startH + dy));
+        const maxPanelHeight = Math.max(360, window.innerHeight - 48);
+        const maxPanelWidth = Math.max(320, window.innerWidth - 48);
+        if (edge.includes('left')) newW = Math.max(320, Math.min(maxPanelWidth, startW + dx));
+        if (edge.includes('top')) newH = Math.max(360, Math.min(maxPanelHeight, startH + dy));
 
         setPanelSize({ width: newW, height: newH });
+        setPanelPos(prev => clampPanelPosition(prev.right, prev.bottom, newW, newH));
       });
     };
 
@@ -349,29 +400,36 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
     setSessionId(null);
   }, []);
 
+  const openSettings = useCallback(() => {
+    setPreferences(prev => prev || DEFAULT_PREFERENCES);
+    setPrefError(null);
+    setShowSettings(true);
+  }, []);
+
   // Render welcome screen when no messages
   const renderWelcome = () => {
     return (
       <div className="agent-welcome">
-        <div className="agent-welcome-icon">🤖</div>
-        <h4>Resume AI Agent</h4>
+        <div className="agent-welcome-icon" aria-hidden="true"><Bot size={28} /></div>
         <p>I can help you improve your resume, write impactful bullet points, analyze job matches, and generate content!</p>
         <div className="agent-quick-actions">
-          {QUICK_ACTIONS.map((action, i) => (
+          {QUICK_ACTIONS.map((action, i) => {
+            const Icon = action.icon;
+            return (
             <button
               key={i}
               className="agent-quick-btn"
               onClick={() => handleQuickAction(action)}
             >
               <span className="qb-icon">
-                {action.icon}
+                <Icon size={17} />
               </span>
               <span className="qb-text">
                 <strong>{action.label}</strong>
                 <span>{action.text}</span>
               </span>
             </button>
-          ))}
+          )})}
         </div>
       </div>
     );
@@ -486,7 +544,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
     return (
       <div key={msg.id} className={`agent-message ${msg.role}`}>
         <div className="msg-avatar">
-          {isUser ? '👤' : '🤖'}
+          {isUser ? <User size={14} /> : <Bot size={14} />}
         </div>
         <div>
           <div
@@ -513,31 +571,35 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
   };
 
   const renderSettingsPanel = () => {
-    if (prefLoading) return (
-      <div className="agent-settings-panel loading">
-        <div className="agent-typing-dots">
-          <span /><span /><span />
-        </div>
-        <p>Loading preferences...</p>
-      </div>
+    const settingsBackButton = (
+      <button
+        type="button"
+        className="settings-back-btn"
+        onClick={() => setShowSettings(false)}
+        title="Back to chat"
+      >
+        <ArrowLeft size={16} />
+        <span>Back to chat</span>
+      </button>
     );
-    if (prefError) return (
-      <div className="agent-settings-panel error">
-        <span className="error-icon">⚠️</span>
-        <p>{prefError}</p>
-        <button className="settings-btn-primary" onClick={() => loadUserPreferences(userId)}>Retry</button>
-      </div>
+
+    if (!preferences) return (
+      null
     );
-    if (!preferences) return null;
 
     return (
       <div className="agent-settings-panel">
+        {settingsBackButton}
         <div className="settings-header">
           <h3>
             <span className="settings-icon">🛠️</span>
             AGENT_PREFS
           </h3>
-          <p>Customize how the AI assists you.</p>
+          <p>
+            Customize how the AI assists you.
+            {prefLoading && <span className="settings-sync"> Syncing...</span>}
+          </p>
+          {prefError && <div className="settings-inline-error">{prefError}</div>}
         </div>
 
         <form className="settings-form" onSubmit={e => { e.preventDefault(); handleSavePreferences(Object.fromEntries(new FormData(e.target))); }}>
@@ -588,26 +650,22 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
             <div className="settings-group">
               <label>
                 <span className="label-text">Experience Level</span>
-                <select className="settings-input" name="experienceLevel" defaultValue={preferences.experienceLevel || ''}>
-                  <option value="">(Agent Default)</option>
-                  <option value="entry">Entry-Level</option>
-                  <option value="mid">Mid-Level</option>
-                  <option value="senior">Senior</option>
-                  <option value="executive">Executive</option>
-                </select>
+                <SettingsSelect
+                  name="experienceLevel"
+                  defaultValue={preferences.experienceLevel}
+                  options={EXPERIENCE_LEVEL_OPTIONS}
+                />
               </label>
             </div>
 
             <div className="settings-group">
               <label>
                 <span className="label-text">Preferred Template</span>
-                <select className="settings-input" name="preferredTemplate" defaultValue={preferences.preferredTemplate || ''}>
-                  <option value="">(Agent Default)</option>
-                  <option value="professional">Professional</option>
-                  <option value="modern">Modern</option>
-                  <option value="creative">Creative</option>
-                  <option value="ats">ATS Optimized</option>
-                </select>
+                <SettingsSelect
+                  name="preferredTemplate"
+                  defaultValue={preferences.preferredTemplate}
+                  options={TEMPLATE_OPTIONS}
+                />
               </label>
             </div>
           </div>
@@ -631,18 +689,31 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
           <div className="settings-toggles">
             <label className="settings-toggle">
               <input type="checkbox" name="preferActionVerbs" defaultChecked={preferences.preferActionVerbs} />
-              <span className="toggle-slider"></span>
-              <span className="toggle-text">Prefer Action Verbs</span>
+              <span className="settings-checkbox" aria-hidden="true">
+                <Check size={13} />
+              </span>
+              <span className="toggle-copy">
+                <span className="toggle-text">Prefer Action Verbs</span>
+              </span>
             </label>
             <label className="settings-toggle">
               <input type="checkbox" name="preferMetrics" defaultChecked={preferences.preferMetrics} />
-              <span className="toggle-slider"></span>
-              <span className="toggle-text">Prefer Metrics</span>
+              <span className="settings-checkbox" aria-hidden="true">
+                <Check size={13} />
+              </span>
+              <span className="toggle-copy">
+                <span className="toggle-text">Prefer Metrics</span>
+              </span>
             </label>
             <label className="settings-toggle">
               <input type="checkbox" name="atsOptimized" defaultChecked={preferences.atsOptimized} />
-              <span className="toggle-slider"></span>
-              <span className="toggle-text">Strict ATS Mode</span>
+              <span className="settings-checkbox" aria-hidden="true">
+                <Check size={13} />
+              </span>
+              <span className="toggle-copy">
+                <span className="toggle-text">Strict ATS Mode</span>
+                <span className="toggle-helper">Prioritizes exact keyword matches over natural phrasing</span>
+              </span>
             </label>
           </div>
 
@@ -661,36 +732,25 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
   return (
     <>
       {/* Floating Toggle Button — draggable */}
-      <button
-        ref={toggleBtnRef}
-        className={`agent-toggle-btn ${isOpen ? 'active' : ''} ${isDragging ? 'dragging' : ''}`}
-        onMouseDown={handleDragStart}
-        onTouchStart={handleDragStart}
-        title={isOpen ? 'Close AI Agent' : 'Open AI Agent (drag to move)'}
-        style={{ right: btnPos.right, bottom: btnPos.bottom }}
-      >
-        {showPulse && !isOpen && <span className="agent-toggle-pulse" />}
-        {isOpen ? (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        ) : (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            <path d="M8 10h.01M12 10h.01M16 10h.01" strokeLinecap="round" />
-          </svg>
-        )}
-      </button>
+      {!isOpen && (
+        <button
+          className="agent-toggle-btn"
+          onClick={() => setIsOpen(true)}
+          title="Open AI Agent"
+        >
+          {showPulse && <span className="agent-toggle-pulse" />}
+          <Bot size={24} />
+        </button>
+      )}
 
       {/* Chat Panel — resizable */}
       {isOpen && (
         <div
-          className={`agent-chat-panel ${isResizing ? 'resizing' : ''}`}
+          className={`agent-chat-panel ${isResizing ? 'resizing' : ''} ${isDraggingPanel ? 'dragging' : ''}`}
           ref={panelRef}
           style={{
-            right: btnPos.right,
-            bottom: btnPos.bottom + 68,
+            right: panelPos.right,
+            bottom: panelPos.bottom,
             width: panelSize.width,
             height: panelSize.height,
           }}
@@ -700,9 +760,13 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
           <div className="agent-resize-handle left" onMouseDown={(e) => handleResizeStart('left', e)} onTouchStart={(e) => handleResizeStart('left', e)} />
           <div className="agent-resize-handle corner" onMouseDown={(e) => handleResizeStart('top-left', e)} onTouchStart={(e) => handleResizeStart('top-left', e)} />
           {/* Header */}
-          <div className="agent-chat-header">
+          <div
+            className="agent-chat-header"
+            onMouseDown={handlePanelDragStart}
+            onTouchStart={handlePanelDragStart}
+          >
             <div className="agent-header-left">
-              <div className="agent-avatar">🤖</div>
+              <div className="agent-avatar"><Bot size={18} /></div>
               <div className="agent-header-info">
                 <h3>Resume AI Agent</h3>
                 <span><span className="agent-status-dot" /> Online</span>
@@ -712,31 +776,26 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
               <button
                 className="agent-header-btn"
                 onClick={newConversation}
-                title="New conversation"
+                title="New chat"
+                aria-label="New chat"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
+                <Plus size={16} />
               </button>
               <button
                 className="agent-header-btn"
-                onClick={() => setShowSettings(true)}
-                title="User Preferences / Settings"
+                onClick={openSettings}
+                title="Settings"
+                aria-label="Settings"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 8v4l3 3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09A1.65 1.65 0 0 0 11 3.09V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
+                <Settings size={16} />
               </button>
               <button
                 className="agent-header-btn"
                 onClick={() => setIsOpen(false)}
-                title="Minimize"
+                title="Close"
+                aria-label="Close"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14" />
-                </svg>
+                <X size={16} />
               </button>
             </div>
           </div>
@@ -789,9 +848,7 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
                     </path>
                   </svg>
                 ) : (
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                  </svg>
+                  <Send size={17} />
                 )}
               </button>
             </div>

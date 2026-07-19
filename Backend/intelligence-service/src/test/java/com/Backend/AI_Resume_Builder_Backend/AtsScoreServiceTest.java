@@ -16,7 +16,7 @@ import com.Backend.AI_Resume_Builder_Backend.ats.AtsScoreService;
 public class AtsScoreServiceTest {
 
     static {
-        System.setProperty("java.net.preferIPv4Stack", "false");
+        System.setProperty("java.net.preferIPv4Stack", "true");
         java.nio.file.Path path = java.nio.file.Paths.get("../.env");
         if (java.nio.file.Files.exists(path)) {
             try {

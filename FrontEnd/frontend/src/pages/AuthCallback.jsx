@@ -3,12 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { API_BASE_URL, API_ROOT_URL } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet-async';
+import { AuroraBackground } from '../components/AuroraBackground';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [error, setError] = useState(null);
-  const [status, setStatus] = useState('INITIALIZING CONNECTION...');
   const { login } = useAuth();
   const isProcessing = useRef(false);
 
@@ -21,8 +22,6 @@ const AuthCallback = () => {
     // Mark as processing immediately
     isProcessing.current = true;
 
-    setStatus('EXCHANGING AUTHORIZATION CODE...');
-
     // Exchange the one-time code for JWT + user info
     fetch(`${API_ROOT_URL}/auth/exchange`, {
       method: 'POST',
@@ -32,15 +31,12 @@ const AuthCallback = () => {
     })
       .then(res => {
         if (!res.ok) {
-          // If the backend returns 401/400, it usually means the code was already used
-          // or has expired.
-          throw new Error('CODE EXCHANGE FAILED. THE CODE MAY HAVE EXPIRED.');
+          throw new Error('Verification failed. The link or session may have expired.');
         }
         return res.json();
       })
       .then(data => {
         const { token, name, email } = data;
-        setStatus('TOKEN RECEIVED. FETCHING USER PROFILE...');
 
         // Fetch user details to get role
         return fetch(`${API_BASE_URL}/user/me`, {
@@ -51,7 +47,6 @@ const AuthCallback = () => {
             return res.json();
           })
           .then(userData => {
-            setStatus('AUTHENTICATION COMPLETE. REDIRECTING...');
             login({
               token,
               name,
@@ -68,7 +63,6 @@ const AuthCallback = () => {
           })
           .catch(err => {
             console.warn('Could not fetch user role, defaulting to USER:', err.message);
-            setStatus('AUTHENTICATION COMPLETE (DEFAULT ROLE). REDIRECTING...');
             login({
               token,
               name,
@@ -86,66 +80,57 @@ const AuthCallback = () => {
       })
       .catch(err => {
         console.error('Code exchange error:', err);
-        setError(err.message || 'AUTHENTICATION FAILED. PLEASE TRY AGAIN.');
-        // Reset processing if it was a network error so user can potentially retry
-        // But for auth codes, they are usually one-time use anyway.
+        setError(err.message || 'Authentication failed. Please try signing in again.');
       });
   }, [code, navigate, login]);
 
-
   return (
-    <div className="bg-[#ffffff] text-black min-h-screen flex flex-col font-mono uppercase selection:bg-[#39ff14] selection:text-black mt-[-64px]" style={{ fontFamily: "'Space Mono', monospace" }}>
+    <AuroraBackground className="min-h-screen flex flex-col items-center justify-center p-4">
       <Helmet>
-        <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
-        <style>{`
-          @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-          }
-          .cursor-blink {
-            animation: blink 1s step-end infinite;
-          }
-        `}</style>
+        <title>Verifying Session | ATS Resify</title>
       </Helmet>
 
-      <main className="flex-grow flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl bg-[#000000] border-4 border-black p-8 shadow-[8px_8px_0px_0px_#39ff14]">
-          <div className="flex items-center gap-4 mb-8 border-b-2 border-[#39ff14] pb-4">
-            <span className="material-symbols-outlined text-[#39ff14] text-3xl">api</span>
-            <h1 className="text-[#39ff14] font-bold text-xl tracking-widest">SYSTEM_AUTH</h1>
-          </div>
-
-          <div className="space-y-4 font-bold">
-            {error ? (
-              <div className="text-red-500 bg-red-950/30 p-4 border border-red-500">
-                <span className="mr-2">[ERROR]</span>
-                {error}
-                <div className="mt-4 pt-4 border-t border-red-500/30">
-                  <a href="/login" className="text-white hover:text-red-500 underline decoration-red-500 underline-offset-4">
-                    (&larr; RETURN TO LOGIN)
-                  </a>
-                </div>
+      <main className="w-full max-w-md mx-auto flex flex-col items-center relative z-10">
+        <div 
+          className="w-full p-8 text-center"
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.92)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(20, 180, 140, 0.16)',
+            boxShadow: '0 24px 64px -16px rgba(20, 100, 80, 0.22), 0 8px 24px -12px rgba(13, 148, 136, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.8)',
+            borderRadius: '24px'
+          }}
+        >
+          {error ? (
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 mb-4 border border-red-100">
+                <AlertCircle className="w-6 h-6" />
               </div>
-            ) : (
-              <>
-                <div className="text-[#39ff14]">
-                  <span className="mr-2 text-white">[{new Date().toISOString().split('T')[1].split('.')[0]}]</span>
-                  OAUTH_CALLBACK_INITIATED
-                </div>
-                <div className="text-[#39ff14]">
-                  <span className="mr-2 text-white">[{new Date().toISOString().split('T')[1].split('.')[0]}]</span>
-                  {status}
-                </div>
-                <div className="text-white pt-4">
-                  <span className="mr-2">&gt;</span>
-                  <span className="bg-[#39ff14] w-3 h-5 inline-block cursor-blink translate-y-1"></span>
-                </div>
-              </>
-            )}
-          </div>
+              <h2 className="text-lg font-bold text-slate-800 mb-2 font-sans">
+                Sign in failed
+              </h2>
+              <p className="text-sm text-slate-500 mb-6 font-sans leading-relaxed">
+                {error}
+              </p>
+              <a 
+                href="/login" 
+                className="w-full bg-[#1A2E28] hover:bg-[#14241f] text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 block text-sm font-sans no-underline cursor-pointer shadow-sm"
+              >
+                Return to Login
+              </a>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center py-6">
+              <Loader2 className="w-10 h-10 text-teal-600 animate-spin mb-4" />
+              <p className="text-slate-600 font-medium text-sm font-sans">
+                Signing you in...
+              </p>
+            </div>
+          )}
         </div>
       </main>
-    </div>
+    </AuroraBackground>
   );
 };
 

@@ -48,6 +48,10 @@ public class SecurityConfig {
                                                                 "/api/latex/templates",
                                                                 "/",
                                                                 "/favicon.ico",
+                                                                "/logo.png",
+                                                                "/index.html",
+                                                                "/assets/**",
+                                                                "/static/**",
                                                                 "/error",
                                                                 "/health")
                                                 .permitAll()
