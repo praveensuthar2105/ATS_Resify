@@ -76,36 +76,8 @@ services:
       - resify-net
     restart: always
 
-  intelligence-service:
-    build:
-      context: ./Backend/intelligence-service
-      dockerfile: Dockerfile
-    container_name: resify-intelligence-service
-    ports:
-      - "8083:8083"
-    environment:
-      - EUREKA_URI=http://discovery-server:8761/eureka/
-      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST}
-      - SPRING_RABBITMQ_PORT=${RABBITMQ_PORT:-5671}
-      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}
-      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASS}
-      - SPRING_RABBITMQ_SSL_ENABLED=${RABBITMQ_SSL_ENABLED:-true}
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - RABBITMQ_PORT=${RABBITMQ_PORT:-5671}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASS=${RABBITMQ_PASS}
-      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=60.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
-    deploy:
-      resources:
-        limits:
-          memory: 400M
-    depends_on:
-      - discovery-server
-    networks:
-      - resify-net
-    restart: always
+  
 
 networks:
   resify-net:
     driver: bridge
-    
