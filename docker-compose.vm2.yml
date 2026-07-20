@@ -26,6 +26,7 @@ services:
     ports:
       - "8761:8761"
     environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=
       - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=40.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
     deploy:
       resources:
@@ -48,6 +49,7 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - RESUME_SERVICE_URI=https://resify-resume-service.onrender.com
+      - CORS_ORIGINS=https://atsresify.me,https://www.atsresify.me
       - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=40.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
     deploy:
       resources:
@@ -78,6 +80,8 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - FRONTEND_URL=${FRONTEND_URL}
+      - OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI}
+      - CORS_ORIGINS=https://atsresify.me,https://www.atsresify.me
       - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=60.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
     deploy:
       resources:
@@ -92,3 +96,4 @@ services:
 networks:
   resify-net:
     driver: bridge
+    

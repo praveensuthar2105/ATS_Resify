@@ -28,7 +28,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 400M
+          memory: 400M 
     networks:
       - resify-net
     restart: always
