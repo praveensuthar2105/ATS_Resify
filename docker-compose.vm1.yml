@@ -3,36 +3,31 @@ version: '3.8'
 services:
   intelligence-service:
     build:
-      context: ./Backend
-      dockerfile: intelligence-service/Dockerfile.prod
+      context: ./Backend/intelligence-service
+      dockerfile: Dockerfile
     container_name: resify-intelligence-service
     ports:
       - "8083:8083"
     environment:
-      - EUREKA_URI=http://130.210.40.244:8761/eureka/
-      - EUREKA_INSTANCE_IP_ADDRESS=92.4.84.21
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_URI=${EUREKA_URI}
       - DB_URL=${INTELLIGENCE_DB_URL}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - RABBITMQ_HOST=130.210.40.244
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
-      - RABBITMQ_PASS=${RABBITMQ_PASS:-guest}
-      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=50.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
+      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST}
+      - SPRING_RABBITMQ_PORT=${RABBITMQ_PORT:-5671}
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASS}
+      - SPRING_RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VHOST:-mgrwepde}
+      - SPRING_RABBITMQ_SSL_ENABLED=${RABBITMQ_SSL_ENABLED:-true}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5671}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASS=${RABBITMQ_PASS}
+      - RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VHOST:-mgrwepde}
+      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=60.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
     deploy:
       resources:
         limits:
-          memory: 400M 
-    networks:
-      - resify-net
+          memory: 500M
     restart: always
-
-networks:
-  resify-net:
-    driver: bridge
