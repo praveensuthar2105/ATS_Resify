@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('userEmail', userData.email);
         localStorage.setItem('userRole', userData.role || 'USER');
         setUser(userData);
+        window.dispatchEvent(new Event('auth-changed'));
     };
 
     const logout = () => {
@@ -34,6 +35,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('userEmail');
         localStorage.removeItem('userRole');
         setUser(null);
+        window.dispatchEvent(new Event('auth-changed'));
         window.location.href = '/';
     };
 

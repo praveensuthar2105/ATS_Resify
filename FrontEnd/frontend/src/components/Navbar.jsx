@@ -20,11 +20,30 @@ const Navbar = () => {
     const token = localStorage.getItem('authToken');
     const name = localStorage.getItem('userName');
     const email = localStorage.getItem('userEmail');
-    if (token && name && email) setUser({ name, email });
+    const role = localStorage.getItem('userRole') || 'USER';
+    if (token && name && email) setUser({ name, email, role });
 
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Keep role in sync if auth updates after OAuth callback / role grant
+  useEffect(() => {
+    const syncUser = () => {
+      const token = localStorage.getItem('authToken');
+      const name = localStorage.getItem('userName');
+      const email = localStorage.getItem('userEmail');
+      const role = localStorage.getItem('userRole') || 'USER';
+      if (token && name && email) setUser({ name, email, role });
+      else setUser(null);
+    };
+    window.addEventListener('storage', syncUser);
+    window.addEventListener('auth-changed', syncUser);
+    return () => {
+      window.removeEventListener('storage', syncUser);
+      window.removeEventListener('auth-changed', syncUser);
+    };
   }, []);
 
   useEffect(() => {
@@ -40,6 +59,13 @@ const Navbar = () => {
   useEffect(() => {
     setMobileNavOpen(false);
     setActiveDropdown(null);
+    // Re-read session after route changes (e.g. OAuth callback → home)
+    const token = localStorage.getItem('authToken');
+    const name = localStorage.getItem('userName');
+    const email = localStorage.getItem('userEmail');
+    const role = localStorage.getItem('userRole') || 'USER';
+    if (token && name && email) setUser({ name, email, role });
+    else setUser(null);
   }, [location.pathname]);
 
   const handleLogin = () => { window.location.href = `${API_ROOT_URL}/oauth2/authorization/google`; };
@@ -108,6 +134,7 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
   const isCreateActive = location.pathname.startsWith('/create-resume') || location.pathname.startsWith('/edit-resume');
   const isAtsActive = location.pathname.startsWith('/ats-checker');
+  const isAdminUser = user?.role === 'ADMIN';
 
   return (
     <header
@@ -274,6 +301,20 @@ const Navbar = () => {
             Features
           </RouterLink>
 
+          {/* Admin Console — only for ADMIN role */}
+          {isAdminUser && (
+            <RouterLink
+              to="/admin"
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-300 no-underline cursor-pointer ${
+                isActive('/admin')
+                  ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white border border-transparent font-bold shadow-[0_4px_14px_rgba(20,184,166,0.35)]'
+                  : 'text-teal-700 hover:text-teal-800 bg-teal-50/80 hover:bg-teal-100/90 border border-teal-200/70'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>admin_panel_settings</span>
+              Admin
+            </RouterLink>
+          )}
 
         </nav>
 
@@ -315,6 +356,13 @@ const Navbar = () => {
                   <span className="material-symbols-outlined text-[#14B8A6] text-lg">query_stats</span>
                   Check ATS score
                 </RouterLink>
+                {isAdminUser && (
+                  <RouterLink to="/admin" onClick={() => setUserMenuOpen(false)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-700 text-sm font-semibold no-underline transition-all duration-200 hover:bg-teal-50">
+                    <span className="material-symbols-outlined text-teal-600 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>admin_panel_settings</span>
+                    Admin console
+                  </RouterLink>
+                )}
                 <div className="h-px bg-slate-200/60 my-1" />
                 <button onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-rose-600 text-sm font-medium bg-transparent border-none cursor-pointer transition-all duration-200 hover:bg-rose-50">
@@ -447,6 +495,22 @@ const Navbar = () => {
             <span className="material-symbols-outlined text-lg">star</span>
             Features
           </RouterLink>
+
+          {/* Admin — only for ADMIN role */}
+          {isAdminUser && (
+            <RouterLink
+              to="/admin"
+              onClick={() => setMobileNavOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold no-underline transition-all duration-200 ${
+                isActive('/admin')
+                  ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-bold shadow-md'
+                  : 'text-teal-700 bg-teal-50 border border-teal-100 hover:bg-teal-100/80'
+              }`}
+            >
+              <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>admin_panel_settings</span>
+              Admin console
+            </RouterLink>
+          )}
 
           <div className="h-px bg-slate-200/60 my-1" />
 
