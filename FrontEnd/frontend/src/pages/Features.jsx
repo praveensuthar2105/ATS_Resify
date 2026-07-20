@@ -1,358 +1,213 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
-import { Helmet } from 'react-helmet-async';
-import {
-  Sparkles, Code2, ShieldCheck, MessageSquareText, RefreshCw,
-  BarChart3, FileUp, ArrowRight, Zap, Layers, PenTool, Target
+import { 
+  Sparkles, FileUp, Briefcase, PenTool, 
+  Percent, Target, Layers, FileCode,
+  Radar, Bot, RefreshCw, FileSymlink,
+  ArrowRight, ArrowUpRight
 } from 'lucide-react';
 
-/* ─── Feature data ─── */
-const HERO_PILLS = [
-  'AI Content Engine',
-  'Live LaTeX → PDF',
-  'ATS Keyword Analysis',
-  'Real-time Sync',
-  'Job-Match Gap Analysis',
-];
-
-const PRIMARY_FEATURES = [
-  {
-    icon: Sparkles,
-    title: 'AI-Powered Generation',
-    description: 'Advanced AI generates professional summaries, experience bullets, project descriptions, and skill recommendations tailored to your target role.',
-    accent: 'from-violet-500/20 to-indigo-500/20',
-    iconBg: 'bg-violet-500/10',
-    iconColor: 'text-violet-600',
-    materialIcon: 'auto_awesome',
-  },
-  {
-    icon: Code2,
-    title: 'Live LaTeX Editor',
-    description: 'Full-featured Monaco-based LaTeX editor with syntax highlighting, auto-completion, and instant server-side PDF compilation.',
-    accent: 'from-sky-500/20 to-cyan-500/20',
-    iconBg: 'bg-sky-500/10',
-    iconColor: 'text-sky-600',
-    materialIcon: 'code',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'ATS Score Checker',
-    description: 'Upload your resume to get an AI-powered ATS compatibility score with keyword analysis, formatting checks, and actionable recommendations.',
-    accent: 'from-emerald-500/20 to-teal-500/20',
-    iconBg: 'bg-emerald-500/10',
-    iconColor: 'text-emerald-600',
-    materialIcon: 'verified',
-  },
-];
-
-const SECONDARY_FEATURES = [
-  {
-    icon: MessageSquareText,
-    title: 'AI Resume Agent',
-    description: 'Interactive chat agent that improves bullet points, analyzes job matches, and tailors content to specific job descriptions.',
-    materialIcon: 'smart_toy',
-  },
-  {
-    icon: RefreshCw,
-    title: 'Real-time Sync',
-    description: 'WebSocket-powered live synchronization between form editor, JSON editor, and LaTeX code. Edit in any mode — all views stay in sync.',
-    materialIcon: 'sync',
-  },
-  {
-    icon: BarChart3,
-    title: 'Job-Match Gap Analysis',
-    description: 'Upload target job descriptions to analyze keyword match rates, identifying critical skill gaps and missing resume keywords instantly.',
-    materialIcon: 'analytics',
-  },
-];
-
-const WORKFLOW_STEPS = [
-  {
-    num: '01',
-    icon: FileUp,
-    title: 'Enter your details',
-    description: 'Fill in your experience, education, skills, and projects using our guided form — or let AI generate content from scratch.',
-  },
-  {
-    num: '02',
-    icon: Zap,
-    title: 'AI optimizes your content',
-    description: 'Our AI creates impactful bullet points, professional summaries, and optimizes your content for ATS keyword matching.',
-  },
-  {
-    num: '03',
-    icon: PenTool,
-    title: 'Fine-tune & export PDF',
-    description: 'Polish in the LaTeX editor, check your ATS score, and download a beautifully typeset PDF — ready to submit.',
-  },
-];
-
-const CAPABILITIES = [
-  { icon: 'edit_note', label: 'Guided Form Builder' },
-  { icon: 'psychology', label: 'AI Bullet Improver' },
-  { icon: 'upload_file', label: 'PDF/DOCX Import' },
-  { icon: 'tune', label: 'Template Engine' },
-  { icon: 'content_copy', label: 'Multi-Resume Support' },
-  { icon: 'security', label: 'Encrypted Storage' },
-  { icon: 'speed', label: 'Instant PDF Compile' },
-  { icon: 'compare', label: 'Side-by-Side Preview' },
-];
-
-/* ─── Intersection Observer hook ─── */
-const useReveal = () => {
+const useReveal = (delay = 0) => {
   const ref = useRef(null);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { el.classList.add('visible'); obs.unobserve(el); } },
-      { threshold: 0.15 }
+      ([entry]) => { 
+        if (entry.isIntersecting) { 
+          setTimeout(() => el.classList.add('visible'), delay);
+          obs.unobserve(el); 
+        } 
+      },
+      { threshold: 0.1 }
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [delay]);
   return ref;
 };
 
 const RevealDiv = ({ children, className = '', delay = 0 }) => {
-  const ref = useReveal();
+  const ref = useReveal(delay);
   return (
-    <div
-      ref={ref}
-      className={`reveal-row ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
+    <div ref={ref} className={`reveal-row ${className}`}>
       {children}
     </div>
   );
 };
 
-/* ═══════════════════════════════════════ */
+const featuresData = [
+  {
+    id: "create",
+    category: "Create",
+    tagline: "Start your journey.",
+    description: "Four intelligent ways to begin building a resume that lands interviews. Choose your starting point and let the AI handle the heavy lifting.",
+    accent: "bg-teal-500",
+    textAccent: "text-teal-600",
+    bgAccent: "bg-teal-50/50",
+    items: [
+      { title: "Start from scratch", desc: "Build step by step with guided prompts. Perfect for fresh starts.", icon: PenTool, route: "/create-resume/scratch" },
+      { title: "Import existing", desc: "Upload a PDF or Word file. We'll extract and restructure it perfectly for ATS.", icon: FileUp, route: "/create-resume/import" },
+      { title: "LinkedIn Sync", desc: "Connect your profile and pull your entire work history in one click.", icon: Briefcase, route: "/create-resume/linkedin" },
+      { title: "AI Prompt", desc: "Describe your dream job. Our AI will draft a fully formatted first version instantly.", icon: Sparkles, route: "/create-resume/prompt" },
+    ]
+  },
+  {
+    id: "analyze",
+    category: "Analyze",
+    tagline: "Beat the robots.",
+    description: "Know exactly why your resume passes or fails automated screening before you even hit the apply button.",
+    accent: "bg-emerald-500",
+    textAccent: "text-emerald-600",
+    bgAccent: "bg-emerald-50/50",
+    items: [
+      { title: "Quick Score", desc: "Upload your resume for an instant parsing and formatting score. Fix issues before recruiters see them.", icon: Percent, route: "/ats-checker/quick-score" },
+      { title: "Job Matching", desc: "Paste any job description to see exactly which keywords you're missing.", icon: Target, route: "/ats-checker/job-match" }
+    ],
+  },
+  {
+    id: "engine",
+    category: "Engine",
+    tagline: "Under the hood.",
+    description: "The technical precision and advanced AI models that make ATS Resify the most powerful builder available.",
+    accent: "bg-cyan-500",
+    textAccent: "text-cyan-600",
+    bgAccent: "bg-cyan-50/50",
+    items: [
+      { title: "Intelligent Bullet Writer", desc: "Converts plain descriptions into executive-quality bullet points with quantified impact.", icon: Sparkles, route: null },
+      { title: "LaTeX Compilation", desc: "Instant on-the-fly PDF rendering ensuring clean structural compliance and precise typesetting.", icon: FileCode, route: null },
+      { title: "Parser & Scorer", desc: "Re-reads your compiled PDF to instantly check for structural formatting errors.", icon: Radar, route: null },
+      { title: "AI Agent", desc: "Interactive chat assistant that tailors content to target job descriptions.", icon: Bot, route: null },
+      { title: "Real-Time Sync", desc: "Zero-latency synchronization between the visual form editor, structured JSON, and raw LaTeX.", icon: RefreshCw, route: null },
+      { title: "Smart Legacy Import", desc: "Converts existing PDF or Word resumes into clean, structured profiles ready for instant optimization.", icon: FileSymlink, route: null },
+    ]
+  }
+];
 
 const Features = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f7fdfb] via-[#eefbf7] to-[#d5f5ec] relative overflow-hidden">
+    <div className="min-h-screen bg-[#FDFDFD] font-sans text-slate-900 selection:bg-teal-200">
       <SEO
         title="Features — ATS Resify"
-        description="Explore the tools behind ATS Resify: AI generation, real-time LaTeX editing, ATS score checking, and interactive resume chat."
+        description="Explore the technical capabilities of ATS Resify."
       />
-      <Helmet>
-        <style>{`
-          .feature-card-glow {
-            position: relative;
-            overflow: hidden;
-          }
-          .feature-card-glow::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            transition: opacity 0.4s ease;
-            border-radius: inherit;
-            pointer-events: none;
-          }
-          .feature-card-glow:hover::before {
-            opacity: 1;
-          }
-          .workflow-line {
-            background: linear-gradient(to bottom, #14B8A6, #0D948800);
-          }
-        `}</style>
-      </Helmet>
-
-      {/* Ambient blobs */}
-      <div className="absolute top-[-5%] right-[-8%] w-[600px] h-[600px] rounded-full bg-teal-300/12 blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-emerald-200/15 blur-[120px] pointer-events-none" />
-      <div className="absolute top-[40%] right-[10%] w-[350px] h-[350px] rounded-full bg-violet-200/10 blur-[100px] pointer-events-none" />
-
-      {/* ─── HERO ─── */}
-      <section className="pt-32 pb-20 px-6 max-w-6xl mx-auto text-center relative z-10">
-        <RevealDiv>
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-widest text-[#0D9488] uppercase bg-[#14B8A6]/10 px-4 py-2 rounded-full mb-6">
-            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>auto_awesome</span>
-            Platform Capabilities
-          </span>
-        </RevealDiv>
-
-        <RevealDiv delay={80}>
-          <h1 className="text-4xl md:text-[56px] font-bold text-slate-800 tracking-tight leading-[1.1] mb-5">
-            Everything you need to
-            <br />
-            <span className="bg-gradient-to-r from-[#0D9488] to-[#14B8A6] bg-clip-text text-transparent">
-              land the interview
-            </span>
-          </h1>
-        </RevealDiv>
-
-        <RevealDiv delay={150}>
-          <p className="text-slate-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-10">
-            AI-powered content generation, professional LaTeX typesetting, ATS optimization,
-            and real-time collaboration — everything in one platform.
-          </p>
-        </RevealDiv>
-
-        <RevealDiv delay={220}>
-          <div className="flex flex-wrap justify-center gap-2.5 mb-4">
-            {HERO_PILLS.map((pill) => (
-              <span
-                key={pill}
-                className="text-[12px] font-semibold text-slate-600 bg-white/70 border border-slate-200/60 px-4 py-2 rounded-full backdrop-blur-sm hover:border-[#14B8A6]/40 hover:text-[#0D9488] transition-all cursor-default"
-              >
-                {pill}
-              </span>
-            ))}
-          </div>
-        </RevealDiv>
-      </section>
-
-      {/* ─── PRIMARY FEATURES (Bento cards) ─── */}
-      <section className="px-6 max-w-6xl mx-auto pb-24 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {PRIMARY_FEATURES.map((feat, i) => (
-            <RevealDiv key={feat.title} delay={i * 100}>
-              <div className={`feature-card-glow group rounded-3xl p-8 h-full bg-white/60 backdrop-blur-xl border border-white/70 shadow-[0_8px_32px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_48px_rgba(13,148,136,0.1)] hover:border-[#14B8A6]/25 transition-all duration-400`}>
-                <div className={`w-12 h-12 ${feat.iconBg} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                  <span className={`material-symbols-outlined ${feat.iconColor}`} style={{ fontSize: '24px' }}>
-                    {feat.materialIcon}
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-slate-800 mb-3 tracking-tight">{feat.title}</h3>
-                <p className="text-[13px] text-slate-500 leading-relaxed">{feat.description}</p>
-              </div>
-            </RevealDiv>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── SECONDARY FEATURES (Horizontal cards) ─── */}
-      <section className="px-6 max-w-6xl mx-auto pb-28 relative z-10">
-        <RevealDiv>
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight mb-3">
-              And much more under the hood
-            </h2>
-            <p className="text-slate-500 text-sm max-w-lg mx-auto">
-              Every feature is built to work together seamlessly, giving you a competitive edge.
+      
+      {/* ─── EDITORIAL HERO ─── */}
+      <section className="pt-40 pb-20 px-6 md:px-12 max-w-7xl mx-auto border-b border-slate-200/60">
+        <div className="max-w-3xl">
+          <RevealDiv>
+            <div className="flex items-center gap-3 mb-8 text-sm font-bold tracking-widest text-teal-600/70 uppercase">
+              <span className="w-8 h-[1px] bg-teal-600/30"></span>
+              Feature Index
+            </div>
+          </RevealDiv>
+          
+          <RevealDiv delay={100}>
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter leading-[1.1] mb-8 text-slate-900">
+              Engineered for <br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-500">the modern job search.</span>
+            </h1>
+          </RevealDiv>
+          
+          <RevealDiv delay={200}>
+            <p className="text-lg md:text-xl text-slate-500 leading-relaxed max-w-xl font-medium">
+              A comprehensive suite of AI writing tools, real-time LaTeX compilation, and ATS parsers designed to bypass filters and land interviews.
             </p>
-          </div>
-        </RevealDiv>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {SECONDARY_FEATURES.map((feat, i) => (
-            <RevealDiv key={feat.title} delay={i * 80}>
-              <div className="group rounded-2xl p-6 bg-white/50 backdrop-blur-xl border border-slate-200/60 hover:border-[#14B8A6]/25 hover:bg-white/70 transition-all duration-300">
-                <div className="w-10 h-10 rounded-xl bg-[#14B8A6]/8 flex items-center justify-center mb-4 group-hover:bg-[#14B8A6]/15 transition-colors">
-                  <span className="material-symbols-outlined text-[#0D9488]" style={{ fontSize: '20px' }}>
-                    {feat.materialIcon}
-                  </span>
-                </div>
-                <h3 className="text-[15px] font-bold text-slate-800 mb-2">{feat.title}</h3>
-                <p className="text-[12px] text-slate-500 leading-relaxed">{feat.description}</p>
-              </div>
-            </RevealDiv>
-          ))}
+          </RevealDiv>
         </div>
       </section>
 
-      {/* ─── CAPABILITIES RIBBON ─── */}
-      <section className="px-6 max-w-6xl mx-auto pb-28 relative z-10">
-        <RevealDiv>
-          <div className="rounded-3xl bg-white/50 backdrop-blur-xl border border-white/70 shadow-[0_4px_24px_rgba(15,23,42,0.04)] p-8 md:p-10">
-            <h3 className="text-xs font-bold text-[#0D9488] uppercase tracking-widest mb-6 text-center">
-              Built-in capabilities
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {CAPABILITIES.map((cap) => (
-                <div
-                  key={cap.label}
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-slate-50/60 border border-slate-100/80 hover:border-[#14B8A6]/20 hover:bg-[#14B8A6]/4 transition-all group"
-                >
-                  <span className="material-symbols-outlined text-slate-400 group-hover:text-[#0D9488] transition-colors" style={{ fontSize: '20px' }}>
-                    {cap.icon}
-                  </span>
-                  <span className="text-[12px] font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">
-                    {cap.label}
-                  </span>
+      {/* ─── STICKY SPLIT LAYOUT ─── */}
+      <div className="max-w-7xl mx-auto px-6 md:px-12">
+        {featuresData.map((section, index) => (
+          <section 
+            key={section.id} 
+            className={`flex flex-col lg:flex-row relative items-start py-24 ${index !== featuresData.length - 1 ? 'border-b border-slate-200/60' : ''}`}
+          >
+            {/* Left Side: Sticky Category Info */}
+            <div className="lg:w-5/12 lg:sticky lg:top-32 lg:pr-12 mb-12 lg:mb-0">
+              <RevealDiv>
+                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${section.bgAccent} ${section.textAccent} text-xs font-bold tracking-wide uppercase mb-6`}>
+                  0{index + 1} — {section.category}
                 </div>
+                <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-slate-900">
+                  {section.tagline}
+                </h2>
+                <p className="text-lg text-slate-500 leading-relaxed max-w-md">
+                  {section.description}
+                </p>
+              </RevealDiv>
+            </div>
+
+            {/* Right Side: Scrollable Feature Cards */}
+            <div className="lg:w-7/12 flex flex-col gap-6">
+              {section.items.map((item, idx) => (
+                <RevealDiv key={idx} delay={idx * 100}>
+                  <div 
+                    onClick={() => item.route && navigate(item.route)}
+                    className={`group relative overflow-hidden bg-white rounded-3xl border border-slate-200/60 p-8 transition-all duration-500 ${item.route ? 'cursor-pointer hover:shadow-2xl hover:-translate-y-1 hover:border-slate-300' : ''}`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 relative z-10">
+                      <div className="flex-1">
+                        <div className={`w-12 h-12 rounded-2xl ${section.bgAccent} ${section.textAccent} flex items-center justify-center mb-6`}>
+                          <item.icon className="w-6 h-6" strokeWidth={2} />
+                        </div>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-black transition-colors">
+                          {item.title}
+                        </h3>
+                        <p className="text-slate-500 text-base leading-relaxed">
+                          {item.desc}
+                        </p>
+                      </div>
+                      
+                      {item.route && (
+                        <div className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all duration-300 shrink-0">
+                          <ArrowUpRight className="w-5 h-5" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Subtle hover accent line at bottom */}
+                    {item.route && (
+                      <div className={`absolute bottom-0 left-0 h-1 w-full scale-x-0 origin-left ${section.accent} transition-transform duration-500 group-hover:scale-x-100`} />
+                    )}
+                  </div>
+                </RevealDiv>
               ))}
             </div>
-          </div>
-        </RevealDiv>
-      </section>
+          </section>
+        ))}
+      </div>
 
-      {/* ─── HOW IT WORKS ─── */}
-      <section className="px-6 max-w-5xl mx-auto pb-32 relative z-10">
+      {/* ─── MINIMAL CLOSING CTA ─── */}
+      <section className="border-t border-slate-200/60 mt-12 bg-white">
         <RevealDiv>
-          <div className="text-center mb-16">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-widest text-[#0D9488] uppercase bg-[#14B8A6]/10 px-4 py-2 rounded-full mb-5">
-              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>route</span>
-              How It Works
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight">
-              Three steps to your best resume
+          <div className="max-w-7xl mx-auto px-6 md:px-12 py-32 text-center">
+            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter text-slate-900 mb-8">
+              Your next role awaits.
             </h2>
-          </div>
-        </RevealDiv>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-          {/* Connecting line (desktop) */}
-          <div className="hidden md:block absolute top-[60px] left-[16%] right-[16%] h-[2px] bg-gradient-to-r from-[#14B8A6]/0 via-[#14B8A6]/30 to-[#14B8A6]/0 z-0" />
-
-          {WORKFLOW_STEPS.map((step, i) => {
-            const Icon = step.icon;
-            return (
-              <RevealDiv key={step.num} delay={i * 120}>
-                <div className="flex flex-col items-center text-center relative z-10">
-                  {/* Step circle */}
-                  <div className="w-[72px] h-[72px] rounded-full bg-white border-2 border-[#14B8A6]/20 flex items-center justify-center mb-6 shadow-[0_4px_20px_rgba(13,148,136,0.08)] relative">
-                    <Icon className="w-6 h-6 text-[#0D9488]" />
-                    <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[#0D9488] text-white text-[11px] font-bold flex items-center justify-center shadow-md">
-                      {step.num}
-                    </span>
-                  </div>
-                  <h3 className="text-base font-bold text-slate-800 mb-2.5">{step.title}</h3>
-                  <p className="text-[13px] text-slate-500 leading-relaxed max-w-[260px]">{step.description}</p>
-                </div>
-              </RevealDiv>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ─── CTA BAND ─── */}
-      <section className="px-6 max-w-4xl mx-auto pb-24 relative z-10">
-        <RevealDiv>
-          <div className="rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 p-10 md:p-14 text-center relative overflow-hidden">
-            {/* Glow */}
-            <div className="absolute top-[-30%] right-[-10%] w-[300px] h-[300px] rounded-full bg-[#14B8A6]/15 blur-[80px] pointer-events-none" />
-            <div className="absolute bottom-[-20%] left-[-5%] w-[200px] h-[200px] rounded-full bg-violet-500/10 blur-[60px] pointer-events-none" />
-
-            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight mb-3 relative z-10">
-              Ready to build a resume that gets past ATS?
-            </h2>
-            <p className="text-slate-400 text-sm max-w-lg mx-auto mb-8 relative z-10">
-              Start from scratch or import an existing resume. Our AI handles the heavy lifting.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center relative z-10">
-              <button
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button 
                 onClick={() => navigate('/create-resume/scratch')}
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-bold text-slate-900 bg-white rounded-full hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,255,255,0.15)] transition-all cursor-pointer border-none"
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-teal-500 hover:bg-teal-400 text-white shadow-[0_0_20px_rgb(20,184,166,0.3)] hover:shadow-[0_0_30px_rgb(20,184,166,0.5)] text-sm font-bold tracking-wide transition-all flex items-center justify-center gap-2"
               >
-                Start From Scratch <ArrowRight className="w-4 h-4" />
+                Start Building
+                <ArrowRight className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => navigate('/create-resume/import')}
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-bold text-white/90 bg-white/10 border border-white/15 rounded-full hover:bg-white/15 hover:-translate-y-0.5 transition-all cursor-pointer"
+              <button 
+                onClick={() => navigate('/ats-checker/quick-score')}
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 text-sm font-bold tracking-wide transition-all flex items-center justify-center gap-2"
               >
-                Import Existing Resume
+                Scan Existing Resume
               </button>
             </div>
           </div>
         </RevealDiv>
       </section>
+
     </div>
   );
 };

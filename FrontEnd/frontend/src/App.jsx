@@ -16,6 +16,7 @@ const EditResume = lazy(() => import('./pages/EditResume'));
 const AtsChecker = lazy(() => import('./pages/AtsChecker'));
 const QuickScore = lazy(() => import('./pages/QuickScore'));
 const JobMatch = lazy(() => import('./pages/JobMatch'));
+const FormatCheck = lazy(() => import('./pages/FormatCheck'));
 
 const Features = lazy(() => import('./pages/Features'));
 const About = lazy(() => import('./pages/About'));
