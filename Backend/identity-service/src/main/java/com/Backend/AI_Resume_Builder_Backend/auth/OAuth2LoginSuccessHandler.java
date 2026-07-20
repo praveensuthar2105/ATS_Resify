@@ -12,78 +12,94 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.Backend.AI_Resume_Builder_Backend.user.Role;
 import com.Backend.AI_Resume_Builder_Backend.user.User;
 import com.Backend.AI_Resume_Builder_Backend.user.UserRepository;
 
-
-
-
+/**
+ * OAuth2 success handler.
+ * Database role is the source of truth. Login never re-promotes admins from a hardcoded email list.
+ * Optional break-glass bootstrap: when zero admins exist and BOOTSTRAP_ADMIN_EMAIL matches, grant ADMIN once.
+ */
 @Component
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-        private static final Logger logger = LoggerFactory.getLogger(OAuth2LoginSuccessHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(OAuth2LoginSuccessHandler.class);
 
-        @Autowired
-        private UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
+    @Autowired
+    private JwtUtil jwtUtil;
 
-        @Autowired
-        private JwtUtil jwtUtil;
+    @Autowired
+    private AuthorizationCodeStore authorizationCodeStore;
 
-        @Autowired
-        private AuthorizationCodeStore authorizationCodeStore;
+    @Value("${app.frontend-url:http://localhost:5173}")
+    private String frontendUrl;
 
-        @Value("${app.frontend-url:http://localhost:5173}")
-        private String frontendUrl;
+    /**
+     * Optional one-time bootstrap email when the system has zero ADMIN users.
+     * Never re-grants on subsequent logins once any admin exists.
+     */
+    @Value("${app.bootstrap-admin-email:}")
+    private String bootstrapAdminEmail;
 
-        @Value("${app.admin-emails:praveensuthar1863@gmail.com,sutharaartu1863@gmail.com,praveensuthar2105@gmail.com,sutharaarti1863@gmail.com}")
-        private java.util.List<String> adminEmails;
+    @Override
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+            Authentication authentication) throws IOException {
+        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
-        @Override
-        public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                        Authentication authentication) throws IOException {
-                OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        String email = oAuth2User.getAttribute("email");
+        String name = oAuth2User.getAttribute("name");
+        String picture = oAuth2User.getAttribute("picture");
+        String providerId = oAuth2User.getAttribute("sub");
 
-                String email = oAuth2User.getAttribute("email");
-                String name = oAuth2User.getAttribute("name");
-                String picture = oAuth2User.getAttribute("picture");
-                String providerId = oAuth2User.getAttribute("sub");
+        User user = userRepository.findByEmail(email)
+                .orElse(new User(email, name, picture, "google", providerId));
 
-                // Save or update user
-                User user = userRepository.findByEmail(email)
-                                .orElse(new User(email, name, picture, "google", providerId));
+        user.setName(name);
+        user.setPicture(picture);
 
-                user.setName(name);
-                user.setPicture(picture);
-
-                // Guarantee admin accounts
-                if (email != null && adminEmails != null && adminEmails.contains(email.trim())) {
-                        user.setRole(com.Backend.AI_Resume_Builder_Backend.user.Role.ADMIN);
-                } else if (user.getRole() == null) {
-                        user.setRole(com.Backend.AI_Resume_Builder_Backend.user.Role.USER);
-                }
-
-                userRepository.save(user);
-
-                // Generate JWT token with role
-                String token = jwtUtil.generateToken(email, name, user.getRole().toString());
-
-                // Generate a one-time authorization code instead of putting JWT in URL
-                String code = UUID.randomUUID().toString();
-                logger.info("[AUTH] Generated one-time code for {}: {}", email, code);
-                authorizationCodeStore.store(code, token, email, name);
-
-                // Redirect to frontend with one-time code (not the JWT)
-                String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/callback")
-                                .queryParam("code", code)
-                                .build()
-                                .toUriString();
-
-                logger.info("[AUTH] Redirecting to: {}", redirectUrl);
-                getRedirectStrategy().sendRedirect(request, response, redirectUrl);
-
+        // Preserve existing DB role. Only default brand-new users to USER.
+        if (user.getRole() == null) {
+            user.setRole(Role.USER);
         }
+
+        // Break-glass: promote only if there are currently zero admins and email matches bootstrap config.
+        if (shouldBootstrapAdmin(email)) {
+            logger.warn("[AUTH] Bootstrap admin grant for {} (zero admins present)", email);
+            user.setRole(Role.ADMIN);
+        }
+
+        userRepository.save(user);
+
+        String token = jwtUtil.generateToken(email, name, user.getRole().toString());
+
+        String code = UUID.randomUUID().toString();
+        logger.info("[AUTH] Generated one-time code for {}", email);
+        authorizationCodeStore.store(code, token, email, name);
+
+        String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/callback")
+                .queryParam("code", code)
+                .build()
+                .toUriString();
+
+        logger.info("[AUTH] Redirecting OAuth success for {}", email);
+        getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+    }
+
+    private boolean shouldBootstrapAdmin(String email) {
+        if (!StringUtils.hasText(bootstrapAdminEmail) || !StringUtils.hasText(email)) {
+            return false;
+        }
+        if (!bootstrapAdminEmail.trim().equalsIgnoreCase(email.trim())) {
+            return false;
+        }
+        long adminCount = userRepository.countByRole(Role.ADMIN);
+        return adminCount == 0;
+    }
 }

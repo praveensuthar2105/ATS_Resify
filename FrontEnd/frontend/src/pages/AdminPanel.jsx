@@ -464,7 +464,10 @@ const AdminPanel = () => {
         body: JSON.stringify({ query: sqlQueryInput })
       });
       const data = await parseResponseOrError(res);
-      setSqlResults(data);
+      // Backend may return a plain array (legacy) or { rows, rowCount, truncated }.
+      const rows = Array.isArray(data) ? data : (Array.isArray(data?.rows) ? data.rows : null);
+      if (!rows) throw new Error(data?.error || 'Unexpected SQL response shape');
+      setSqlResults(rows);
     } catch (err) { setSqlError(err.message); }
   };
 
@@ -2043,11 +2046,17 @@ const AdminPanel = () => {
                       <div>
                         <div className="flex justify-between text-xs font-medium text-slate-500 mb-2">
                           <span>30-Day Retention</span>
-                          <span>{engagementStats.retentionRate}%</span>
+                          <span>{engagementStats.retentionRate != null ? `${engagementStats.retentionRate}%` : 'N/A'}</span>
                         </div>
                         <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all duration-700" style={{ width: `${engagementStats.retentionRate}%` }} />
+                          <div
+                            className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all duration-700"
+                            style={{ width: `${engagementStats.retentionRate != null ? engagementStats.retentionRate : 0}%` }}
+                          />
                         </div>
+                        {engagementStats.retentionRate == null && (
+                          <p className="text-[11px] text-slate-400 mt-2">Retention tracking is not enabled in this release.</p>
+                        )}
                       </div>
                     </div>
                     <div className={glassCard + " p-6"}>

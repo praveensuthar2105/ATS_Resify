@@ -80,14 +80,27 @@ public class AdminController {
 
     private final RestClient restClient;
 
+    /** Hard kill-switch for SQL Studio. Default OFF for production safety. */
+    @Value("${app.admin.sql-studio.enabled:false}")
+    private boolean sqlStudioEnabled;
+
+    /** Max rows returned by any admin CSV export. */
+    @Value("${app.admin.export.max-rows:50000}")
+    private int exportMaxRows;
+
+    /** Max rows returned by a freeform SQL Studio query. */
+    @Value("${app.admin.sql-studio.max-rows:200}")
+    private int sqlStudioMaxRows;
+
     @Autowired
     public AdminController(
-            @Value("${resume.service.url:${RESUME_SERVICE_URL:https://resify-resume-service.onrender.com}}") String resumeServiceUrl,
+            @Value("${resume.service.url:${RESUME_SERVICE_URL:http://localhost:8082}}") String resumeServiceUrl,
             RestClient.Builder restClientBuilder) {
-        org.springframework.http.client.SimpleClientHttpRequestFactory requestFactory = 
+        org.springframework.http.client.SimpleClientHttpRequestFactory requestFactory =
                 new org.springframework.http.client.SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(5000); // 5 seconds
-        requestFactory.setReadTimeout(10000);   // 10 seconds
+        // Keep health probes snappy so the admin dashboard cannot hang on a dead dependency.
+        requestFactory.setConnectTimeout(2000);
+        requestFactory.setReadTimeout(3000);
 
         this.restClient = restClientBuilder
                 .baseUrl(resumeServiceUrl)
@@ -463,9 +476,16 @@ public class AdminController {
             long totalLatency = System.currentTimeMillis() - startTime;
             health.put("totalCheckDurationMs", totalLatency);
 
+            boolean dbUp = "UP".equals(String.valueOf(((Map<?, ?>) health.get("database")).get("status")));
+            boolean redisUp = "UP".equals(String.valueOf(((Map<?, ?>) health.get("redis")).get("status")));
+            boolean latexUp = "UP".equals(String.valueOf(((Map<?, ?>) health.get("latex")).get("status")));
+            String overall = (!dbUp) ? "DOWN" : (!latexUp || !redisUp) ? "DEGRADED" : "HEALTHY";
+            health.put("overallStatus", overall);
+
             return ResponseEntity.ok(health);
         } catch (Exception e) {
-            return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            logger.error("Admin system-health failed", e);
+            return new ResponseEntity<>(Map.of("error", "Failed to collect system health"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -487,7 +507,12 @@ public class AdminController {
             return new ResponseEntity<>(Map.of("error", "Access denied."), HttpStatus.FORBIDDEN);
         }
 
-        List<User> users = userRepository.findAll();
+        List<User> users = userRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+        if (users.size() > exportMaxRows) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of(
+                    "error", "Export exceeds max rows (" + exportMaxRows + "). Narrow the dataset or raise app.admin.export.max-rows."));
+        }
+
         StringBuilder csv = new StringBuilder();
         csv.append("ID,Name,Email,Role,Joined At,Provider\n");
 
@@ -495,9 +520,9 @@ public class AdminController {
             csv.append(user.getId()).append(",");
             csv.append(escapeCsv(user.getName())).append(",");
             csv.append(escapeCsv(user.getEmail())).append(",");
-            csv.append(user.getRole()).append(",");
-            csv.append(user.getCreatedAt()).append(",");
-            csv.append(user.getProvider()).append("\n");
+            csv.append(escapeCsv(user.getRole() != null ? user.getRole().toString() : "")).append(",");
+            csv.append(escapeCsv(user.getCreatedAt() != null ? user.getCreatedAt().toString() : "")).append(",");
+            csv.append(escapeCsv(user.getProvider())).append("\n");
         }
 
         return ResponseEntity.ok()
@@ -505,15 +530,29 @@ public class AdminController {
                 .body(csv.toString());
     }
 
+    /**
+     * Neutralize CSV formula injection and quote fields per spreadsheet-safe rules.
+     * Prefixes cells that begin with = + - @ TAB CR with a single quote.
+     */
     private String escapeCsv(String data) {
-        if (data == null)
+        if (data == null) {
             return "";
-        String cleaned = data.trim();
-        if (cleaned.startsWith("=") || cleaned.startsWith("+") || cleaned.startsWith("-") || cleaned.startsWith("@")) {
+        }
+        String cleaned = data
+                .replace("\u0000", "")
+                .replace("\r\n", " ")
+                .replace('\r', ' ')
+                .replace('\n', ' ')
+                .trim();
+        if (cleaned.isEmpty()) {
+            return "";
+        }
+        char first = cleaned.charAt(0);
+        if (first == '=' || first == '+' || first == '-' || first == '@' || first == '\t' || first == '\r') {
             cleaned = "'" + cleaned;
         }
-        String escaped = cleaned.replaceAll("\"", "\"\"");
-        if (escaped.contains(",") || escaped.contains("\n") || escaped.contains("\r")) {
+        String escaped = cleaned.replace("\"", "\"\"");
+        if (escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n") || escaped.contains("\r")) {
             return "\"" + escaped + "\"";
         }
         return escaped;
@@ -721,20 +760,30 @@ public class AdminController {
         return token.isEmpty() ? null : token;
     }
 
-    // Helper method to check if user is admin
+    /**
+     * Admin gate: valid JWT + active ADMIN role in the database.
+     * Re-checking the DB ensures revoke takes effect before JWT expiry.
+     */
     private boolean isAdmin(String authHeader) {
         try {
             String token = extractToken(authHeader);
-            if (token == null) {
+            if (token == null || !jwtUtil.validateToken(token)) {
                 return false;
             }
 
-            if (!jwtUtil.validateToken(token)) {
+            String roleClaim = jwtUtil.getRoleFromToken(token);
+            if (!"ADMIN".equals(roleClaim)) {
                 return false;
             }
 
-            String role = jwtUtil.getRoleFromToken(token);
-            return "ADMIN".equals(role);
+            String email = jwtUtil.getEmailFromToken(token);
+            if (email == null || email.isBlank()) {
+                return false;
+            }
+
+            return userRepository.findByEmail(email)
+                    .map(u -> u.getRole() == Role.ADMIN)
+                    .orElse(false);
         } catch (Exception e) {
             return false;
         }
@@ -801,8 +850,9 @@ public class AdminController {
         }
         stats.put("powerUsers", powerUsers);
         
-        double retentionRate = mau > 0 ? 45.5 : 0.0; // Mock retention for now
-        stats.put("retentionRate", retentionRate);
+        // Retention is not computed yet — omit fake values rather than shipping mock KPIs.
+        stats.put("retentionRate", null);
+        stats.put("retentionAvailable", false);
         
         long resumeUsers = resumeRepository.countDistinctUsersAfter(LocalDateTime.now().minusDays(30));
         long atsUsers = atsCheckRepository.countDistinctUsersAfter(LocalDateTime.now().minusDays(30));
@@ -856,7 +906,9 @@ public class AdminController {
         
         liveStats.put("resumesToday", resumesToday);
         liveStats.put("atsChecksToday", atsChecksToday);
-        liveStats.put("onlineUsers", Math.max(1, (int)(resumesToday * 1.5))); 
+        // onlineUsers is not tracked server-side; do not invent a value for the dashboard.
+        liveStats.put("onlineUsers", null);
+        liveStats.put("onlineUsersAvailable", false);
         
         return ResponseEntity.ok(liveStats);
     }
@@ -865,6 +917,14 @@ public class AdminController {
     public void exportResumesCsv(@RequestHeader("Authorization") String authHeader, jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
         if (!isAdmin(authHeader)) {
             response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
+        long total = resumeRepository.count();
+        if (total > exportMaxRows) {
+            response.setStatus(HttpStatus.PAYLOAD_TOO_LARGE.value());
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"Export exceeds max rows (" + exportMaxRows + ").\"}");
             return;
         }
         
@@ -877,14 +937,14 @@ public class AdminController {
         List<Resume> resumes = resumeRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
         for (Resume r : resumes) {
             String email = r.getUser() != null ? r.getUser().getEmail() : "N/A";
-            String cName = r.getCandidateName() != null ? r.getCandidateName().replace(",", " ") : "N/A";
-            writer.printf("%d,%d,%s,%s,%s,%s\n", 
-                r.getId(), 
-                r.getUser() != null ? r.getUser().getId() : 0,
-                email, 
-                r.getTemplateType(),
-                cName,
-                r.getCreatedAt()
+            String cName = r.getCandidateName() != null ? r.getCandidateName() : "N/A";
+            writer.printf("%s,%s,%s,%s,%s,%s\n",
+                escapeCsv(String.valueOf(r.getId())),
+                escapeCsv(String.valueOf(r.getUser() != null ? r.getUser().getId() : 0)),
+                escapeCsv(email),
+                escapeCsv(r.getTemplateType()),
+                escapeCsv(cName),
+                escapeCsv(r.getCreatedAt() != null ? r.getCreatedAt().toString() : "")
             );
         }
         writer.flush();
@@ -903,13 +963,14 @@ public class AdminController {
         java.io.PrintWriter writer = response.getWriter();
         writer.println("Metric,Value");
         
-        writer.printf("Total Users,%d\n", userRepository.count());
-        writer.printf("Total Resumes,%d\n", resumeRepository.count());
-        writer.printf("Total ATS Checks,%d\n", atsCheckRepository.count());
-        writer.printf("Total Feedback,%d\n", feedbackRepository.count());
+        writer.printf("%s,%s\n", escapeCsv("Total Users"), escapeCsv(String.valueOf(userRepository.count())));
+        writer.printf("%s,%s\n", escapeCsv("Total Resumes"), escapeCsv(String.valueOf(resumeRepository.count())));
+        writer.printf("%s,%s\n", escapeCsv("Total ATS Checks"), escapeCsv(String.valueOf(atsCheckRepository.count())));
+        writer.printf("%s,%s\n", escapeCsv("Total Feedback"), escapeCsv(String.valueOf(feedbackRepository.count())));
         
         Double avgRating = feedbackRepository.getAverageRating();
-        writer.printf("Average Feedback Rating,%.2f\n", avgRating != null ? avgRating : 0.0);
+        writer.printf("%s,%s\n", escapeCsv("Average Feedback Rating"),
+                escapeCsv(String.format("%.2f", avgRating != null ? avgRating : 0.0)));
         
         writer.flush();
     }
@@ -983,30 +1044,106 @@ public class AdminController {
             response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
             return;
         }
+        long total = adminAuditLogRepository.count();
+        if (total > exportMaxRows) {
+            response.setStatus(HttpStatus.PAYLOAD_TOO_LARGE.value());
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"Export exceeds max rows (" + exportMaxRows + ").\"}");
+            return;
+        }
         response.setContentType("text/csv");
         response.setHeader("Content-Disposition", "attachment; filename=\"audit_logs_export.csv\"");
         java.io.PrintWriter writer = response.getWriter();
         writer.println("ID,Timestamp,Admin Email,Action,Target User Email");
         List<AdminAuditLog> logs = adminAuditLogRepository.findAll(Sort.by(Sort.Direction.DESC, "timestamp"));
         for (AdminAuditLog l : logs) {
-            writer.printf("%d,%s,%s,%s,%s\n", l.getId(), l.getTimestamp(), l.getAdminEmail(), l.getAction(), l.getTargetUserEmail());
+            writer.printf("%s,%s,%s,%s,%s\n",
+                    escapeCsv(String.valueOf(l.getId())),
+                    escapeCsv(l.getTimestamp() != null ? l.getTimestamp().toString() : ""),
+                    escapeCsv(l.getAdminEmail()),
+                    escapeCsv(l.getAction() != null ? l.getAction().toString() : ""),
+                    escapeCsv(l.getTargetUserEmail()));
         }
         writer.flush();
     }
 
     @PostMapping("/sql-query")
     public ResponseEntity<?> runSqlQuery(@RequestHeader("Authorization") String authHeader, @RequestBody Map<String, String> body) {
-        if (!isAdmin(authHeader)) return new ResponseEntity<>(Map.of("error", "Access denied"), HttpStatus.FORBIDDEN);
-        String query = body.get("query");
-        if (query == null || !query.trim().toUpperCase().startsWith("SELECT")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "ponytail safety ceiling: Only read-only SELECT queries are allowed in SQL Studio."));
+        if (!isAdmin(authHeader)) {
+            return new ResponseEntity<>(Map.of("error", "Access denied"), HttpStatus.FORBIDDEN);
         }
+        if (!sqlStudioEnabled) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "error", "SQL Studio is disabled. Set app.admin.sql-studio.enabled=true only in controlled environments."));
+        }
+
+        String query = body != null ? body.get("query") : null;
+        String validationError = validateReadOnlySql(query);
+        if (validationError != null) {
+            return ResponseEntity.badRequest().body(Map.of("error", validationError));
+        }
+
         try {
-            List<Map<String, Object>> results = jdbcTemplate.queryForList(query);
-            return ResponseEntity.ok(results);
+            String limited = enforceSqlLimit(query.trim());
+            List<Map<String, Object>> results = jdbcTemplate.queryForList(limited);
+            if (results.size() > sqlStudioMaxRows) {
+                results = results.subList(0, sqlStudioMaxRows);
+            }
+            return ResponseEntity.ok(Map.of(
+                    "rows", results,
+                    "rowCount", results.size(),
+                    "truncated", true
+            ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            logger.warn("SQL Studio query failed: {}", e.getClass().getSimpleName());
+            return ResponseEntity.badRequest().body(Map.of("error", "Query failed. Check syntax and permissions."));
         }
+    }
+
+    /**
+     * Allow only a single SELECT statement. Blocks multi-statements and dangerous constructs.
+     */
+    private String validateReadOnlySql(String query) {
+        if (query == null || query.isBlank()) {
+            return "Query is required.";
+        }
+        String normalized = query.trim();
+        // Strip trailing semicolons for validation, then reject any remaining ones (multi-statement).
+        while (normalized.endsWith(";")) {
+            normalized = normalized.substring(0, normalized.length() - 1).trim();
+        }
+        if (normalized.contains(";")) {
+            return "Multi-statement SQL is not allowed.";
+        }
+        String upper = normalized.toUpperCase();
+        if (!upper.startsWith("SELECT") && !upper.startsWith("WITH")) {
+            return "Only read-only SELECT (or WITH ... SELECT) queries are allowed.";
+        }
+        String[] banned = {
+                " INTO ", " OUTFILE", " DUMPFILE", " FOR UPDATE", " LOCK IN",
+                " INSERT ", " UPDATE ", " DELETE ", " DROP ", " ALTER ", " CREATE ",
+                " TRUNCATE ", " GRANT ", " REVOKE ", " CALL ", " EXEC ", " EXECUTE ",
+                " LOAD_FILE", " SLEEP(", " BENCHMARK(", " INFORMATION_SCHEMA.PROCESSLIST"
+        };
+        String padded = " " + upper.replaceAll("\\s+", " ") + " ";
+        for (String token : banned) {
+            if (padded.contains(token)) {
+                return "Query contains a disallowed keyword or construct.";
+            }
+        }
+        return null;
+    }
+
+    private String enforceSqlLimit(String query) {
+        String trimmed = query.trim();
+        while (trimmed.endsWith(";")) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1).trim();
+        }
+        String upper = trimmed.toUpperCase();
+        if (!upper.contains(" LIMIT ")) {
+            return trimmed + " LIMIT " + sqlStudioMaxRows;
+        }
+        return trimmed;
     }
 
     @GetMapping("/logs")

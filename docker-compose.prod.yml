@@ -43,6 +43,7 @@ services:
     environment:
       - EUREKA_URI=http://discovery-server:8761/eureka/
       - DB_URL=${IDENTITY_DB_URL}
+      - IDENTITY_DB_URL=${IDENTITY_DB_URL}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - REDIS_HOST=${REDIS_HOST}
@@ -52,6 +53,11 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - FRONTEND_URL=${FRONTEND_URL}
+      - RESUME_SERVICE_URL=http://resume-service:8082
+      - ADMIN_SQL_STUDIO_ENABLED=false
+      - BOOTSTRAP_ADMIN_EMAIL=${BOOTSTRAP_ADMIN_EMAIL:-}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://atsresify.me,https://www.atsresify.me}
+      - OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI:-https://atsresify.me/login/oauth2/code/google}
     deploy:
       resources:
         limits:

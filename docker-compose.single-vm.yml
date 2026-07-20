@@ -62,7 +62,9 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - FRONTEND_URL=${FRONTEND_URL}
       - OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI} # Pass the Redirect URI from .env into the container
-      - RESUME_SERVICE_URL=${RESUME_SERVICE_URI:-https://resify-resume-service.onrender.com}
+      - RESUME_SERVICE_URL=${RESUME_SERVICE_URL:-http://resume-service:8082}
+      - ADMIN_SQL_STUDIO_ENABLED=${ADMIN_SQL_STUDIO_ENABLED:-false}
+      - BOOTSTRAP_ADMIN_EMAIL=${BOOTSTRAP_ADMIN_EMAIL:-}
       - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=40.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
     deploy:
       resources:
