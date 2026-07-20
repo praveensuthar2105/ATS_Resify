@@ -49,7 +49,7 @@ const Footer = () => {
             {/* Social icons */}
             <div className="flex gap-3">
               <a
-                href="mailto:contact@atsresify.me"
+                href="mailto:praveensuthar1863@gmail.com"
                 className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-[#14B8A6]/10 hover:text-[#14B8A6] border border-[#E2E8F0] flex items-center justify-center transition-all duration-200 text-slate-600 no-underline shadow-sm hover:scale-105"
                 aria-label="Email Contact"
               >

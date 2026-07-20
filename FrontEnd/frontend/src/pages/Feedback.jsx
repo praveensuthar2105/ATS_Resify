@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { API_BASE_URL } from '../services/api';
 import { Helmet } from 'react-helmet-async';
 import SEO from '../components/SEO';
+import { Star, Send, CheckCircle2, AlertCircle, MessageSquare } from 'lucide-react';
 
 const Feedback = () => {
     const [formData, setFormData] = useState({ name: '', email: '', rating: 0, message: '' });
@@ -44,118 +45,125 @@ const Feedback = () => {
 
     const getRatingLabel = () => {
         const value = hoverRating || formData.rating;
-        return value > 0 ? ['', 'poor', 'fair', 'good', 'very good', 'excellent'][value] : 'select rating';
+        return value > 0 ? ['', 'Needs Work', 'Fair', 'Good', 'Very Good', 'Excellent'][value] : 'Select rating';
     };
 
     return (
-        <div className="bg-[#ffffff] text-black min-h-screen flex flex-col font-mono uppercase selection:bg-[#39ff14] selection:text-black" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-teal-100 selection:text-teal-900 pt-32 pb-20 px-6 relative overflow-hidden flex flex-col items-center">
             <SEO
-                title="CareerAI - Feedback"
+                title="Feedback | ATS Resify"
                 description="Help us improve ATS Resify by sharing your experience. We value your opinion to build better AI resume tools."
             />
-            <Helmet>
-                <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
-            </Helmet>
 
-            <main className="flex-grow py-24 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
-                <div className="text-center mb-16">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 border-2 border-black text-black mb-8 w-fit text-xs font-black uppercase shadow-[2px_2px_0px_0px_#000000]">
-                        WE VALUE YOUR OPINION
+            {/* Background Ambience */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-teal-300/10 blur-[120px]" />
+                <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-amber-400/5 blur-[150px]" />
+            </div>
+
+            <main className="w-full max-w-3xl relative z-10 flex flex-col items-center">
+                <div className="text-center mb-12">
+                    <div className="inline-flex items-center justify-center p-3 bg-teal-50 rounded-2xl mb-5 text-teal-600 shadow-sm border border-teal-100">
+                        <MessageSquare className="w-8 h-8" />
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight uppercase text-black">
-                        SHARE YOUR <span className="bg-[#39ff14] text-black px-2 border-2 border-black shadow-[4px_4px_0px_0px_#000000]">FEEDBACK</span>
+                    <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight text-slate-900">
+                        Share Your Feedback
                     </h1>
-                    <p className="text-sm text-[#333333] max-w-2xl mx-auto lowercase leading-relaxed font-bold">
-                        help us improve ats resify by sharing your experience. your feedback directly shapes our product.
+                    <p className="text-slate-500 max-w-xl mx-auto leading-relaxed">
+                        Help us improve ATS Resify by sharing your experience. Your feedback directly shapes the future of our product.
                     </p>
                 </div>
 
-                <div className="w-full max-w-3xl bg-white border-2 border-black p-8 md:p-12 relative shadow-[6px_6px_0px_0px_#39ff14]">
-                    {/* Corner Accents */}
-                    <div className="absolute -top-3 -left-3 w-6 h-6 bg-[#39ff14] border-2 border-black"></div>
-                    <div className="absolute -bottom-3 -right-3 w-6 h-6 bg-[#39ff14] border-2 border-black"></div>
-
-                    <h2 className="text-2xl font-black mb-8 uppercase text-black border-b-2 border-black pb-4">HOW WAS YOUR EXPERIENCE?</h2>
+                <div className="w-full bg-white/80 backdrop-blur-xl border border-white shadow-xl shadow-slate-200/50 rounded-[2rem] p-8 md:p-12">
+                    <h2 className="text-xl font-bold mb-8 text-slate-800 flex items-center gap-2">
+                        How was your experience?
+                    </h2>
 
                     {submitted && (
-                        <div className="mb-8 p-4 border-2 border-black bg-[#39ff14] text-black font-bold uppercase text-sm shadow-[2px_2px_0px_0px_#000000] flex items-center gap-2">
-                            <span className="material-symbols-outlined">check_circle</span>
-                            FEEDBACK TRANSMITTED SUCCESSFULLY. THANK YOU!
+                        <div className="mb-8 p-4 bg-emerald-50 text-emerald-700 rounded-xl text-sm flex items-center gap-3 border border-emerald-100 shadow-sm">
+                            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+                            <span className="font-semibold">Feedback transmitted successfully. Thank you for your input!</span>
                         </div>
                     )}
+                    
                     {error && (
-                        <div className="mb-8 p-4 border-2 border-red-500 bg-red-100 text-red-600 font-bold uppercase text-sm shadow-[2px_2px_0px_0px_#000000] flex items-center gap-2">
-                            <span className="material-symbols-outlined">error</span>
-                            ERROR: {error}
+                        <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-xl text-sm flex items-center gap-3 border border-red-100 shadow-sm">
+                            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                            <span className="font-semibold">{error}</span>
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-xs font-bold mb-2 uppercase text-black" htmlFor="name">NAME</label>
+                                <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide" htmlFor="name">Full Name</label>
                                 <input
-                                    className="w-full bg-white border-2 border-black focus:border-[#39ff14] focus:ring-2 focus:ring-[#39ff14] outline-none text-black px-4 py-3 text-sm placeholder:text-gray-400 font-mono transition-colors"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all placeholder:text-slate-400"
                                     id="name" name="name" value={formData.name} onChange={handleChange}
-                                    placeholder="YOUR NAME" type="text" required
+                                    placeholder="Jane Doe" type="text" required
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold mb-2 uppercase text-black" htmlFor="email">EMAIL</label>
+                                <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide" htmlFor="email">Email Address</label>
                                 <input
-                                    className="w-full bg-white border-2 border-black focus:border-[#39ff14] focus:ring-2 focus:ring-[#39ff14] outline-none text-black px-4 py-3 text-sm placeholder:text-gray-400 font-mono transition-colors"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all placeholder:text-slate-400"
                                     id="email" name="email" value={formData.email} onChange={handleChange}
-                                    placeholder="YOU@EXAMPLE.COM" type="email" required
+                                    placeholder="jane@example.com" type="email" required
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold mb-2 uppercase text-black">RATING</label>
-                            <div className="flex items-center gap-4">
-                                <div className="flex gap-2">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                        <button
-                                            key={star}
-                                            type="button"
-                                            onClick={() => setFormData({ ...formData, rating: star })}
-                                            onMouseEnter={() => setHoverRating(star)}
-                                            onMouseLeave={() => setHoverRating(0)}
-                                            className="focus:outline-none focus:ring-2 focus:ring-[#39ff14] bg-transparent border-none p-0 cursor-pointer"
-                                            aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
-                                        >
-                                            <span
-                                                className={`material-symbols-outlined text-4xl transition-colors ${star <= (hoverRating || formData.rating)
-                                                    ? 'text-[#39ff14]'
-                                                    : 'text-gray-300'
-                                                    }`}
-                                                style={{ fontVariationSettings: "'FILL' 1" }}
+                            <label className="block text-xs font-semibold text-slate-600 mb-3 uppercase tracking-wide">Overall Rating</label>
+                            <div className="flex items-center gap-4 bg-slate-50 border border-slate-100 p-4 rounded-xl w-fit">
+                                <div className="flex gap-1">
+                                    {[1, 2, 3, 4, 5].map((star) => {
+                                        const isActive = star <= (hoverRating || formData.rating);
+                                        return (
+                                            <button
+                                                key={star}
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, rating: star })}
+                                                onMouseEnter={() => setHoverRating(star)}
+                                                onMouseLeave={() => setHoverRating(0)}
+                                                className="focus:outline-none transition-transform hover:scale-110"
+                                                aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
                                             >
-                                                star
-                                            </span>
-                                        </button>
-                                    ))}
+                                                <Star 
+                                                    className={`w-8 h-8 transition-colors ${isActive ? 'fill-amber-400 text-amber-400' : 'fill-slate-200 text-slate-200'}`}
+                                                />
+                                            </button>
+                                        );
+                                    })}
                                 </div>
-                                <span className="text-xs text-[#333333] lowercase font-bold">{getRatingLabel()}</span>
+                                <span className={`text-sm font-semibold ml-2 ${hoverRating || formData.rating ? 'text-slate-700' : 'text-slate-400'}`}>
+                                    {getRatingLabel()}
+                                </span>
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold mb-2 uppercase text-black" htmlFor="message">YOUR FEEDBACK</label>
+                            <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide" htmlFor="message">Your Feedback</label>
                             <textarea
-                                className="w-full bg-white border-2 border-black focus:border-[#39ff14] focus:ring-2 focus:ring-[#39ff14] outline-none text-black px-4 py-3 text-sm placeholder:text-gray-400 font-mono transition-colors h-32 resize-none brutal-scrollbar"
+                                className="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all placeholder:text-slate-400 resize-none"
                                 id="message" name="message" value={formData.message} onChange={handleChange}
-                                placeholder="TELL US WHAT YOU LIKED, WHAT COULD BE IMPROVED..."
+                                placeholder="Tell us what you liked, or what could be improved..."
                             ></textarea>
                         </div>
 
                         <button
-                            className={`w-full bg-[#39ff14] text-black font-black text-lg py-4 border-2 border-black hover:bg-black hover:text-[#39ff14] shadow-[4px_4px_0px_0px_#000000] active:shadow-none transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`w-full py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 mt-4 ${submitting ? 'opacity-70 cursor-not-allowed' : ''}`}
                             type="submit"
                             disabled={submitting}
                         >
-                            {submitting ? 'SUBMITTING...' : 'SUBMIT FEEDBACK'}
-                            {!submitting && <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">send</span>}
+                            {submitting ? (
+                                'Submitting...'
+                            ) : (
+                                <>
+                                    Submit Feedback
+                                    <Send className="w-4 h-4" />
+                                </>
+                            )}
                         </button>
                     </form>
                 </div>

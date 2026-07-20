@@ -35,34 +35,59 @@ const CreatePrompt = lazy(() => import('./pages/create/CreatePrompt'));
 
 // 404 Not Found Component
 const NotFound = () => (
-  <Box sx={{
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '60vh',
-    textAlign: 'center',
-    p: 4
-  }}>
-    <Box sx={{ fontSize: '72px', mb: 2 }}>🔍</Box>
-    <Box component="h1" sx={{ fontSize: '2rem', fontWeight: 700, mb: 1, color: '#1f2937' }}>
-      Page Not Found
-    </Box>
-    <Box sx={{ color: '#6b7280', mb: 3 }}>
-      The page you're looking for doesn't exist or has been moved.
-    </Box>
-    <Link to="/" style={{
-      color: '#6366f1',
-      textDecoration: 'none',
-      fontWeight: 600,
-      padding: '12px 24px',
-      border: '2px solid #6366f1',
-      borderRadius: '8px',
-      transition: 'all 0.2s'
-    }}>
-      ← Back to Home
-    </Link>
-  </Box>
+  <div className="relative min-h-[70vh] flex items-center justify-center px-6 py-20 overflow-hidden bg-slate-50 font-['DM_Sans',_'Inter',_sans-serif]">
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="absolute top-[5%] right-[-8%] w-[420px] h-[420px] rounded-full bg-teal-300/15 blur-[120px]" />
+      <div className="absolute bottom-[-10%] left-[-8%] w-[480px] h-[480px] rounded-full bg-indigo-300/10 blur-[140px]" />
+    </div>
+
+    <div className="relative z-10 w-full max-w-lg text-center">
+      <div className="bg-white/80 backdrop-blur-xl border border-white shadow-2xl shadow-slate-200/60 rounded-[2rem] p-8 md:p-10">
+        <div className="mx-auto mb-5 w-20 h-20 rounded-3xl bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-100 flex items-center justify-center shadow-sm">
+          <span className="material-symbols-outlined text-[40px] text-teal-600" style={{ fontVariationSettings: "'FILL' 1" }}>
+            explore_off
+          </span>
+        </div>
+
+        <p className="text-[11px] font-bold tracking-[0.2em] text-teal-700 uppercase bg-teal-50 border border-teal-100 px-3 py-1.5 rounded-full mb-4 inline-block">
+          Error 404
+        </p>
+
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 mb-3 font-['Space_Grotesk',_sans-serif]">
+          Page not found
+        </h1>
+
+        <p className="text-slate-500 text-[15px] leading-relaxed mb-8 max-w-sm mx-auto">
+          The page you&apos;re looking for doesn&apos;t exist, was moved, or the link may be broken.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-semibold text-sm no-underline shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 hover:-translate-y-0.5 transition-all duration-200"
+          >
+            <span className="material-symbols-outlined text-[18px]">home</span>
+            Back to home
+          </Link>
+          <Link
+            to="/contact"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-semibold text-sm no-underline hover:border-teal-300 hover:text-teal-700 hover:bg-teal-50/50 transition-all duration-200"
+          >
+            <span className="material-symbols-outlined text-[18px]">support_agent</span>
+            Contact support
+          </Link>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-slate-100 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-medium text-slate-400">
+          <Link to="/create-resume/prompt" className="hover:text-teal-600 no-underline transition-colors">AI Builder</Link>
+          <span className="text-slate-300">·</span>
+          <Link to="/ats-checker/quick-score" className="hover:text-teal-600 no-underline transition-colors">ATS Checker</Link>
+          <span className="text-slate-300">·</span>
+          <Link to="/features" className="hover:text-teal-600 no-underline transition-colors">Features</Link>
+        </div>
+      </div>
+    </div>
+  </div>
 );
 
 // Fallback Page Loader during route chunk loading
