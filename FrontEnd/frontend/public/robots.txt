@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /edit-resume
 
 Sitemap: https://atsresify.me/sitemap.xml
