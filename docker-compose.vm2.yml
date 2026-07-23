@@ -65,6 +65,7 @@ services:
       - FRONTEND_URL=${FRONTEND_URL}
       - OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI}
       - CORS_ORIGINS=https://atsresify.me,https://www.atsresify.me
+      - RESUME_SERVICE_URL=https://resify-resume-service.onrender.com
       - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=60.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=128m
     deploy:
       resources:
