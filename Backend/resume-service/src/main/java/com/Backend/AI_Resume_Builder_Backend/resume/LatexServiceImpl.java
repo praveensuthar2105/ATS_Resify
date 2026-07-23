@@ -98,7 +98,7 @@ public class LatexServiceImpl implements LatexService {
         }
 
         template = template.replace("{{EMAIL}}", escapeLatexSpecialChars(getStringValue(personalInfo, "email")));
-        template = template.replace("{{PHONE_NUMBER}}", escapeLatexSpecialChars(getStringValue(personalInfo, "phoneNumber")));
+        template = handleOptionalSection(template, "PHONE_NUMBER", getStringValue(personalInfo, "phoneNumber"));
 
         // Handle optional links
         template = handleOptionalSection(template, "LINKEDIN",

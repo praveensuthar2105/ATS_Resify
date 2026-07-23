@@ -14,14 +14,14 @@ export const RESUME_TEMPLATES = [
     name: 'ATS',
     displayName: 'ATS Optimized',
     description: 'Simple format that passes automated screening',
-    thumbnail: 'templates/ats.png',
+    thumbnail: '/templates/ats.png',
   },
   {
     id: 'minimal',
     name: 'Minimal',
     displayName: 'Minimal Typographic',
     description: 'Elegant sans-serif design focused on pure typography',
-    thumbnail: 'templates/minimal.png',
+    thumbnail: '/templates/minimal.png',
   },
 ];
 
