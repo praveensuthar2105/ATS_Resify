@@ -3,8 +3,8 @@ version: '3.8'
 services:
   discovery-server:
     build:
-      context: ./Backend/discovery-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Backend/discovery-server/Dockerfile.prod
     container_name: resify-discovery-server
     ports:
       - "8761:8761"
@@ -21,8 +21,8 @@ services:
 
   gateway-service:
     build:
-      context: ./Backend/gateway-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Backend/gateway-service/Dockerfile.prod
     container_name: resify-gateway-service
     ports:
       - "8080:8080"
@@ -46,8 +46,8 @@ services:
 
   identity-service:
     build:
-      context: ./Backend/identity-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Backend/identity-service/Dockerfile.prod
     container_name: resify-identity-service
     ports:
       - "8081:8081"
