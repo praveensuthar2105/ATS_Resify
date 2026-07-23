@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import CookieConsent from './components/CookieConsent';
 import { Loader2 } from 'lucide-react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import './App.css';
 
 // Lazy load page components to split massive packages (Monaco, Recharts, react-pdf)
@@ -190,6 +191,7 @@ function App() {
         <ErrorBoundary>
           <Router>
             <AppContent />
+            <SpeedInsights />
           </Router>
         </ErrorBoundary>
       </ThemeProvider>

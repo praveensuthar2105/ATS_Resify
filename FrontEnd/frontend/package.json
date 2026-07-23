@@ -17,6 +17,7 @@
     "@mui/icons-material": "^7.3.4",
     "@mui/material": "^7.3.4",
     "@radix-ui/react-accordion": "^1.2.16",
+    "@vercel/speed-insights": "^2.0.0",
     "antd": "^5.27.6",
     "axios": "^1.13.1",
     "clsx": "^2.1.1",
