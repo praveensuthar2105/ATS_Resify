@@ -26,7 +26,7 @@ services:
       - RABBITMQ_PASS=${RABBITMQ_PASS}
       - RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VIRTUAL_HOST}
       - RABBITMQ_SSL_ENABLED=${RABBITMQ_SSL_ENABLED:-true}
-      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=50.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
+      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=50.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=128m
     deploy:
       resources:
         limits:

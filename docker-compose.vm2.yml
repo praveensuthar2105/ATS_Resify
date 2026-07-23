@@ -10,7 +10,7 @@ services:
       - "8761:8761"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=
-      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=40.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
+      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=40.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=128m
     deploy:
       resources:
         limits:
@@ -33,7 +33,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - RESUME_SERVICE_URI=https://resify-resume-service.onrender.com
       - CORS_ORIGINS=https://atsresify.me,https://www.atsresify.me
-      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=40.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
+      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=40.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=128m
     deploy:
       resources:
         limits:
@@ -65,7 +65,7 @@ services:
       - FRONTEND_URL=${FRONTEND_URL}
       - OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI}
       - CORS_ORIGINS=https://atsresify.me,https://www.atsresify.me
-      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=60.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=64m
+      - JVM_OPTS=-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=60.0 -XX:+UseSerialGC -Xss256k -XX:MaxMetaspaceSize=128m
     deploy:
       resources:
         limits:
