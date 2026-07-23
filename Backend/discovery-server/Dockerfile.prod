@@ -6,7 +6,7 @@ WORKDIR /app
 COPY Backend ./Backend
 
 # Build the module (using reactor module names relative to parent pom)
-RUN mvn -f Backend/pom.xml -pl common-lib,discovery-server -am clean install -DskipTests
+RUN mvn -f Backend/pom.xml -pl common-lib,discovery-server -am clean install -Dmaven.test.skip=true
 
 # Stage 2: Runtime environment
 FROM eclipse-temurin:21-jre-jammy
