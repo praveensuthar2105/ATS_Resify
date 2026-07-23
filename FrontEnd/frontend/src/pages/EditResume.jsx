@@ -1751,7 +1751,7 @@ ${sections}
         {/* RIGHT PANEL: PDF Preview */}
         <Panel defaultSize={52} minSize={35} className="hidden lg:flex flex-col h-full pb-0 relative font-sans" style={{ background: 'linear-gradient(180deg, #FBFEFC 0%, #F0F9F6 100%)' }}>
           {/* Top bar with resume status and controls */}
-          <div className="bg-white border-b border-slate-200 p-4 flex items-center justify-between gap-4 shrink-0 z-10 font-sans">
+          <div className="relative z-50 bg-white border-b border-slate-200 p-4 flex items-center justify-between gap-4 shrink-0 font-sans">
             <div className="min-w-0">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="flex items-center text-xs font-sans font-bold text-slate-800 uppercase tracking-wider">
