@@ -14,4 +14,4 @@ WORKDIR /app
 
 COPY --from=build /app/Backend/identity-service/target/*.jar app.jar
 EXPOSE 8081
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JVM_OPTS -Djava.net.preferIPv4Stack=true -jar app.jar"]
