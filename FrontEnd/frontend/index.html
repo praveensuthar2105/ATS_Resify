@@ -106,13 +106,22 @@
     }
   </style>
 
-  <!-- ===== LCP IMAGE HINT — tells browser to fetch hero image early ===== -->
-  <link rel="preload" as="image" href="/resume-preview.png" fetchpriority="high" />
 
-  <!-- ===== GOOGLE ADSENSE ===== -->
+
+  <!-- ===== GOOGLE ADSENSE (Load when page is idle to improve FCP) ===== -->
   <meta name="google-adsense-account" content="ca-pub-3213050293695562">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3213050293695562"
-    crossorigin="anonymous"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      // Delay loading non-critical ad script slightly after paint
+      setTimeout(() => {
+        const script = document.createElement('script');
+        script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3213050293695562";
+        script.crossOrigin = "anonymous";
+        script.async = true;
+        document.head.appendChild(script);
+      }, 1500);
+    });
+  </script>
 
   <!-- ===== GOOGLE ANALYTICS (GA4) — defer so it doesn't block render ===== -->
   <script defer src="https://www.googletagmanager.com/gtag/js?id=G-SEV1TV5SW0"></script>
