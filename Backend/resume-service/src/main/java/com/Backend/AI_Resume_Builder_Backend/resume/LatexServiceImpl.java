@@ -15,6 +15,11 @@ public class LatexServiceImpl implements LatexService {
 
     @Override
     public String generateLatexCode(Map<String, Object> resumeData, String templateType) throws IOException {
+        return generateLatexCode(resumeData, templateType, null);
+    }
+
+    @Override
+    public String generateLatexCode(Map<String, Object> resumeData, String templateType, Map<String, Object> sectionConfig) throws IOException {
         // Default to professional if template not specified
         if (templateType == null || templateType.trim().isEmpty()) {
             templateType = "ats";
@@ -24,7 +29,7 @@ public class LatexServiceImpl implements LatexService {
         String template = loadLatexTemplate(templateType);
 
         // Populate template with data
-        String latexCode = populateTemplate(template, resumeData, templateType);
+        String latexCode = populateTemplate(template, resumeData, templateType, sectionConfig);
 
         return latexCode;
     }
@@ -33,7 +38,7 @@ public class LatexServiceImpl implements LatexService {
     public Map<String, String> getAvailableTemplates() {
         Map<String, String> templates = new LinkedHashMap<>();
         templates.put("ats", "ATS-Optimized - Simple format that passes automated screening");
-        templates.put("minimal", "Minimal Typographic - Elegant serif design focused on pure typography");
+        templates.put("minimal", "Minimal Typographic - Elegant sans-serif design focused on pure typography");
         return templates;
     }
 
@@ -74,34 +79,36 @@ public class LatexServiceImpl implements LatexService {
         }
     }
 
-    private String populateTemplate(String template, Map<String, Object> resumeData, String templateType) {
+    private String populateTemplate(String template, Map<String, Object> resumeData, String templateType, Map<String, Object> sectionConfig) {
         // Extract personal information
         Map<String, Object> personalInfo = getMapValue(resumeData, "personalInformation");
 
-        // Replace simple placeholders
+        // Replace personal details in header
         template = replacePlaceholder(template, "FULL_NAME",
                 getStringValue(personalInfo, "fullName"));
-        template = replacePlaceholder(template, "EMAIL",
-                getStringValue(personalInfo, "email"));
-        template = replacePlaceholder(template, "PHONE_NUMBER",
-                getStringValue(personalInfo, "phoneNumber"));
-        template = handleOptionalSection(template, "LOCATION",
-                getStringValue(personalInfo, "location"));
+        
+        // Handle optional header details cleanly.
+        String personalLocation = getStringValue(personalInfo, "location");
+        if (personalLocation != null && !personalLocation.trim().isEmpty()) {
+            template = template.replace("{{#LOCATION}}", "");
+            template = template.replace("{{/LOCATION}}", "");
+            template = template.replace("{{LOCATION}}", escapeLatexSpecialChars(personalLocation));
+        } else {
+            template = removeSection(template, "LOCATION");
+        }
+
+        template = template.replace("{{EMAIL}}", escapeLatexSpecialChars(getStringValue(personalInfo, "email")));
+        template = template.replace("{{PHONE_NUMBER}}", escapeLatexSpecialChars(getStringValue(personalInfo, "phoneNumber")));
 
         // Handle optional links
-        // Optional sections in header/footer links
         template = handleOptionalSection(template, "LINKEDIN",
                 getStringValue(personalInfo, "linkedIn"));
         template = handleOptionalSection(template, "GITHUB",
                 getStringValue(personalInfo, "gitHub"));
         template = handleOptionalSection(template, "PORTFOLIO",
                 getStringValue(personalInfo, "portfolio"));
-        template = handleOptionalSection(template, "EMAIL",
-                getStringValue(personalInfo, "email"));
-        template = handleOptionalSection(template, "PHONE_NUMBER",
-                getStringValue(personalInfo, "phoneNumber"));
 
-        // LinkedIn and GitHub display (without https://)
+        // LinkedIn and GitHub display
         String linkedin = getStringValue(personalInfo, "linkedIn");
         String github = getStringValue(personalInfo, "gitHub");
         String linkedinDisplay = linkedin.replace("https://", "").replace("http://", "");
@@ -115,30 +122,115 @@ public class LatexServiceImpl implements LatexService {
         template = handleOptionalSection(template, "SUMMARY",
                 getStringValue(resumeData, "summary"));
 
-        // Skills
+        // Pre-render each section segment first inside the template
         template = handleSkillsSection(template, resumeData);
-
-        // Experience
         template = handleExperienceSection(template, resumeData, templateType);
-
-        // Projects
         template = handleProjectsSection(template, resumeData, templateType);
-
-        // Education
         template = handleEducationSection(template, resumeData);
-
-        // Certifications
         template = handleCertificationsSection(template, resumeData);
-
-        // Achievements
         template = handleAchievementsSection(template, resumeData);
-
-        // Languages
         template = handleLanguagesSection(template, resumeData);
 
-        // As a final safety step, strip any leftover Mustache-like tags so LaTeX never
-        // sees
-        // raw markers like {{#EMAIL}} or {{UNRESOLVED}} which can introduce # into TeX.
+        // Dynamically slice and rearrange sections based on sectionConfig
+        List<String> order = null;
+        Map<String, String> titles = new HashMap<>();
+        List<String> hidden = new ArrayList<>();
+
+        if (sectionConfig != null) {
+            Object orderObj = sectionConfig.get("order");
+            if (orderObj instanceof List) {
+                order = new ArrayList<>();
+                for (Object o : (List<?>) orderObj) {
+                    if (o != null) order.add(o.toString().toLowerCase().trim());
+                }
+            }
+
+            Object titlesObj = sectionConfig.get("titles");
+            if (titlesObj instanceof Map) {
+                for (Map.Entry<?, ?> entry : ((Map<?, ?>) titlesObj).entrySet()) {
+                    if (entry.getKey() != null && entry.getValue() != null) {
+                        titles.put(entry.getKey().toString().toLowerCase().trim(), entry.getValue().toString());
+                    }
+                }
+            }
+
+            Object hiddenObj = sectionConfig.get("hidden");
+            if (hiddenObj instanceof List) {
+                for (Object h : (List<?>) hiddenObj) {
+                    if (h != null) hidden.add(h.toString().toLowerCase().trim());
+                }
+            }
+        }
+
+        // Standard fallback order if none was provided
+        if (order == null || order.isEmpty()) {
+            order = Arrays.asList("education", "experience", "projects", "skills", "certifications", "achievements");
+        }
+
+        // Segment extraction helper
+        Map<String, String> sectionContents = new HashMap<>();
+        List<String> allKeys = Arrays.asList("education", "experience", "projects", "skills", "certifications", "achievements");
+
+        for (String key : allKeys) {
+            String beginTag = "%BEGIN_" + key.toUpperCase();
+            String endTag = "%END_" + key.toUpperCase();
+            int startIndex = template.indexOf(beginTag);
+            int endIndex = template.indexOf(endTag);
+
+            if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+                // Extract inner block content including the end tag line
+                int lineEndIndex = template.indexOf("\n", endIndex);
+                if (lineEndIndex == -1) lineEndIndex = template.length();
+                
+                String fullBlock = template.substring(startIndex, lineEndIndex);
+                String innerContent = template.substring(startIndex + beginTag.length(), endIndex).trim();
+
+                // Store clean inner content (or empty if set to hidden/disabled)
+                if (hidden.contains(key) || innerContent.isEmpty()) {
+                    sectionContents.put(key, "");
+                } else {
+                    // Check if user customized the section title/header name
+                    String customTitle = titles.get(key);
+                    if (customTitle != null && !customTitle.trim().isEmpty()) {
+                        // Replace standard latex title declarations inside the inner content
+                        String escapedTitle = escapeLatexSpecialChars(customTitle);
+                        innerContent = innerContent.replace("\\section*{Education}", "\\section*{" + escapedTitle + "}");
+                        innerContent = innerContent.replace("\\section{Education}", "\\section{" + escapedTitle + "}");
+                        innerContent = innerContent.replace("\\section*{Experience}", "\\section*{" + escapedTitle + "}");
+                        innerContent = innerContent.replace("\\section{Experience}", "\\section{" + escapedTitle + "}");
+                        innerContent = innerContent.replace("\\section*{Projects}", "\\section*{" + escapedTitle + "}");
+                        innerContent = innerContent.replace("\\section{Projects}", "\\section{" + escapedTitle + "}");
+                        innerContent = innerContent.replace("\\section*{Technical Skills}", "\\section*{" + escapedTitle + "}");
+                        innerContent = innerContent.replace("\\section*{Skills}", "\\section*{" + escapedTitle + "}");
+                        innerContent = innerContent.replace("\\section{Skills}", "\\section{" + escapedTitle + "}");
+                        innerContent = innerContent.replace("\\section*{Certifications}", "\\section*{" + escapedTitle + "}");
+                        innerContent = innerContent.replace("\\section{Certifications}", "\\section{" + escapedTitle + "}");
+                        innerContent = innerContent.replace("\\section*{Achievements}", "\\section*{" + escapedTitle + "}");
+                        innerContent = innerContent.replace("\\section{Achievements}", "\\section{" + escapedTitle + "}");
+                    }
+                    sectionContents.put(key, innerContent);
+                }
+
+                // Delete the original static block from the master template string
+                template = template.substring(0, startIndex) + template.substring(lineEndIndex);
+            }
+        }
+
+        // Reassemble the sections dynamically back into the template body
+        StringBuilder bodyBuilder = new StringBuilder();
+        for (String key : order) {
+            String content = sectionContents.get(key);
+            if (content != null && !content.trim().isEmpty()) {
+                bodyBuilder.append("\n\n").append(content);
+            }
+        }
+
+        // Insert the re-ordered block sections back right before \end{document}
+        int docEndIndex = template.lastIndexOf("\\end{document}");
+        if (docEndIndex != -1) {
+            template = template.substring(0, docEndIndex) + bodyBuilder.toString() + "\n\n" + template.substring(docEndIndex);
+        }
+
         return sanitizeTemplateArtifacts(template);
     }
 
@@ -174,9 +266,46 @@ public class LatexServiceImpl implements LatexService {
     }
 
     private String handleSkillsSection(String template, Map<String, Object> resumeData) {
-        Map<String, Object> skills = getMapValue(resumeData, "skills");
+        Object skillsObj = resumeData.get("skills");
+        Map<String, Object> skillsMap = new HashMap<>();
 
-        if (skills == null || skills.isEmpty()) {
+        if (skillsObj instanceof List) {
+            // Editor format: [{ title: 'Languages', items: ['Java', 'C++'] }]
+            List<?> list = (List<?>) skillsObj;
+            for (Object item : list) {
+                if (item instanceof Map) {
+                    Map<?, ?> entry = (Map<?, ?>) item;
+                    Object titleObj = entry.get("title");
+                    Object itemsObj = entry.get("items");
+                    if (titleObj != null) {
+                        String categoryKey = titleObj.toString().toLowerCase().trim()
+                            .replace("developer tools", "tools")
+                            .replace("cloud/devops", "cloud");
+                        List<String> listItems = new ArrayList<>();
+                        if (itemsObj instanceof List) {
+                            for (Object val : (List<?>) itemsObj) {
+                                if (val != null) listItems.add(val.toString());
+                            }
+                        } else if (itemsObj instanceof String) {
+                            String strVal = (String) itemsObj;
+                            if (!strVal.trim().isEmpty()) {
+                                for (String part : strVal.split(",")) {
+                                    listItems.add(part.trim());
+                                }
+                            }
+                        }
+                        if (!listItems.isEmpty()) {
+                            skillsMap.put(categoryKey, listItems);
+                        }
+                    }
+                }
+            }
+        } else if (skillsObj instanceof Map) {
+            // Traditional Map format
+            skillsMap = getMapValue(resumeData, "skills");
+        }
+
+        if (skillsMap.isEmpty()) {
             template = removeSection(template, "HAS_SKILLS");
             return template;
         }
@@ -185,7 +314,7 @@ public class LatexServiceImpl implements LatexService {
         boolean hasAnySkills = false;
         List<String> categories = Arrays.asList("languages", "frameworks", "databases", "tools", "cloud", "other");
         for (String category : categories) {
-            List<String> categorySkills = getStringListValue(skills, category);
+            List<String> categorySkills = getStringListValue(skillsMap, category);
             if (categorySkills != null && !categorySkills.isEmpty()) {
                 hasAnySkills = true;
                 break;
@@ -201,12 +330,12 @@ public class LatexServiceImpl implements LatexService {
         template = template.replace("{{/HAS_SKILLS}}", "");
 
         // Handle each skill category
-        template = handleSkillCategory(template, skills, "languages", "SKILL_LANGUAGES");
-        template = handleSkillCategory(template, skills, "frameworks", "SKILL_FRAMEWORKS");
-        template = handleSkillCategory(template, skills, "databases", "SKILL_DATABASES");
-        template = handleSkillCategory(template, skills, "tools", "SKILL_TOOLS");
-        template = handleSkillCategory(template, skills, "cloud", "SKILL_CLOUD");
-        template = handleSkillCategory(template, skills, "other", "SKILL_OTHER");
+        template = handleSkillCategory(template, skillsMap, "languages", "SKILL_LANGUAGES");
+        template = handleSkillCategory(template, skillsMap, "frameworks", "SKILL_FRAMEWORKS");
+        template = handleSkillCategory(template, skillsMap, "databases", "SKILL_DATABASES");
+        template = handleSkillCategory(template, skillsMap, "tools", "SKILL_TOOLS");
+        template = handleSkillCategory(template, skillsMap, "cloud", "SKILL_CLOUD");
+        template = handleSkillCategory(template, skillsMap, "other", "SKILL_OTHER");
 
         return template;
     }
@@ -250,8 +379,8 @@ public class LatexServiceImpl implements LatexService {
                     escapeLatexSpecialChars(getStringValue(exp, "jobTitle")));
             expEntry = expEntry.replace("{{COMPANY}}",
                     escapeLatexSpecialChars(getStringValue(exp, "company")));
-            expEntry = expEntry.replace("{{LOCATION}}",
-                    escapeLatexSpecialChars(getStringValue(exp, "location")));
+            expEntry = handleOptionalSection(expEntry, "LOCATION",
+                    getStringValue(exp, "location"));
             expEntry = expEntry.replace("{{DURATION}}",
                     escapeLatexSpecialChars(getStringValue(exp, "duration")));
 
@@ -349,15 +478,46 @@ public class LatexServiceImpl implements LatexService {
             projEntry = projEntry.replace("{{TECHNOLOGIES}}",
                     escapeLatexSpecialChars(technologies));
 
-            // Handle GitHub link (optional)
-            String githubLink = getStringValue(project, "githubLink");
-            if (githubLink != null && !githubLink.isEmpty()) {
+            // Handle GitHub link (optional) & Live link (optional)
+            String githubLink = getStringValue(project, "githubLink").trim();
+            String liveLink = getStringValue(project, "liveLink").trim();
+            if (liveLink.isEmpty()) {
+                liveLink = getStringValue(project, "liveUrl").trim(); // backup key
+            }
+
+            // Enforce proper URL protocols so PDF href compilations are clickable
+            if (!githubLink.isEmpty() && !githubLink.toLowerCase().startsWith("http://") && !githubLink.toLowerCase().startsWith("https://")) {
+                githubLink = "https://" + githubLink;
+            }
+            if (!liveLink.isEmpty() && !liveLink.toLowerCase().startsWith("http://") && !liveLink.toLowerCase().startsWith("https://")) {
+                liveLink = "https://" + liveLink;
+            }
+
+            boolean hasLinks = (!githubLink.isEmpty() || !liveLink.isEmpty());
+
+            if (hasLinks) {
+                projEntry = projEntry.replace("{{#HAS_PROJECT_LINKS}}", "");
+                projEntry = projEntry.replace("{{/HAS_PROJECT_LINKS}}", "");
+            } else {
+                projEntry = removeSection(projEntry, "HAS_PROJECT_LINKS");
+            }
+
+            if (!githubLink.isEmpty()) {
                 projEntry = projEntry.replace("{{#GITHUB_LINK}}", "");
                 projEntry = projEntry.replace("{{/GITHUB_LINK}}", "");
                 projEntry = projEntry.replace("{{GITHUB_LINK}}",
                         escapeLatexSpecialChars(githubLink));
             } else {
                 projEntry = removeSection(projEntry, "GITHUB_LINK");
+            }
+
+            if (!liveLink.isEmpty()) {
+                projEntry = projEntry.replace("{{#LIVE_LINK}}", "");
+                projEntry = projEntry.replace("{{/LIVE_LINK}}", "");
+                projEntry = projEntry.replace("{{LIVE_LINK}}",
+                        escapeLatexSpecialChars(liveLink));
+            } else {
+                projEntry = removeSection(projEntry, "LIVE_LINK");
             }
 
             projContent.append(projEntry);
@@ -387,8 +547,8 @@ public class LatexServiceImpl implements LatexService {
                     escapeLatexSpecialChars(getStringValue(edu, "degree")));
             eduEntry = eduEntry.replace("{{UNIVERSITY}}",
                     escapeLatexSpecialChars(getStringValue(edu, "university")));
-            eduEntry = eduEntry.replace("{{LOCATION}}",
-                    escapeLatexSpecialChars(getStringValue(edu, "location")));
+            eduEntry = handleOptionalSection(eduEntry, "LOCATION",
+                    getStringValue(edu, "location"));
             eduEntry = eduEntry.replace("{{GRADUATION_YEAR}}",
                     escapeLatexSpecialChars(getStringValue(edu, "graduationYear")));
             eduEntry = handleOptionalSection(eduEntry, "GPA",
@@ -483,15 +643,18 @@ public class LatexServiceImpl implements LatexService {
         String startTag = "{{#" + sectionName + "}}";
         String endTag = "{{/" + sectionName + "}}";
 
-        int startIndex = template.indexOf(startTag);
-        if (startIndex == -1)
-            return template;
+        while (true) {
+            int startIndex = template.indexOf(startTag);
+            if (startIndex == -1)
+                break;
 
-        int endIndex = template.indexOf(endTag);
-        if (endIndex == -1)
-            return template;
+            int endIndex = template.indexOf(endTag, startIndex + startTag.length());
+            if (endIndex == -1)
+                break;
 
-        return template.substring(0, startIndex) + template.substring(endIndex + endTag.length());
+            template = template.substring(0, startIndex) + template.substring(endIndex + endTag.length());
+        }
+        return template;
     }
 
     private String extractLoopTemplate(String template, String loopName) {
@@ -643,7 +806,7 @@ public class LatexServiceImpl implements LatexService {
                     continue;
                 }
 
-                // Remove bullet markers if present (-, •, *, 1., 2., etc.)
+                // Strip typical lead bullets, keeping the actual point message
                 String point = trimmedLine.replaceAll("^[-•*]\\s*|^\\d+\\.\\s*", "").trim();
                 if (!point.isEmpty() && points.size() < 3) {
                     points.add(point);

@@ -51,45 +51,146 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException {
-        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        try {
+            OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
-        String email = oAuth2User.getAttribute("email");
-        String name = oAuth2User.getAttribute("name");
-        String picture = oAuth2User.getAttribute("picture");
-        String providerId = oAuth2User.getAttribute("sub");
+            String email = oAuth2User.getAttribute("email");
+            String name = oAuth2User.getAttribute("name");
+            String picture = oAuth2User.getAttribute("picture");
+            String providerId = oAuth2User.getAttribute("sub");
 
-        User user = userRepository.findByEmail(email)
-                .orElse(new User(email, name, picture, "google", providerId));
+            // Resolve existing account by providerId first (unique), then email.
+            // Looking up only by email causes Duplicate entry on provider_id when:
+            // - Google email changed, or
+            // - email is missing/mismatched but sub (providerId) already exists.
+            User user = resolveOrCreateUser(email, name, picture, providerId);
 
-        user.setName(name);
-        user.setPicture(picture);
+            // Preserve existing DB role. Only default brand-new users to USER.
+            if (user.getRole() == null) {
+                user.setRole(Role.USER);
+            }
 
-        // Preserve existing DB role. Only default brand-new users to USER.
-        if (user.getRole() == null) {
-            user.setRole(Role.USER);
+            // Break-glass: promote only if there are currently zero admins and email matches bootstrap config.
+            String effectiveEmail = user.getEmail();
+            if (shouldBootstrapAdmin(effectiveEmail)) {
+                logger.warn("[AUTH] Bootstrap admin grant for {} (zero admins present)", effectiveEmail);
+                user.setRole(Role.ADMIN);
+            }
+
+            userRepository.save(user);
+
+            String tokenEmail = user.getEmail();
+            String tokenName = user.getName() != null ? user.getName() : name;
+            String token = jwtUtil.generateToken(tokenEmail, tokenName, user.getRole().toString());
+
+            String code = UUID.randomUUID().toString();
+            logger.info("[AUTH] Generated one-time code for {}", tokenEmail);
+            authorizationCodeStore.store(code, token, tokenEmail, tokenName);
+
+            String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/callback")
+                    .queryParam("code", code)
+                    .build()
+                    .toUriString();
+
+            logger.info("[AUTH] Redirecting OAuth success for {}", tokenEmail);
+            getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+        } catch (Exception ex) {
+            // Never leave the browser on a backend Whitelabel / static-resource 500 page.
+            // Log full detail server-side; do not put internal exception text in the redirect URL (prod-safe).
+            logger.error("[AUTH] OAuth success handling failed: {}", ex.getMessage(), ex);
+            String failUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/login")
+                    .queryParam("error", "oauth_failed")
+                    .queryParam("message", "Sign-in failed. Please try again.")
+                    .build()
+                    .encode()
+                    .toUriString();
+            getRedirectStrategy().sendRedirect(request, response, failUrl);
+        }
+    }
+
+    /**
+     * Find user by Google {@code sub} (providerId), else by email, else create.
+     * Updates profile fields on existing users without re-inserting (avoids UK on provider_id).
+     */
+    private User resolveOrCreateUser(String email, String name, String picture, String providerId) {
+        User matched = null;
+
+        if (StringUtils.hasText(providerId)) {
+            matched = userRepository.findByProviderId(providerId).orElse(null);
+            if (matched != null) {
+                logger.info("[AUTH] Matched existing user id={} by providerId", matched.getId());
+            }
         }
 
-        // Break-glass: promote only if there are currently zero admins and email matches bootstrap config.
-        if (shouldBootstrapAdmin(email)) {
-            logger.warn("[AUTH] Bootstrap admin grant for {} (zero admins present)", email);
-            user.setRole(Role.ADMIN);
+        if (matched == null && StringUtils.hasText(email)) {
+            matched = userRepository.findByEmail(email).orElse(null);
+            if (matched != null) {
+                logger.info("[AUTH] Matched existing user id={} by email", matched.getId());
+            }
         }
 
-        userRepository.save(user);
+        if (matched == null) {
+            if (!StringUtils.hasText(email)) {
+                throw new IllegalStateException(
+                        "OAuth login missing email and no existing account for providerId=" + providerId);
+            }
+            if (!StringUtils.hasText(providerId)) {
+                throw new IllegalStateException(
+                        "OAuth login missing provider subject (sub) for email=" + email);
+            }
+            logger.info("[AUTH] Creating new user for email={}", email);
+            User created = new User(email, name, picture, "google", providerId);
+            created.setRole(Role.USER);
+            return created;
+        }
 
-        String token = jwtUtil.generateToken(email, name, user.getRole().toString());
+        // Effectively final reference for lambdas below
+        final User user = matched;
+        final Long userId = user.getId();
 
-        String code = UUID.randomUUID().toString();
-        logger.info("[AUTH] Generated one-time code for {}", email);
-        authorizationCodeStore.store(code, token, email, name);
+        // Existing user — refresh profile; never INSERT a second row for the same Google account.
+        if (StringUtils.hasText(name)) {
+            user.setName(name);
+        }
+        if (StringUtils.hasText(picture)) {
+            user.setPicture(picture);
+        }
 
-        String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/callback")
-                .queryParam("code", code)
-                .build()
-                .toUriString();
+        // Repair / link providerId if missing or outdated, without stealing another row's unique key
+        if (StringUtils.hasText(providerId) && !providerId.equals(user.getProviderId())) {
+            boolean providerIdOwnedByOther = userRepository.findByProviderId(providerId)
+                    .filter(other -> other.getId() != null && !other.getId().equals(userId))
+                    .isPresent();
+            if (!providerIdOwnedByOther) {
+                user.setProviderId(providerId);
+            } else {
+                logger.warn(
+                        "[AUTH] providerId {} already linked to another user; keeping user id={} providerId={}",
+                        providerId, userId, user.getProviderId());
+            }
+        }
 
-        logger.info("[AUTH] Redirecting OAuth success for {}", email);
-        getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+        // Allow Google email change when the new address is not taken
+        if (StringUtils.hasText(email) && !email.equalsIgnoreCase(user.getEmail())) {
+            boolean emailTaken = userRepository.findByEmail(email)
+                    .filter(other -> other.getId() != null && !other.getId().equals(userId))
+                    .isPresent();
+            if (!emailTaken) {
+                logger.info("[AUTH] Updating email for user id={} from {} to {}",
+                        userId, user.getEmail(), email);
+                user.setEmail(email);
+            } else {
+                logger.warn(
+                        "[AUTH] Google returned email {} already owned by another user; keeping {}",
+                        email, user.getEmail());
+            }
+        }
+
+        if (!StringUtils.hasText(user.getProvider())) {
+            user.setProvider("google");
+        }
+
+        return user;
     }
 
     private boolean shouldBootstrapAdmin(String email) {

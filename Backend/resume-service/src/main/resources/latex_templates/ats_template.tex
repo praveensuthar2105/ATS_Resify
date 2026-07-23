@@ -15,8 +15,8 @@
 \titleformat{\section}{\normalsize\bfseries\uppercase}{}{0em}{}[\titlerule]
 \titlespacing*{\section}{0pt}{8pt}{4pt}
 
-% Tight list spacing
-\setlist[itemize]{leftmargin=0.15in, topsep=2pt, itemsep=1pt, parsep=0pt}
+% Tight list spacing & Custom Dash Bullet Symbol
+\setlist[itemize]{label=-,leftmargin=0.15in, topsep=2pt, itemsep=1pt, parsep=0pt}
 
 \begin{document}
 
@@ -25,10 +25,10 @@
 {\Large \textbf{\uppercase{{{FULL_NAME}}}}}
 
 \vspace{2pt}
-{{PHONE_NUMBER}} $|$ {{EMAIL}}{{#LINKEDIN}} $|$ \href{{{LINKEDIN}}}{LinkedIn}{{/LINKEDIN}}{{#GITHUB}} $|$ \href{{{GITHUB}}}{GitHub}{{/GITHUB}}{{#PORTFOLIO}} $|$ \href{{{PORTFOLIO}}}{Portfolio}{{/PORTFOLIO}}{{#LOCATION}} $|$ {{LOCATION}}{{/LOCATION}}
+{\small {{PHONE_NUMBER}} $|$ {{EMAIL}}{{#LINKEDIN}} $|$ \href{{{LINKEDIN}}}{LinkedIn}{{/LINKEDIN}}{{#GITHUB}} $|$ \href{{{GITHUB}}}{GitHub}{{/GITHUB}}{{#PORTFOLIO}} $|$ \href{{{PORTFOLIO}}}{Portfolio}{{/PORTFOLIO}}{{#LOCATION}} $|$ {{LOCATION}}{{/LOCATION}}}
 \end{center}
 
-%----------EDUCATION----------
+%BEGIN_EDUCATION
 {{#HAS_EDUCATION}}
 \section*{Education}
 {{#EDUCATION}}
@@ -38,8 +38,9 @@
 
 {{/EDUCATION}}
 {{/HAS_EDUCATION}}
+%END_EDUCATION
 
-%----------EXPERIENCE----------
+%BEGIN_EXPERIENCE
 {{#HAS_EXPERIENCE}}
 \section*{Experience}
 {{#EXPERIENCE}}
@@ -52,20 +53,23 @@
 
 {{/EXPERIENCE}}
 {{/HAS_EXPERIENCE}}
+%END_EXPERIENCE
 
-%----------PROJECTS----------
+%BEGIN_PROJECTS
 {{#HAS_PROJECTS}}
 \section*{Projects}
 {{#PROJECTS}}
-\textbf{{{PROJECT_TITLE}}} $|$ \textit{{{TECHNOLOGIES}}}{{#HAS_PROJECT_LINKS}} \hfill{{#GITHUB_LINK}}\href{{{GITHUB_LINK}}}{GitHub}{{/GITHUB_LINK}}{{#LIVE_LINK}}{{#GITHUB_LINK}} $|$ {{/GITHUB_LINK}}\href{{{LIVE_LINK}}}{Live}{{/LIVE_LINK}}{{/HAS_PROJECT_LINKS}}
+\textbf{{{PROJECT_TITLE}}}{{#HAS_PROJECT_LINKS}} \hfill{{#GITHUB_LINK}}\href{{{GITHUB_LINK}}}{GitHub}{{/GITHUB_LINK}}{{#LIVE_LINK}}{{#GITHUB_LINK}} $|$ {{/GITHUB_LINK}}\href{{{LIVE_LINK}}}{Live}{{/LIVE_LINK}}{{/HAS_PROJECT_LINKS}}
+\\{\small\textit{Technologies: {{{TECHNOLOGIES}}}}}
 \begin{itemize}
 {{PROJECT_DESCRIPTION}}
 \end{itemize}
 
 {{/PROJECTS}}
 {{/HAS_PROJECTS}}
+%END_PROJECTS
 
-%----------TECHNICAL SKILLS----------
+%BEGIN_SKILLS
 {{#HAS_SKILLS}}
 \section*{Technical Skills}
 {{#SKILL_LANGUAGES}}\textbf{Languages:} {{SKILL_LANGUAGES}}{{/SKILL_LANGUAGES}}{{#SKILL_FRAMEWORKS}}
@@ -75,8 +79,9 @@
 \\\textbf{Cloud/DevOps:} {{SKILL_CLOUD}}{{/SKILL_CLOUD}}{{#SKILL_OTHER}}
 \\\textbf{Other:} {{SKILL_OTHER}}{{/SKILL_OTHER}}
 {{/HAS_SKILLS}}
+%END_SKILLS
 
-%----------CERTIFICATIONS----------
+%BEGIN_CERTIFICATIONS
 {{#HAS_CERTIFICATIONS}}
 \section*{Certifications}
 \begin{itemize}
@@ -85,8 +90,9 @@
 {{/CERTIFICATIONS}}
 \end{itemize}
 {{/HAS_CERTIFICATIONS}}
+%END_CERTIFICATIONS
 
-%----------ACHIEVEMENTS----------
+%BEGIN_ACHIEVEMENTS
 {{#HAS_ACHIEVEMENTS}}
 \section*{Achievements}
 \begin{itemize}
@@ -95,5 +101,6 @@
 {{/ACHIEVEMENTS}}
 \end{itemize}
 {{/HAS_ACHIEVEMENTS}}
+%END_ACHIEVEMENTS
 
 \end{document}

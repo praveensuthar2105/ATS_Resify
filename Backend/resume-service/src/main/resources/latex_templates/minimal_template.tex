@@ -57,8 +57,8 @@
 \newcommand{\subtext}[1]{
 #1\par\vspace{-0.2cm}}
 
-%%%% Set Item Spacing
-\setlist[itemize]{align=parleft,left=0pt..1em}
+%%%% Set Item Spacing & Custom Dash Bullet Symbol
+\setlist[itemize]{label=-,align=parleft,left=0pt..1em}
 
 %%%% Define Skills Bold Formatting (Uses bfseries instead of textbf to avoid parser name mismatch)
 \newcommand{\hskills}[1]{{\bfseries #1} }
@@ -79,15 +79,15 @@
 %%%%%%% --------------------------------------------------------------------------------------
 \begin{center}
     \begin{minipage}[b]{0.3\textwidth}
-            \large {{PHONE_NUMBER}} \\
-            \large \href{mailto:{{EMAIL}}}{{EMAIL}} 
+            \small {{PHONE_NUMBER}} \\
+            \small \href{mailto:{{EMAIL}}}{{EMAIL}} 
     \end{minipage}% 
     \begin{minipage}[b]{0.4\textwidth}
             \centering
             {\Huge \textbf{{{FULL_NAME}}}}
     \end{minipage}% 
     \begin{minipage}[b]{0.3\textwidth}
-            \flushright \large
+            \flushright \small
             {{#LINKEDIN}}\href{{{LINKEDIN}}}{{{LINKEDIN_DISPLAY}}} \\ {{/LINKEDIN}}
             {{#PORTFOLIO}}\href{{{PORTFOLIO}}}{Portfolio}{{/PORTFOLIO}}
     \end{minipage}   
@@ -98,13 +98,11 @@
 \vspace{-0.25cm}
 
 {{#SUMMARY}}
-\hskills{Impact:} {{SUMMARY}}
+\hskills{} {{SUMMARY}}
 \vspace{-0.2cm}
 {{/SUMMARY}}
 
-%%%%%%% --------------------------------------------------------------------------------------
-%%%%%%%  EDUCATION
-%%%%%%% --------------------------------------------------------------------------------------
+%BEGIN_EDUCATION
 {{#HAS_EDUCATION}}
 \section{Education}
 {{#EDUCATION}}
@@ -112,14 +110,14 @@
 \textbf{{{UNIVERSITY}}}{{#LOCATION}}, {{LOCATION}}{{/LOCATION}} \hfill {{GRADUATION_YEAR}}
 \textit{{{DEGREE}}}{{#GPA}} $|$ GPA: {{GPA}}{{/GPA}}
 \fi
-\subsection*{{{DEGREE}}, {\normalsize \normalfont {{UNIVERSITY}}}{{#LOCATION}}, {{LOCATION}}{{/LOCATION}}{{#GPA}}, GPA: {{GPA}}{{/GPA}} \hfill {{GRADUATION_YEAR}}}
+\subsection*{{{UNIVERSITY}}{{#LOCATION}} \hfill {{LOCATION}}{{/LOCATION}}}
+\subtext{\textit{{{DEGREE}}}{{#GPA}} $|$ GPA: {{GPA}}{{/GPA}} \hfill \normalfont {{GRADUATION_YEAR}}}
 \vspace{0.1cm}
 {{/EDUCATION}}
 {{/HAS_EDUCATION}}
+%END_EDUCATION
 
-%%%%%%% --------------------------------------------------------------------------------------
-%%%%%%%  EXPERIENCE
-%%%%%%% --------------------------------------------------------------------------------------
+%BEGIN_EXPERIENCE
 {{#HAS_EXPERIENCE}}
 \section{Experience}
 {{#EXPERIENCE}}
@@ -135,27 +133,23 @@
     \vspace{-0.3cm}
 {{/EXPERIENCE}}
 {{/HAS_EXPERIENCE}}
+%END_EXPERIENCE
 
-%%%%%%% --------------------------------------------------------------------------------------
-%%%%%%%  PROJECTS
-%%%%%%% --------------------------------------------------------------------------------------
+%BEGIN_PROJECTS
 {{#HAS_PROJECTS}}
 \section{Projects}
 {{#PROJECTS}}
-\iffalse
-\textbf{{{PROJECT_TITLE}}} $|$ \textit{{{TECHNOLOGIES}}} \hfill {{#GITHUB_LINK}} \href{{{GITHUB_LINK}}}{GitHub} {{/GITHUB_LINK}}
-\fi
-\subsection*{{{PROJECT_TITLE}} $|$ {\normalsize\normalfont \textit{{{TECHNOLOGIES}}}} \hfill {{#GITHUB_LINK}} \href{{{GITHUB_LINK}}}{GitHub} {{/GITHUB_LINK}}}
+\subsection*{{{PROJECT_TITLE}} \hfill {{#GITHUB_LINK}} \href{{{GITHUB_LINK}}}{GitHub} {{/GITHUB_LINK}}{{#LIVE_LINK}}{{#GITHUB_LINK}} $|$ {{/GITHUB_LINK}}\href{{{LIVE_LINK}}}{Live}{{/LIVE_LINK}}}
+\subtext{\small\textit{Technologies: {{{TECHNOLOGIES}}}}}
     \begin{itemize}[itemsep=0pt, parsep=1pt, leftmargin=1em]
         {{PROJECT_DESCRIPTION}}
     \end{itemize}
-    \vspace{-0.3cm}
+    \vspace{-0.25cm}
 {{/PROJECTS}}
 {{/HAS_PROJECTS}}
+%END_PROJECTS
 
-%%%%%%% --------------------------------------------------------------------------------------
-%%%%%%%  SKILLS
-%%%%%%% --------------------------------------------------------------------------------------
+%BEGIN_SKILLS
 {{#HAS_SKILLS}}
 \section{Skills}
 \iffalse
@@ -166,20 +160,19 @@
 \textbf{Cloud/DevOps}: {{SKILL_CLOUD}}
 \textbf{Other}: {{SKILL_OTHER}}
 \fi
-\begin{tabular}{p{11em} p{44em}}
-{{#SKILL_LANGUAGES}} \hskills{Languages} & {{SKILL_LANGUAGES}} \\ {{/SKILL_LANGUAGES}}
-{{#SKILL_FRAMEWORKS}} \hskills{Frameworks} & {{SKILL_FRAMEWORKS}} \\ {{/SKILL_FRAMEWORKS}}
-{{#SKILL_DATABASES}} \hskills{Databases} & {{SKILL_DATABASES}} \\ {{/SKILL_DATABASES}}
-{{#SKILL_TOOLS}} \hskills{Developer Tools} & {{SKILL_TOOLS}} \\ {{/SKILL_TOOLS}}
-{{#SKILL_CLOUD}} \hskills{Cloud/DevOps} & {{SKILL_CLOUD}} \\ {{/SKILL_CLOUD}}
-{{#SKILL_OTHER}} \hskills{Other} & {{SKILL_OTHER}} \\ {{/SKILL_OTHER}}
-\end{tabular}
-\vspace{-0.2cm}
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+{{#SKILL_LANGUAGES}} \hskills{Languages:} & {{SKILL_LANGUAGES}} \\ \vspace{1pt} {{/SKILL_LANGUAGES}}
+{{#SKILL_FRAMEWORKS}} \hskills{Frameworks:} & {{SKILL_FRAMEWORKS}} \\ \vspace{1pt} {{/SKILL_FRAMEWORKS}}
+{{#SKILL_DATABASES}} \hskills{Databases:} & {{SKILL_DATABASES}} \\ \vspace{1pt} {{/SKILL_DATABASES}}
+{{#SKILL_TOOLS}} \hskills{Developer Tools:} & {{SKILL_TOOLS}} \\ \vspace{1pt} {{/SKILL_TOOLS}}
+{{#SKILL_CLOUD}} \hskills{Cloud/DevOps:} & {{SKILL_CLOUD}} \\ \vspace{1pt} {{/SKILL_CLOUD}}
+{{#SKILL_OTHER}} \hskills{Other:} & {{SKILL_OTHER}} \\ {{/SKILL_OTHER}}
+\end{tabularx}
+\vspace{-0.15cm}
 {{/HAS_SKILLS}}
+%END_SKILLS
 
-%%%%%%% --------------------------------------------------------------------------------------
-%%%%%%%  CERTIFICATIONS
-%%%%%%% --------------------------------------------------------------------------------------
+%BEGIN_CERTIFICATIONS
 {{#HAS_CERTIFICATIONS}}
 \section{Certifications}
 \begin{itemize}[itemsep=0pt, parsep=1pt, leftmargin=1em]
@@ -189,10 +182,9 @@
 \end{itemize}
 \vspace{-0.2cm}
 {{/HAS_CERTIFICATIONS}}
+%END_CERTIFICATIONS
 
-%%%%%%% --------------------------------------------------------------------------------------
-%%%%%%%  ACHIEVEMENTS
-%%%%%%% --------------------------------------------------------------------------------------
+%BEGIN_ACHIEVEMENTS
 {{#HAS_ACHIEVEMENTS}}
 \section{Achievements} % \section
 \begin{tabular}[t]{ p{4em} p{50em}}
@@ -207,5 +199,6 @@
 \end{tabular}
 \vspace{-0.2cm}
 {{/HAS_ACHIEVEMENTS}}
+%END_ACHIEVEMENTS
 
 \end{document}

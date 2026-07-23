@@ -108,6 +108,19 @@ export const resumeAPI = {
     const response = await apiClient.get('/latex/templates');
     return response?.data;
   },
+
+  /**
+   * Generate LaTeX from structured resume data using a backend template.
+   * @param {object} resumeData - structured resume JSON
+   * @param {string} templateType - backend template id (ats | minimal)
+   */
+  generateLatex: async (resumeData, templateType = 'ats') => {
+    const response = await apiClient.post('/latex/generate', {
+      resumeData,
+      templateType,
+    });
+    return response?.data;
+  },
 };
 
 export default apiClient;

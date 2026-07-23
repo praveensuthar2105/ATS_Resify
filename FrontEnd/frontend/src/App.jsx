@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
+import { ResumeProvider } from './context/ResumeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import CookieConsent from './components/CookieConsent';
@@ -149,7 +150,9 @@ function AppContent() {
             <Route path="/create-resume/prompt" element={<CreatePrompt />} />
             <Route path="/edit-resume" element={
               <ProtectedRoute>
-                <EditResume />
+                <ResumeProvider>
+                  <EditResume />
+                </ResumeProvider>
               </ProtectedRoute>
             } />
             <Route path="/ats-checker" element={<Navigate to="/ats-checker/quick-score" replace />} />

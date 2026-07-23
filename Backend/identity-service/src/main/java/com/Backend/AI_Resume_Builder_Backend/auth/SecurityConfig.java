@@ -2,6 +2,8 @@ package com.Backend.AI_Resume_Builder_Backend.auth;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -10,22 +12,25 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+        private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
         @Autowired
         private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
         @Autowired
         private JwtAuthenticationFilter jwtAuthFilter;
+
+        @Value("${app.frontend-url:http://localhost:5173}")
+        private String frontendUrl;
 
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -37,6 +42,7 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/api/public/**",
                                                                 "/oauth2/**",
+                                                                "/login",
                                                                 "/login/**",
                                                                 "/auth/**",
                                                                 "/api/health/**",
@@ -58,9 +64,34 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth2 -> oauth2
-                                                .successHandler(oAuth2LoginSuccessHandler))
+                                                // This app has no server-rendered login page; OAuth starts at
+                                                // /oauth2/authorization/google and the UI lives on the frontend.
+                                                .loginPage(frontendUrl + "/login")
+                                                .successHandler(oAuth2LoginSuccessHandler)
+                                                .failureHandler((request, response, exception) -> {
+                                                        // Full exception stays in server logs only (no internal leak to browser/URL)
+                                                        logger.warn("[AUTH] OAuth2 login failed: {}",
+                                                                        exception.getMessage(), exception);
+                                                        String redirectUrl = UriComponentsBuilder
+                                                                        .fromUriString(frontendUrl + "/login")
+                                                                        .queryParam("error", "oauth_failed")
+                                                                        .queryParam("message",
+                                                                                        "Sign-in failed. Please try again.")
+                                                                        .build()
+                                                                        .encode()
+                                                                        .toUriString();
+                                                        response.sendRedirect(redirectUrl);
+                                                }))
                                 .exceptionHandling(ex -> ex
                                                 .authenticationEntryPoint((request, response, authException) -> {
+                                                        // Browser navigations → frontend login; API clients → JSON
+                                                        String accept = request.getHeader("Accept");
+                                                        boolean wantsHtml = accept != null
+                                                                        && accept.contains("text/html");
+                                                        if (wantsHtml) {
+                                                                response.sendRedirect(frontendUrl + "/login");
+                                                                return;
+                                                        }
                                                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                                                         response.setContentType("application/json");
                                                         response.getWriter().write(

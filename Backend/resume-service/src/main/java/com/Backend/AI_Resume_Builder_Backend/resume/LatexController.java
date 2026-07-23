@@ -62,8 +62,12 @@ public class LatexController {
             templateType = normalized;
         }
 
+        // Extract optional section configuration
+        @SuppressWarnings("unchecked")
+        Map<String, Object> sectionConfig = (Map<String, Object>) request.get("sectionConfig");
+
         // Generate LaTeX code
-        String latexCode = latexService.generateLatexCode(resumeData, templateType);
+        String latexCode = latexService.generateLatexCode(resumeData, templateType, sectionConfig);
 
         // Prepare response
         Map<String, Object> response = new HashMap<>();

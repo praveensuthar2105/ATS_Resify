@@ -50,9 +50,10 @@ const GenerateResume = () => {
   const [usageCount, setUsageCount] = useState(() => parseInt(localStorage.getItem('freeUsageCount') || '0', 10));
   const [selectedTemplate, setSelectedTemplate] = useState('ats');
 
+  // Kept in sync with backend LatexServiceImpl + src/lib/templates.js
   const availableTemplates = {
-    'ats': 'ATS-Engine v2.0 - Stripped of graphical noise to ensure optimized OCR parsing across major ATS platforms.',
-    'minimal': 'Minimal Typographic - Elegant serif-driven design for senior roles and high-impact clarity.'
+    'ats': 'ATS Optimized — Simple format that passes automated screening.',
+    'minimal': 'Minimal Typographic — Elegant design focused on pure typography for senior roles.'
   };
 
   const writingTips = [

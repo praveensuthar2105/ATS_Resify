@@ -39,6 +39,20 @@ export const ResumeProvider = ({ children }) => {
   const [useOnlineCompiler, setUseOnlineCompiler] = useState(false);
   const autoCompileTimer = useRef(null);
 
+  // Section custom config (ordering/renaming/visibility)
+  const [sectionConfig, setSectionConfig] = useState({
+    order: ['education', 'experience', 'projects', 'skills', 'certifications', 'achievements'],
+    titles: {
+      education: 'Education',
+      experience: 'Experience',
+      projects: 'Projects',
+      skills: 'Skills',
+      certifications: 'Certifications',
+      achievements: 'Achievements'
+    },
+    hidden: []
+  });
+
   // Monaco editor state
   const [monacoAvailable, setMonacoAvailable] = useState(false);
   const [MonacoEditor, setMonacoEditor] = useState(null);
@@ -737,17 +751,81 @@ ${sections}
   // Generate LaTeX when resumeData changes and compile to PDF
   useEffect(() => {
     if (!resumeData) return;
-    const latex = generateLatexFromData(resumeData);
-    setLatexCode(latex);
 
-    // Auto-compile if enabled
-    if (autoCompile && latex) {
-      if (autoCompileTimer.current) clearTimeout(autoCompileTimer.current);
-      autoCompileTimer.current = setTimeout(() => {
-        compileToPdf(latex);
-      }, 1000);
+    let storedTemplateId = 'ats';
+    try {
+      const storedResume = localStorage.getItem('generatedResume');
+      if (storedResume) {
+        const parsed = JSON.parse(storedResume);
+        const storedId = parsed?.selectedTemplate || parsed?.templateType || parsed?.templateId;
+        if (storedId) {
+          storedTemplateId = storedId.trim().toLowerCase();
+          // Normalize inline to avoid requiring a separate import
+          const aliases = {
+            modern: 'ats',
+            professional: 'ats',
+            creative: 'minimal',
+            minimalist: 'minimal',
+            minimalistic: 'minimal'
+          };
+          if (aliases[storedTemplateId]) {
+            storedTemplateId = aliases[storedTemplateId];
+          } else if (storedTemplateId !== 'ats' && storedTemplateId !== 'minimal') {
+            storedTemplateId = 'ats';
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore parse/read fallback
     }
-  }, [resumeData, generateLatexFromData, autoCompile, compileToPdf]);
+
+    const run = async () => {
+      let latex = '';
+      try {
+        const resumePayload = { ...resumeData };
+        delete resumePayload.selectedTemplate;
+        delete resumePayload.templateType;
+        delete resumePayload.templateId;
+
+        const response = await fetch(`${API_BASE_URL}/latex/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getAuthToken()}`
+          },
+          body: JSON.stringify({
+            resumeData: resumePayload,
+            templateType: storedTemplateId,
+            sectionConfig: sectionConfig
+          })
+        });
+        if (response.ok) {
+          const result = await response.json();
+          if (result?.latexCode) {
+            latex = result.latexCode;
+          }
+        }
+      } catch (err) {
+        console.warn('Backend latex generate failed in context, falling back to local ATS:', err);
+      }
+
+      if (!latex) {
+        latex = generateLatexFromData(resumeData);
+      }
+
+      setLatexCode(latex);
+
+      // Auto-compile if enabled
+      if (autoCompile && latex) {
+        if (autoCompileTimer.current) clearTimeout(autoCompileTimer.current);
+        autoCompileTimer.current = setTimeout(() => {
+          compileToPdf(latex);
+        }, 1000);
+      }
+    };
+
+    run();
+  }, [resumeData, sectionConfig, generateLatexFromData, autoCompile, compileToPdf]);
 
   // Handle LaTeX code changes (when in latex edit mode)
   const handleLatexChange = useCallback((value) => {
@@ -1019,6 +1097,8 @@ ${sections}
       setAutoCompile,
       useOnlineCompiler,
       setUseOnlineCompiler,
+      sectionConfig,
+      setSectionConfig,
       monacoAvailable,
       MonacoEditor,
       editorRef,

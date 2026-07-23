@@ -11,6 +11,9 @@ const Login = () => {
     const location = useLocation();
     const from = location.state?.from?.pathname || '/';
     const containerRef = useRef(null);
+    const searchParams = new URLSearchParams(location.search);
+    const oauthError = searchParams.get('error');
+    const oauthMessage = searchParams.get('message');
 
     const handleGoogleLogin = () => {
         // Store the 'from' path to redirect back after OAuth callback
@@ -125,6 +128,26 @@ const Login = () => {
                             </div>
                         </div>
                     </div>
+
+                    {oauthError && (
+                        <div
+                            className="mb-4 rounded-xl border px-3 py-2.5 text-left"
+                            style={{
+                                background: 'rgba(239, 68, 68, 0.06)',
+                                borderColor: 'rgba(239, 68, 68, 0.22)',
+                            }}
+                            role="alert"
+                        >
+                            <p className="text-xs font-semibold text-rose-700 font-sans">
+                                Sign-in failed. Please try again.
+                            </p>
+                            {oauthMessage && (
+                                <p className="text-[11px] text-rose-600/90 mt-1 font-sans break-words">
+                                    {oauthMessage}
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     {/* Google OAuth Button */}
                     <button

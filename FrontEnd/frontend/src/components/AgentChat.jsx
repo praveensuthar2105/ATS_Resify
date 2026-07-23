@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowLeft, Bot, Check, ChevronDown, Lightbulb, Plus, Send, Settings, Sparkles, Star, Target, User, X } from 'lucide-react';
 import agentAPI from '../services/agentApi';
+import { getTemplateMeta, getTemplateSelectOptions, normalizeTemplateId } from '../lib/templates';
 import './AgentChat.css';
 
 const QUICK_ACTIONS = [
@@ -32,13 +33,8 @@ const EXPERIENCE_LEVEL_OPTIONS = [
   { value: 'staff_principal', label: 'Staff / Principal (10+ years)' },
 ];
 
-const TEMPLATE_OPTIONS = [
-  { value: '', label: 'Agent Default' },
-  { value: 'modern', label: 'Modern' },
-  { value: 'professional', label: 'Professional' },
-  { value: 'creative', label: 'Creative' },
-  { value: 'minimalist', label: 'Minimalist' },
-];
+// Must match backend compile pipeline (ats | minimal) — shared with preview selector
+const TEMPLATE_OPTIONS = getTemplateSelectOptions({ includeAgentDefault: false });
 
 // Format timestamp
 const formatTime = (timestamp) => {
@@ -73,10 +69,16 @@ const renderSafeMessage = (text) => {
   });
 };
 
-const SettingsSelect = ({ name, defaultValue, options }) => {
+const SettingsSelect = ({ name, defaultValue, value, onChange, options }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState(defaultValue || '');
+  const isControlled = value !== undefined;
+  const [internalValue, setInternalValue] = useState(defaultValue || '');
+  const selectedValue = isControlled ? (value ?? '') : internalValue;
   const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!isControlled) setInternalValue(defaultValue || '');
+  }, [defaultValue, isControlled]);
 
   const selectedOption = options.find(opt => opt.value === selectedValue) || options[0];
 
@@ -89,6 +91,12 @@ const SettingsSelect = ({ name, defaultValue, options }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const choose = (next) => {
+    if (!isControlled) setInternalValue(next);
+    onChange?.(next);
+    setIsOpen(false);
+  };
 
   return (
     <div className="settings-select-wrap" ref={containerRef}>
@@ -110,10 +118,7 @@ const SettingsSelect = ({ name, defaultValue, options }) => {
               <li
                 key={option.value || 'default'}
                 className={`settings-select-option ${isSelected ? 'selected' : ''}`}
-                onClick={() => {
-                  setSelectedValue(option.value);
-                  setIsOpen(false);
-                }}
+                onClick={() => choose(option.value)}
               >
                 <span>{option.label}</span>
                 {isSelected && <Check size={12} className="settings-select-check" />}
@@ -126,7 +131,7 @@ const SettingsSelect = ({ name, defaultValue, options }) => {
   );
 };
 
-const AgentChat = ({ resumeContext, formData, userId }) => {
+const AgentChat = ({ resumeContext, formData, userId, activeTemplateId, onTemplateChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
@@ -704,9 +709,16 @@ const AgentChat = ({ resumeContext, formData, userId }) => {
                 <span className="label-text">Preferred Template</span>
                 <SettingsSelect
                   name="preferredTemplate"
-                  defaultValue={preferences.preferredTemplate}
+                  value={normalizeTemplateId(activeTemplateId || preferences.preferredTemplate)}
+                  onChange={(id) => {
+                    // Same selection as the preview-panel Template selector — not a second independent control
+                    onTemplateChange?.(normalizeTemplateId(id));
+                  }}
                   options={TEMPLATE_OPTIONS}
                 />
+                <span className="text-[10px] text-slate-400 mt-1 block leading-snug">
+                  Linked to editor preview ({getTemplateMeta(activeTemplateId).displayName}). Switching here recompiles the PDF.
+                </span>
               </label>
             </div>
           </div>
