@@ -9,6 +9,7 @@ import FeedbackPopup from '../components/FeedbackPopup';
 import { ArrowLeft, Loader2, Save, Download, RefreshCw, Trash2, CheckCircle2, ChevronDown, Award, Briefcase, GraduationCap, FolderGit, User, Award as CertificationIcon, Lightbulb } from 'lucide-react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../components/ui/accordion';
 import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from 'react-resizable-panels';
+import TemplateSelector from '../components/TemplateSelector';
 
 const FormItem = ({ label, value, onChange, placeholder, type = 'text', colspan = 1 }) => {
   const idId = React.useId ? React.useId() : label.replace(/\s+/g, '-');
@@ -843,18 +844,78 @@ ${sections}
     }
   }, [navigate]);
 
+  const [templateType, setTemplateType] = useState(() => {
+    try {
+      const stored = localStorage.getItem('generatedResume');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const storedId = parsed?.selectedTemplate || parsed?.templateType || parsed?.templateId;
+        if (storedId) {
+          const key = storedId.trim().toLowerCase();
+          const aliases = {
+            modern: 'ats',
+            professional: 'ats',
+            creative: 'minimal',
+            minimalist: 'minimal',
+            minimalistic: 'minimal'
+          };
+          return aliases[key] || (key === 'minimal' ? 'minimal' : 'ats');
+        }
+      }
+    } catch (e) {
+      void e;
+    }
+    return 'ats';
+  });
+
   useEffect(() => {
     if (!resumeData) return;
     if (editMode === 'latex') return;
 
-    const latex = generateLatexFromData(resumeData);
-    setLatexCode(latex);
+    const run = async () => {
+      let latex = '';
+      try {
+        const resumePayload = { ...resumeData };
+        delete resumePayload.selectedTemplate;
+        delete resumePayload.templateType;
+        delete resumePayload.templateId;
 
-    if (autoCompile && latex) {
-      if (autoCompileTimer.current) clearTimeout(autoCompileTimer.current);
-      autoCompileTimer.current = setTimeout(() => compileToPdf(latex), 500);
-    }
-  }, [resumeData, editMode, autoCompile, compileToPdf, generateLatexFromData, sectionConfig]);
+        const response = await fetch(`${API_BASE_URL}/latex/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getAuthToken()}`
+          },
+          body: JSON.stringify({
+            resumeData: resumePayload,
+            templateType: templateType,
+            sectionConfig: sectionConfig
+          })
+        });
+        if (response.ok) {
+          const result = await response.json();
+          if (result?.latexCode) {
+            latex = result.latexCode;
+          }
+        }
+      } catch (err) {
+        console.warn('Backend latex generate failed in EditResume, falling back to local:', err);
+      }
+
+      if (!latex) {
+        latex = generateLatexFromData(resumeData);
+      }
+
+      setLatexCode(latex);
+
+      if (autoCompile && latex) {
+        if (autoCompileTimer.current) clearTimeout(autoCompileTimer.current);
+        autoCompileTimer.current = setTimeout(() => compileToPdf(latex), 500);
+      }
+    };
+
+    run();
+  }, [resumeData, editMode, autoCompile, compileToPdf, generateLatexFromData, sectionConfig, templateType]);
 
   useEffect(() => {
     return () => {
@@ -1714,8 +1775,27 @@ ${sections}
               </div>
             </div>
 
-            {/* Zoom and manual sync */}
+            {/* Template Selector, Zoom, and manual sync */}
             <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1.5 rounded-xl">
+              <TemplateSelector 
+                templateId={templateType} 
+                onSelect={(id) => {
+                  setTemplateType(id);
+                  // Update generatedResume in localStorage to store selected template config
+                  try {
+                    const stored = localStorage.getItem('generatedResume');
+                    if (stored) {
+                      const parsed = JSON.parse(stored);
+                      parsed.selectedTemplate = id;
+                      parsed.templateType = id;
+                      localStorage.setItem('generatedResume', JSON.stringify(parsed));
+                    }
+                  } catch (e) {
+                    void e;
+                  }
+                }} 
+              />
+              <div className="w-px h-5 bg-slate-200/80 mx-1"></div>
               <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="w-8 h-8 flex items-center justify-center hover:bg-white text-slate-600 rounded-lg transition-all border border-transparent hover:border-slate-200/60 hover:shadow-sm cursor-pointer"><span className="material-symbols-outlined text-[16px]">remove</span></button>
               <span className="font-bold text-xs text-slate-700 w-11 text-center font-sans">{zoom}%</span>
               <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="w-8 h-8 flex items-center justify-center hover:bg-white text-slate-600 rounded-lg transition-all border border-transparent hover:border-slate-200/60 hover:shadow-sm cursor-pointer"><span className="material-symbols-outlined text-[16px]">add</span></button>
