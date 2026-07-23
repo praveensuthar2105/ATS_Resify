@@ -50,7 +50,9 @@ const AtsChecker = () => {
       }
       showToast('ATS ANALYSIS COMPLETE!', 'success');
       setTimeout(() => {
-        setShowFeedback(true);
+        if (!localStorage.getItem('hasSubmittedFeedback')) {
+          setShowFeedback(true);
+        }
       }, 1500);
     } catch (error) {
       console.error('Error calculating ATS score:', error);

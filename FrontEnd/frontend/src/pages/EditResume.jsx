@@ -1047,6 +1047,13 @@ ${sections}
       a.remove();
       URL.revokeObjectURL(url);
       setSnack({ open: true, type: 'success', text: 'PDF compilation downloaded' });
+      
+      // Trigger feedback popup after successful download
+      setTimeout(() => {
+        if (!localStorage.getItem('hasSubmittedFeedback')) {
+          setShowFeedback(true);
+        }
+      }, 1000);
     } else if (latexCode) {
       setSnack({ open: true, type: 'info', text: 'Initiating LaTeX PDF compilation...' });
       try {
@@ -1066,6 +1073,13 @@ ${sections}
         a.remove();
         URL.revokeObjectURL(downloadUrl);
         setSnack({ open: true, type: 'success', text: 'PDF compilation downloaded' });
+        
+        // Trigger feedback popup after successful download
+        setTimeout(() => {
+          if (!localStorage.getItem('hasSubmittedFeedback')) {
+            setShowFeedback(true);
+          }
+        }, 1000);
       } catch (error) {
         setSnack({ open: true, type: 'error', text: 'PDF generation failed: ' + error.message });
       }

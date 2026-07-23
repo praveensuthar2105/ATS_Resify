@@ -52,6 +52,7 @@ const FeedbackPopup = ({ isOpen, onClose }) => {
       }
 
       setSubmitted(true);
+      localStorage.setItem('hasSubmittedFeedback', 'true');
       setTimeout(() => {
         onClose();
       }, 2000);
@@ -71,13 +72,7 @@ const FeedbackPopup = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 font-mono text-brutal-white uppercase select-none">
       <div className="w-full max-w-lg bg-brutal-black brutal-border p-6 md:p-8 relative brutal-shadow-white animate-scale-in">
         
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-neon-green text-lg bg-transparent border-none cursor-pointer"
-        >
-          ✕
-        </button>
+
 
         {/* Accent boxes */}
         <div className="absolute -top-3 -left-3 w-6 h-6 bg-neon-green border-2 border-brutal-white"></div>
@@ -177,13 +172,6 @@ const FeedbackPopup = ({ isOpen, onClose }) => {
 
             {/* Submit Button */}
             <div className="flex gap-4 mt-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 py-3 border-2 border-brutal-white bg-transparent text-brutal-white font-bold text-xs hover:bg-white/10 btn-brutal transition-colors cursor-pointer"
-              >
-                CANCEL
-              </button>
               <button
                 type="submit"
                 disabled={submitting}
