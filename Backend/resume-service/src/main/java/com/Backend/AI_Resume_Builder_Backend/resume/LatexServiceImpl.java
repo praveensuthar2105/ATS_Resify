@@ -98,7 +98,12 @@ public class LatexServiceImpl implements LatexService {
         }
 
         template = template.replace("{{EMAIL}}", escapeLatexSpecialChars(getStringValue(personalInfo, "email")));
-        template = handleOptionalSection(template, "PHONE_NUMBER", getStringValue(personalInfo, "phoneNumber"));
+        String phoneVal = getStringValue(personalInfo, "phoneNumber");
+        if (phoneVal != null && !phoneVal.trim().isEmpty()) {
+            template = template.replace("{{PHONE_NUMBER}}", escapeLatexSpecialChars(phoneVal) + " \\\\");
+        } else {
+            template = template.replace("{{PHONE_NUMBER}}", "");
+        }
 
         // Handle optional links
         template = handleOptionalSection(template, "LINKEDIN",

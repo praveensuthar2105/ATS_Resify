@@ -380,7 +380,7 @@ const EditResume = () => {
       .replace(new RegExp(BACKSLASH_PLACEHOLDER, 'g'), '\\textbackslash{}');
   };
 
-  const generateLatexFromData = useCallback((data) => {
+  const generateLatexFromData = useCallback((data, templateType = 'ats') => {
     const pi = data?.personalInformation || {};
     const name = escapeLatex(pi.fullName || 'Your Name');
     const email = escapeLatex(pi.email || 'email@example.com');
@@ -550,8 +550,38 @@ const EditResume = () => {
 
     const sections = orderedSections.filter(Boolean).join('\n\n');
 
-    return `\\documentclass[10pt,letterpaper]{article}
+    if (templateType === 'minimal') {
+      return `\\documentclass[10pt,a4paper]{article}
+\\usepackage[utf8]{inputenc}
+\\usepackage[top=0.4in,bottom=0.4in,left=0.5in,right=0.5in]{geometry}
+\\usepackage{titlesec}
+\\usepackage{enumitem}
+\\usepackage[usenames,dvipsnames]{color}
+\\usepackage[hidelinks]{hyperref}
+\\usepackage{helvet}
+\\renewcommand{\\familydefault}{\\sfdefault}
+\\usepackage[T1]{fontenc}
 
+\\definecolor{UI_blue}{RGB}{32, 64, 151}
+\\titleformat{\\section}{\\color{UI_blue}\\scshape\\raggedright\\large}{}{0em}{}[\\vspace{-10pt}\\hrulefill]
+\\titlespacing*{\\section}{0pt}{8pt}{4pt}
+\\setlist[itemize]{label=-,leftmargin=0.15in, topsep=2pt, itemsep=1pt, parsep=0pt}
+
+\\begin{document}
+
+\\begin{center}
+{\\Huge \\textbf{${name}}}
+
+\\vspace{2pt}
+{\\small ${contactLine}}
+\\end{center}
+
+${sections}
+
+\\end{document}`;
+    }
+
+    return `\\documentclass[10pt,letterpaper]{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage[top=0.4in,bottom=0.4in,left=0.5in,right=0.5in]{geometry}
 \\usepackage{titlesec}
@@ -564,7 +594,6 @@ const EditResume = () => {
 
 \\titleformat{\\section}{\\normalsize\\bfseries\\uppercase}{}{0em}{}[\\titlerule]
 \\titlespacing*{\\section}{0pt}{8pt}{4pt}
-
 \\setlist[itemize]{leftmargin=0.15in, topsep=2pt, itemsep=1pt, parsep=0pt}
 
 \\begin{document}
@@ -903,7 +932,7 @@ ${sections}
       }
 
       if (!latex) {
-        latex = generateLatexFromData(resumeData);
+        latex = generateLatexFromData(resumeData, templateType);
       }
 
       setLatexCode(latex);
