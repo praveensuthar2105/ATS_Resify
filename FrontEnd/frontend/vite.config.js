@@ -9,6 +9,7 @@ export default defineConfig({
     // 'hidden' emits .map files but does NOT append the sourceMappingURL comment
     // in the bundle, so end-users never download them — only DevTools / Lighthouse use them.
     sourcemap: 'hidden',
+    chunkSizeWarningLimit: 1500,
 
     rollupOptions: {
       output: {
