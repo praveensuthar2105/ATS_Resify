@@ -79,8 +79,8 @@
 %%%%%%% --------------------------------------------------------------------------------------
 \begin{center}
     \begin{minipage}[b]{0.3\textwidth}
-            \small {{PHONE_NUMBER}}
-            \small \href{mailto:{{EMAIL}}}{{EMAIL}} 
+            \small {{PHONE_NUMBER}} \par
+            \small \href{mailto:{{EMAIL}}}{{{EMAIL}}} 
     \end{minipage}% 
     \begin{minipage}[b]{0.4\textwidth}
             \centering
@@ -88,8 +88,9 @@
     \end{minipage}% 
     \begin{minipage}[b]{0.3\textwidth}
             \flushright \small
-            {{#LINKEDIN}}\href{{{LINKEDIN}}}{{{LINKEDIN_DISPLAY}}} \\ {{/LINKEDIN}}
-            {{#PORTFOLIO}}\href{{{PORTFOLIO}}}{Portfolio}{{/PORTFOLIO}}
+            {{#LINKEDIN}}\href{{{LINKEDIN}}}{{{LINKEDIN_DISPLAY}}}\par{{/LINKEDIN}}
+            {{#GITHUB}}\href{{{GITHUB}}}{{{GITHUB_DISPLAY}}}\par{{/GITHUB}}
+            {{#PORTFOLIO}}\href{{{PORTFOLIO}}}{Portfolio}\par{{/PORTFOLIO}}
     \end{minipage}   
     
 \vspace{-0.15cm} 
@@ -161,11 +162,11 @@
 \textbf{Other}: {{SKILL_OTHER}}
 \fi
 \begin{tabularx}{\textwidth}{@{}l X@{}}
-{{#SKILL_LANGUAGES}} \hskills{Languages:} & {{SKILL_LANGUAGES}} \\ \vspace{1pt} {{/SKILL_LANGUAGES}}
-{{#SKILL_FRAMEWORKS}} \hskills{Frameworks:} & {{SKILL_FRAMEWORKS}} \\ \vspace{1pt} {{/SKILL_FRAMEWORKS}}
-{{#SKILL_DATABASES}} \hskills{Databases:} & {{SKILL_DATABASES}} \\ \vspace{1pt} {{/SKILL_DATABASES}}
-{{#SKILL_TOOLS}} \hskills{Developer Tools:} & {{SKILL_TOOLS}} \\ \vspace{1pt} {{/SKILL_TOOLS}}
-{{#SKILL_CLOUD}} \hskills{Cloud/DevOps:} & {{SKILL_CLOUD}} \\ \vspace{1pt} {{/SKILL_CLOUD}}
+{{#SKILL_LANGUAGES}} \hskills{Languages:} & {{SKILL_LANGUAGES}} \\[1pt] {{/SKILL_LANGUAGES}}
+{{#SKILL_FRAMEWORKS}} \hskills{Frameworks:} & {{SKILL_FRAMEWORKS}} \\[1pt] {{/SKILL_FRAMEWORKS}}
+{{#SKILL_DATABASES}} \hskills{Databases:} & {{SKILL_DATABASES}} \\[1pt] {{/SKILL_DATABASES}}
+{{#SKILL_TOOLS}} \hskills{Developer Tools:} & {{SKILL_TOOLS}} \\[1pt] {{/SKILL_TOOLS}}
+{{#SKILL_CLOUD}} \hskills{Cloud/DevOps:} & {{SKILL_CLOUD}} \\[1pt] {{/SKILL_CLOUD}}
 {{#SKILL_OTHER}} \hskills{Other:} & {{SKILL_OTHER}} \\ {{/SKILL_OTHER}}
 \end{tabularx}
 \vspace{-0.15cm}
@@ -187,7 +188,7 @@
 %BEGIN_ACHIEVEMENTS
 {{#HAS_ACHIEVEMENTS}}
 \section{Achievements} % \section
-\begin{tabular}[t]{ p{4em} p{50em}}
+\begin{tabularx}{\textwidth}{@{} p{4em} X @{}}
 {{#ACHIEVEMENTS}}
 \iffalse
 \begin{itemize}
@@ -196,7 +197,7 @@
 \fi
 \hskills{{{ACH_YEAR}}} & {{ACH_TITLE}}{{#ACH_DESCRIPTION}}: {{ACH_DESCRIPTION}}{{/ACH_DESCRIPTION}} \\
 {{/ACHIEVEMENTS}}
-\end{tabular}
+\end{tabularx}
 \vspace{-0.2cm}
 {{/HAS_ACHIEVEMENTS}}
 %END_ACHIEVEMENTS
