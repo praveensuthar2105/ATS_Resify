@@ -39,7 +39,7 @@ jobs:
     name: Deploy to VM1
     runs-on: ubuntu-latest
     needs: build-and-test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     
     steps:
       - name: Execute deployment commands via SSH
@@ -64,7 +64,7 @@ jobs:
     name: Deploy to VM2
     runs-on: ubuntu-latest
     needs: build-and-test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     
     steps:
       - name: Execute deployment commands via SSH
