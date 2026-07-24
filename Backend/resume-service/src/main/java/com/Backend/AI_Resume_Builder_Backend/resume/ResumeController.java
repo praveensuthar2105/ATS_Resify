@@ -85,6 +85,7 @@ public class ResumeController {
 						resumeRequest.getUserResumeDescription(), templateType, userEmail);
 
 		String jobId = event.getJobId();
+		final String finalTemplateType = templateType;
 		try {
 			resumeGenProducer.requestGeneration(event);
 		} catch (Exception e) {
@@ -92,7 +93,7 @@ public class ResumeController {
 			// Fallback to synchronous generation in a separate thread
 			new Thread(() -> {
 				try {
-					Map<String, Object> jsonObject = resumeService.generateResumeResponse(resumeRequest.getUserResumeDescription(), templateType);
+					Map<String, Object> jsonObject = resumeService.generateResumeResponse(resumeRequest.getUserResumeDescription(), finalTemplateType);
 					event.setResultData(jsonObject);
 					event.setStatus("COMPLETED");
 					resumeGenResultListener.putResult(jobId, event);
