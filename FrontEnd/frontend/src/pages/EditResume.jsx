@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AgentChat from '../components/AgentChat';
 import { decodeToken, getAuthToken } from '../utils/auth';
-import { API_BASE_URL } from '../services/api';
+import { API_BASE_URL, resumeAPI } from '../services/api';
 import SEO from '../components/SEO';
 import { Helmet } from 'react-helmet-async';
 import FeedbackPopup from '../components/FeedbackPopup';
@@ -832,6 +832,21 @@ ${sections}
 
         setResumeData(normalizedResumeData);
 
+        // Initial sync of the loaded resume to the database logs
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          let selectedTemplate = 'ats';
+          try {
+            const parsed = JSON.parse(storedResume);
+            if (parsed.selectedTemplate) {
+              selectedTemplate = parsed.selectedTemplate;
+            }
+          } catch(e) {}
+          resumeAPI.saveResume(normalizedResumeData, selectedTemplate).catch(e => {
+            console.warn('Initial save sync failed:', e);
+          });
+        }
+
         setLoading(false);
       } catch (error) {
         console.error('Error parsing resume data:', error);
@@ -1023,6 +1038,27 @@ ${sections}
 
     setResumeData(updatedResume);
     localStorage.setItem('generatedResume', JSON.stringify(updatedResume));
+
+    // Sync to backend DB logs if user is authenticated
+    try {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        let templateType = 'ats';
+        const stored = localStorage.getItem('generatedResume');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed.selectedTemplate) {
+              templateType = parsed.selectedTemplate;
+            }
+          } catch(e) {}
+        }
+        await resumeAPI.saveResume(updatedResume, templateType);
+      }
+    } catch (e) {
+      console.warn('Failed to sync resume log to backend:', e);
+    }
+
     setLastSavedAt(new Date());
     setSaving(false);
     setShowSavedIndicator(true);
@@ -1969,7 +2005,7 @@ ${sections}
         </div>
       )}
 
-      {showFeedback && <FeedbackPopup onClose={() => setShowFeedback(false)} />}
+      {showFeedback && <FeedbackPopup isOpen={showFeedback} onClose={() => setShowFeedback(false)} />}
     </div>
   );
 };

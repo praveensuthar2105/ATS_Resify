@@ -13,18 +13,25 @@ const CreatePrompt = () => {
   // Prompt generation states
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Generate Handler
   const handleGenerate = async () => {
     if (!prompt.trim() || prompt.trim().length < 20) return;
 
     setLoading(true);
+    setError(null);
 
     try {
       const response = await resumeAPI.generateResume(prompt, 'ats');
       
       // Pull data from response
       const d = response.data || response;
+      
+      if (d && d.error) {
+        throw new Error(d.message || d.error);
+      }
+      
       const pi = d.personalInformation || d.personalInfo || {};
       
       const rawExp = Array.isArray(d.experience) ? d.experience : [];
@@ -79,6 +86,7 @@ const CreatePrompt = () => {
       navigate('/edit-resume', { state: { triggerFeedback: true } });
     } catch (e) {
       console.error('AI Resume Generation failed:', e);
+      setError(e.message || 'AI Resume Generation failed. Please ensure the API is reachable.');
     } finally {
       setLoading(false);
     }
@@ -155,6 +163,16 @@ const CreatePrompt = () => {
               <span>Minimum 20 words recommended</span>
             </div>
           </div>
+
+          {error && (
+            <div className="mt-4 p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-800 text-xs text-left flex items-start gap-2.5 font-sans leading-relaxed">
+              <span className="material-symbols-outlined text-[16px] text-rose-500 mt-0.5 flex-shrink-0">error</span>
+              <div>
+                <span className="font-bold block mb-0.5">Generation Failed</span>
+                {error}
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="mt-8 p-5 rounded-2xl border border-[#14B8A6]/20 bg-teal-50/10 flex items-center justify-center gap-3 prompt-animate">

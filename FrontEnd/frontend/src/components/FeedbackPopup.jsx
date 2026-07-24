@@ -33,7 +33,7 @@ const FeedbackPopup = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.rating === 0) {
-      setError('PLEASE CHOOSE A RATING.');
+      setError('Please select a rating.');
       return;
     }
     setSubmitting(true);
@@ -48,7 +48,7 @@ const FeedbackPopup = ({ isOpen, onClose }) => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'FAILED TO TRANSMIT FEEDBACK.');
+        throw new Error(data.error || 'Failed to transmit feedback.');
       }
 
       setSubmitted(true);
@@ -57,7 +57,7 @@ const FeedbackPopup = ({ isOpen, onClose }) => {
         onClose();
       }, 2000);
     } catch (err) {
-      setError(err.message || 'AN ERROR OCCURRED.');
+      setError(err.message || 'An error occurred.');
     } finally {
       setSubmitting(false);
     }
@@ -65,46 +65,52 @@ const FeedbackPopup = ({ isOpen, onClose }) => {
 
   const getRatingLabel = () => {
     const value = hoverRating || formData.rating;
-    return value > 0 ? ['', 'POOR', 'FAIR', 'GOOD', 'VERY GOOD', 'EXCELLENT'][value] : 'CHOOSE RATING';
+    return value > 0 ? ['Choose Rating', 'Poor 😞', 'Fair 😐', 'Good 🙂', 'Very Good 😃', 'Excellent! 🤩'][value] : 'Choose Rating';
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 font-mono text-brutal-white uppercase select-none">
-      <div className="w-full max-w-lg bg-brutal-black brutal-border p-6 md:p-8 relative brutal-shadow-white animate-scale-in">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 select-none animate-fade-in">
+      <div className="w-full max-w-md bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 rounded-[2.5rem] p-8 shadow-2xl relative animate-scale-in">
         
-
-
-        {/* Accent boxes */}
-        <div className="absolute -top-3 -left-3 w-6 h-6 bg-neon-green border-2 border-brutal-white"></div>
-        <div className="absolute -bottom-3 -right-3 w-6 h-6 bg-neon-green border-2 border-brutal-white"></div>
+        {/* Close Button */}
+        <button 
+          onClick={onClose}
+          type="button"
+          className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[20px] block">close</span>
+        </button>
 
         {submitted ? (
-          <div className="text-center py-8 flex flex-col items-center justify-center gap-4">
-            <span className="material-symbols-outlined text-6xl text-neon-green animate-bounce">check_circle</span>
-            <h3 className="text-xl font-black">FEEDBACK TRANSMITTED</h3>
-            <p className="text-xs text-slate-400 font-mono italic">SESSION ACTIVE. REMAINING ON THIS PAGE...</p>
+          <div className="text-center py-10 flex flex-col items-center justify-center gap-4">
+            <div className="w-16 h-16 bg-teal-50 dark:bg-teal-950/30 rounded-full flex items-center justify-center text-teal-500 dark:text-teal-400 shadow-inner">
+              <span className="material-symbols-outlined text-4xl animate-bounce">check_circle</span>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Feedback Submitted!</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">Thank you for helping us improve Resify.</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <div>
-              <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
-                <span className="w-2 h-2 bg-neon-green animate-pulse"></span>
-                TRANSMIT FEEDBACK //
+              <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">
+                Share Your Feedback
               </h3>
-              <p className="text-[10px] text-slate-500 lowercase mt-1">help us refine the resume optimization engine.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Help us refine the AI resume builder and ATS scanner.
+              </p>
             </div>
 
             {error && (
-              <div className="p-3 border border-red-500 bg-red-500/10 text-red-500 text-xs font-bold">
-                ERROR: {error}
+              <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 text-rose-600 dark:text-rose-400 text-xs font-semibold rounded-2xl">
+                {error}
               </div>
             )}
 
             {/* Rating Stars */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-bold text-slate-400">01 // RATING_INDEX</label>
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1.5">
+              <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">01. Rating</label>
+              <div className="flex items-center gap-4">
+                <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
@@ -112,74 +118,83 @@ const FeedbackPopup = ({ isOpen, onClose }) => {
                       onClick={() => setFormData({ ...formData, rating: star })}
                       onMouseEnter={() => setHoverRating(star)}
                       onMouseLeave={() => setHoverRating(0)}
-                      className={`text-2xl bg-transparent border-none cursor-pointer p-0 leading-none transition-colors ${
-                        star <= (hoverRating || formData.rating) ? 'text-neon-green' : 'text-slate-600'
-                      }`}
+                      className="text-3xl bg-transparent border-none cursor-pointer p-1 transition-all hover:scale-125 active:scale-90"
                     >
-                      ★
+                      <span className={`material-symbols-outlined text-3xl block leading-none font-variation-fill ${
+                        star <= (hoverRating || formData.rating) 
+                          ? 'text-amber-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]' 
+                          : 'text-slate-200 dark:text-slate-800'
+                      }`} style={{ fontVariationSettings: star <= (hoverRating || formData.rating) ? "'FILL' 1" : "'FILL' 0" }}>
+                        star
+                      </span>
                     </button>
                   ))}
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 border border-slate-700 text-neon-green bg-neon-green/5">
+                <span className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-900 text-slate-700 dark:text-slate-300 bg-slate-50/50 dark:bg-slate-900/20">
                   {getRatingLabel()}
                 </span>
               </div>
             </div>
 
             {/* Message Area */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-slate-400">02 // MESSAGE_DUMP</label>
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">02. Comments</label>
               <textarea
                 name="message"
                 value={formData.message}
                 onChange={handleChange}
-                placeholder="> TELL US WHAT YOU LIKED OR WHAT COULD BE IMPROVED..."
+                placeholder="What did you like? What can we improve?"
                 rows={3}
                 required
-                className="w-full bg-black/40 border-2 border-brutal-white p-3 font-mono text-xs brutal-scrollbar focus:outline-none focus:border-neon-green transition-colors resize-none text-brutal-white"
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-900 rounded-2xl p-4 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none transition-all resize-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               />
             </div>
 
-            {/* Authenticated fields (optional display/hide) */}
+            {/* Authenticated fields */}
             {!isAuthenticated && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-400">03 // NAME</label>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">03. Your Name</label>
                   <input
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    placeholder="NAME"
+                    placeholder="Jane Doe"
                     required
-                    className="bg-black/40 border-2 border-brutal-white p-3 font-mono text-xs focus:outline-none focus:border-neon-green text-brutal-white"
+                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-900 rounded-2xl p-4 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none transition-all focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                   />
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-400">04 // EMAIL</label>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">04. Email Address</label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="EMAIL"
+                    placeholder="jane@example.com"
                     required
-                    className="bg-black/40 border-2 border-brutal-white p-3 font-mono text-xs focus:outline-none focus:border-neon-green text-brutal-white"
+                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-900 rounded-2xl p-4 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none transition-all focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                   />
                 </div>
               </div>
             )}
 
             {/* Submit Button */}
-            <div className="flex gap-4 mt-2">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex-1 py-3 border-2 border-brutal-white bg-neon-green text-black font-black text-xs btn-brutal cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
-              >
-                {submitting ? 'TRANSMITTING...' : 'SUBMIT PROTOCOL'}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full py-4 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold text-sm rounded-2xl hover:shadow-lg hover:shadow-teal-500/10 active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-md border-0"
+            >
+              {submitting ? (
+                <>
+                  <span className="material-symbols-outlined text-[18px] animate-spin">autorenew</span>
+                  Submitting Feedback...
+                </>
+              ) : (
+                'Submit Feedback'
+              )}
+            </button>
           </form>
         )}
       </div>

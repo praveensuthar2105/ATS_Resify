@@ -161,4 +161,35 @@ public class ResumeController {
 		return ResponseEntity.ok(response);
 	}
 
+	/**
+	 * Endpoint to manually log or save a resume to the database.
+	 * Can be used for custom scratch, imported, or updated resumes.
+	 */
+	@PostMapping("/save")
+	public ResponseEntity<?> saveResumeLog(@RequestBody Map<String, Object> requestBody) {
+		String templateType = (String) requestBody.get("templateType");
+		if (templateType == null || templateType.trim().isEmpty()) {
+			templateType = "ats";
+		}
+
+		org.springframework.security.core.Authentication authentication = 
+				org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+		
+		if (authentication != null 
+				&& authentication.isAuthenticated() 
+				&& !authentication.getName().equals("anonymousUser")) {
+			String email = authentication.getName();
+			try {
+				resumeService.saveResumeToDb(email, templateType, requestBody);
+				return ResponseEntity.ok(Map.of("success", true, "message", "Resume logged successfully"));
+			} catch (Exception e) {
+				log.error("Failed to save resume log manually", e);
+				return new ResponseEntity<>(Map.of("error", "Failed to save resume log", "message", e.getMessage()), 
+						HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+		}
+		return new ResponseEntity<>(Map.of("error", "Unauthorized. Please sign in to log your resume."), 
+				HttpStatus.UNAUTHORIZED);
+	}
+
 }

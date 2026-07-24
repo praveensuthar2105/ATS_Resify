@@ -64,6 +64,14 @@ export const resumeAPI = {
     return data;
   },
 
+  saveResume: async (resumeData, templateType = 'ats') => {
+    const response = await apiClient.post('/resume/save', {
+      templateType,
+      data: resumeData
+    });
+    return response?.data;
+  },
+
   calculateAtsScore: async (file, jobDescription = '') => {
     const formData = new FormData();
     formData.append('file', file);
