@@ -59,6 +59,9 @@ jobs:
             # Pull latest changes
             git pull origin main
             
+            # Force remove old conflicting containers from previous paths
+            docker rm -f resify-intelligence-service || true
+            
             # Restart backend using Docker Compose for VM1 (try modern docker compose plugin first)
             if command -v docker-compose &> /dev/null; then
               docker-compose -f docker-compose.vm1.yml down
@@ -91,6 +94,9 @@ jobs:
             
             # Pull latest changes
             git pull origin main
+            
+            # Force remove old conflicting containers from previous paths
+            docker rm -f resify-discovery-server resify-gateway-service resify-identity-service || true
             
             # Restart backend using Docker Compose for VM2 (try modern docker compose plugin first)
             if command -v docker-compose &> /dev/null; then
