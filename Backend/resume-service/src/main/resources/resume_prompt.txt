@@ -1,45 +1,71 @@
 Generate a professional IT job resume in JSON format based on the following description.
 
 CRITICAL REQUIREMENTS:
-1. THE RESUME MUST FIT ON ONE PAGE. Keep all content concise and focused.
-2. FOR EVERY PROJECT: The "description" field MUST contain EXACTLY 3 bullet points separated by newlines. Format as: "- Point 1\n- Point 2\n- Point 3". NEVER provide empty descriptions, fewer than 3 points, or more than 3 points. Each point must be substantive and describe a project feature, technology, impact, or accomplishment.
-   - INVALID EXAMPLES (DO NOT DO THIS):
-     - "" (empty string) ❌
-     - "Some description" (only 1 point) ❌
-     - "- Point 1\n- Point 2" (only 2 points) ❌
-     - "- Point 1\n- Point 2\n- Point 3\n- Point 4" (4 points - too many) ❌
-   - VALID EXAMPLES (DO THIS):
-     - "- Built responsive web application using React and Redux\n- Implemented REST APIs with Node.js and Express\n- Deployed on AWS with Docker containerization" ✓
-     - "- Created automated testing suite with 95% code coverage\n- Optimized database queries reducing response time by 40%\n- Integrated real-time notifications using WebSocket" ✓
-3. All content must be professional, realistic, and relevant to the user's description.
+1. THE RESUME MUST FIT ON ONE PAGE. Keep overall content focused; invest depth in project descriptions without filler.
+2. PROJECT DESCRIPTIONS (MOST IMPORTANT — follow carefully):
+   For EVERY project, the "description" field must be a multi-line bullet list (each line starts with "- ", bullets separated by \n).
+
+   A) DETAIL LEVEL:
+   - Write DETAILED, specific bullets — not vague one-liners.
+   - Cover what the project does, what YOU built, how it works, tech choices, and real outcomes (metrics when plausible).
+   - Expand on architecture, features, integrations, performance, security, testing, or deployment when relevant to that project.
+   - Prefer concrete details over generic phrases like "worked on backend" or "developed a web app".
+
+   B) BULLET COUNT DEPENDS ON THE PROJECT (NOT FIXED):
+   - Do NOT force every project to have the same number of bullets.
+   - Scale depth to project scope and the detail available in the user's input:
+     • Small / simple / minor project → 2–3 bullets
+     • Medium / typical project → 3–5 bullets
+     • Large / complex / flagship project → 5–7 bullets
+   - Never leave description empty. Minimum 2 bullets per project.
+   - Do not invent fluff bullets just to hit a number; every bullet must add unique value.
+
+   C) ATS-OPTIMIZED + HUMANIZED TONE:
+   - ATS: use clear, scannable language; include real tech keywords and role-relevant terms naturally (frameworks, languages, tools, patterns) — no keyword stuffing.
+   - ATS: start each bullet with a strong past-tense action verb (Built, Designed, Implemented, Integrated, Optimized, Automated, Deployed, etc.).
+   - ATS: prefer plain wording over buzzword soup; avoid icons, tables, or special characters that break parsers.
+   - Humanized: write like a thoughtful engineer describing real work — natural, confident, specific, readable.
+   - Avoid robotic/template phrasing, filler adjectives ("synergistic", "cutting-edge", "leveraged robust solutions"), and repetitive sentence openers across bullets.
+   - Mix sentence rhythm slightly; keep professional but not stiff. Sound human, not AI-generated.
+   - When possible, include impact (%, latency, users, reliability, time saved) in plain language.
+
+   D) FORMAT RULES:
+   - Valid format only: "- Detailed bullet one\n- Detailed bullet two\n- Detailed bullet three"
+   - INVALID: empty string, single paragraph without bullets, one ultra-short bullet, identical bullets across projects.
+   - VALID example (medium project, 4 bullets — count is illustrative, not a rule):
+     "- Built a full-stack resume builder that turns free-text career details into structured, ATS-friendly PDF resumes\n- Designed Spring Boot microservices for auth, resume generation, and scoring, with JWT-secured APIs and Redis caching for faster repeat requests\n- Integrated Gemini for content generation and scoring, then tuned prompts so project bullets stay specific and keyword-rich without sounding robotic\n- Containerized services with Docker and set up CI-friendly builds so local and cloud deploys stayed consistent"
+   - VALID example (small project, 2 bullets):
+     "- Created a CLI tool in Python that batch-renames and validates CSV exports for a small data cleanup workflow\n- Added simple logging and unit tests so failures were easy to spot before shipping files downstream"
+
+3. All content must be professional, realistic, and relevant to the user's description. Do not invent employers, degrees, or certifications the user never implied.
 
 TEMPLATE STYLE: {{templateType}}
 
 TEMPLATE-SPECIFIC INSTRUCTIONS:
 - If template is "modern": Use dynamic, contemporary language. Emphasize innovation, technology leadership, and modern methodologies. Use action verbs like "spearheaded", "engineered", "innovated", "optimized". Focus on metrics and impact.
 
-- If template is "ats": Use clear, keyword-rich language. Include standard industry terms and certifications. Use simple action verbs like "managed", "developed", "implemented", "created". Ensure all technical skills are explicitly mentioned. Format should be ATS-scanner friendly.
+- If template is "ats": Prioritize clear, keyword-rich, human-sounding language. Include standard industry terms and tech names explicitly. Prefer straightforward action verbs (built, developed, implemented, improved). Keep project bullets ATS-scanner friendly while still detailed and natural.
 
-- If template is "creative": Use expressive, unique language that showcases creativity and personality. Emphasize design thinking, innovation, and creative problem-solving. Use vivid action verbs like "crafted", "designed", "conceptualized", "transformed". Highlight creative achievements and unique projects.
+- If template is "creative": Use expressive but still professional language. Emphasize design thinking and creative problem-solving without sacrificing clarity or ATS readability in project bullets.
 
-- If template is "executive": Use formal, authoritative language. Focus on strategic leadership, business impact, and high-level achievements. Use executive-level action verbs like "directed", "orchestrated", "established", "transformed". Emphasize revenue growth, team leadership, and organizational impact.
+- If template is "executive": Use formal, authoritative language. Focus on strategic leadership and business impact, while project bullets remain concrete and scannable.
 
 CONTENT LENGTH GUIDELINES (CRITICAL FOR ONE-PAGE FIT):
-- Summary: Maximum 2-3 sentences (40-60 words)
-- Experience: Maximum 2-3 most relevant positions, each with 2-3 concise bullet points (max 20 words per point)
-- Projects: Maximum 2-3 most impressive projects. FOR EACH PROJECT, THE DESCRIPTION FIELD MUST CONTAIN EXACTLY 3 BULLET POINTS (no more, no less). Each point should start with a dash (-) and describe a key feature, technology, impact, or accomplishment. Separate points with \n character. NO EMPTY DESCRIPTIONS ALLOWED.
-- Education: Keep concise - degree, institution, year only
-- Certifications: List only the most relevant (max 3-4)
-- Achievements: Only exceptional ones (max 2-3)
-- Focus on quality over quantity - include only the most impactful and relevant information
+- Summary: Maximum 2–3 sentences (40–60 words), humanized and role-focused
+- Experience: Maximum 2–3 most relevant positions, each with 2–3 concise bullet points (max ~25 words per point)
+- Projects: Maximum 2–3 most impressive projects. For EACH project, write a DETAILED description with a VARIABLE number of bullets based on project complexity (see rule 2). Prefer depth on the strongest project.
+- Education: Keep concise — degree, institution, year only
+- Certifications: List only the most relevant (max 3–4)
+- Achievements: Only exceptional ones (max 2–3)
+- Focus on quality over quantity — project descriptions are the exception where richer detail is encouraged
 
 ONE-PAGE OVERFLOW PRIORITIZATION (if content exceeds one page):
 1. First, reduce the number of projects (keep most recent/impactful 2 projects)
 2. Then, reduce experience positions (keep most recent/relevant 2 positions)
-3. Only then, shorten individual bullet points to be more concise
-4. Preserve the required bullet count per item (2-4 for projects, 2-3 for experience)
+3. Only then, slightly tighten individual bullets — do not gut project detail first
+4. Keep project bullet count flexible (2–7 based on project size); keep experience at 2–3 bullets
 5. Prefer recent and high-impact achievements over older ones
-6. Never sacrifice clarity for brevity - maintain professional language
+6. Never sacrifice clarity for brevity — maintain professional, human language
 
 IMPORTANT: Please respond ONLY in English language. Do not use Chinese or any other language.
 
@@ -54,6 +80,7 @@ SKILLS GENERATION GUIDELINES:
 - Only include skills that are mentioned or strongly implied by the user's description
 - Organize skills logically: put most relevant/strongest skills first in each category
 - Ensure skills are current and industry-relevant based on the described experience
+- Mirror important project tech keywords in the skills section for ATS consistency
 
 Ensure the JSON is consistent, well-structured, and contains all specified keys, even if some values are empty strings, empty arrays, or null. Use the exact keys and hierarchy provided below.
 
@@ -73,7 +100,7 @@ JSON Structure Requirements (all content must be in English):
     "linkedIn": "string or null",
     "gitHub": "string or null"
   },
-  "summary": "string (professional summary in English)",
+  "summary": "string (professional summary in English — natural, human tone)",
   "skills": {
     "languages": ["string (programming languages like Java, Python, JavaScript, C++, TypeScript, Go, etc.)"],
     "frameworks": ["string (frameworks and libraries like Spring Boot, Spring Security, React, Angular, Vue.js, Node.js, Express.js, Django, Flask, .NET, Hibernate, JPA, etc.)"],
@@ -109,7 +136,7 @@ JSON Structure Requirements (all content must be in English):
   "projects": [
     {
       "title": "string (in English)",
-      "description": "string (in English): EXACTLY 3 bullet points separated by newline characters",
+      "description": "string (in English): multi-line bullets separated by \\n; count depends on project complexity (2–7); detailed, ATS-optimized, humanized tone — NOT a fixed 3 bullets",
       "technologiesUsed": ["string (in English)"],
       "githubLink": "string or null"
     }
@@ -123,4 +150,4 @@ JSON Structure Requirements (all content must be in English):
   "extraInformation": "string (in English)"
 }
 
-Please generate realistic and professional content based on the user's description. If information is not provided, make reasonable assumptions or leave fields empty/null as appropriate.
+Please generate realistic and professional content based on the user's description. If information is not provided, make reasonable assumptions or leave fields empty/null as appropriate. For projects, always produce detailed, project-specific descriptions with a natural human writing style that still reads well for ATS systems.

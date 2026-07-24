@@ -42,11 +42,21 @@ public class ResumeController {
 		Map<String, Object> jsonObject = resumeService
 				.generateResumeResponse(resumeRequest.getUserResumeDescription(), templateType);
 
-		// Save resume generation record if user is authenticated
+		// Save resume generation log only for successful authenticated generations
+		boolean generationSucceeded = jsonObject != null
+				&& !jsonObject.containsKey("error")
+				&& jsonObject.get("data") != null;
 		org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-		if (authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser")) {
+		if (generationSucceeded
+				&& authentication != null
+				&& authentication.isAuthenticated()
+				&& !authentication.getName().equals("anonymousUser")) {
 			String email = authentication.getName();
-			resumeService.saveResumeToDb(email, templateType, jsonObject);
+			try {
+				resumeService.saveResumeToDb(email, templateType, jsonObject);
+			} catch (Exception e) {
+				log.warn("Failed to persist resume generation log for {}: {}", email, e.getMessage());
+			}
 		}
 
 		return new ResponseEntity<>(jsonObject, HttpStatus.OK);
@@ -74,7 +84,25 @@ public class ResumeController {
 				com.Backend.AI_Resume_Builder_Backend.messaging.ResumeGenEvent.createRequest(
 						resumeRequest.getUserResumeDescription(), templateType, userEmail);
 
-		String jobId = resumeGenProducer.requestGeneration(event);
+		String jobId = event.getJobId();
+		try {
+			resumeGenProducer.requestGeneration(event);
+		} catch (Exception e) {
+			log.warn("RabbitMQ is down, falling back to synchronous generation. Error: {}", e.getMessage());
+			// Fallback to synchronous generation in a separate thread
+			new Thread(() -> {
+				try {
+					Map<String, Object> jsonObject = resumeService.generateResumeResponse(resumeRequest.getUserResumeDescription(), templateType);
+					event.setResultData(jsonObject);
+					event.setStatus("COMPLETED");
+					resumeGenResultListener.putResult(jobId, event);
+				} catch (Exception ex) {
+					event.setErrorMessage(ex.getMessage());
+					event.setStatus("FAILED");
+					resumeGenResultListener.putResult(jobId, event);
+				}
+			}).start();
+		}
 
 		Map<String, Object> response = new HashMap<>();
 		response.put("jobId", jobId);
@@ -105,10 +133,22 @@ public class ResumeController {
 
 		if ("COMPLETED".equals(event.getStatus())) {
 			response.put("data", event.getResultData());
-			
-			// Save to DB on completion
-			if (!"anonymous".equals(event.getUserEmail())) {
-				resumeService.saveResumeToDb(event.getUserEmail(), event.getTemplateType(), event.getResultData());
+
+			// Save resume generation log only for successful authenticated generations
+			Map<String, Object> resultData = event.getResultData();
+			boolean generationSucceeded = resultData != null
+					&& !resultData.containsKey("error")
+					&& resultData.get("data") != null;
+			if (generationSucceeded
+					&& event.getUserEmail() != null
+					&& !"anonymous".equals(event.getUserEmail())) {
+				try {
+					String templateType = event.getTemplateType() != null ? event.getTemplateType() : "modern";
+					resumeService.saveResumeToDb(event.getUserEmail(), templateType, resultData);
+				} catch (Exception e) {
+					log.warn("Failed to persist async resume generation log for {}: {}",
+							event.getUserEmail(), e.getMessage());
+				}
 			}
 
 			resumeGenResultListener.consumeResult(jobId);

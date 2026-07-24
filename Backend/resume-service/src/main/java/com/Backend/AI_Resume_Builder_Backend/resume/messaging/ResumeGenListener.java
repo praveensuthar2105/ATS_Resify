@@ -42,10 +42,11 @@ public class ResumeGenListener {
                 throw new RuntimeException(resultData.get("error").toString());
             }
 
-            // Publish success result
+            // Publish success result (preserve userEmail + templateType for DB logging on poll)
             ResumeGenEvent resultEvent = ResumeGenEvent.createResult(
                     event.getJobId(), resultData);
             resultEvent.setUserEmail(event.getUserEmail());
+            resultEvent.setTemplateType(event.getTemplateType());
 
             rabbitTemplate.convertAndSend(
                     RabbitMQConstants.EXCHANGE,

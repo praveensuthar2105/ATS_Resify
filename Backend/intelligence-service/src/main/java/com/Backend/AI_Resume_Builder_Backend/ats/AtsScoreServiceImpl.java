@@ -215,6 +215,15 @@ public class AtsScoreServiceImpl implements AtsScoreService {
                     fixPenaltiesFromPreAnalysis(dataMap, resumeText, 1);
 
                     log.info("ATS text analysis succeeded on attempt {}", attempt);
+                    logSafeAtsMetadata(result);
+
+                    // Persist ATS check record (same as sync path)
+                    try {
+                        recordAtsCheck(hasJd, result, resumeText, "async-text-upload");
+                    } catch (Exception e) {
+                        log.warn("Failed to persist async ATS check record: {}", e.getMessage());
+                    }
+
                     result.put("resumeText", resumeText);
                     return result;
                 }

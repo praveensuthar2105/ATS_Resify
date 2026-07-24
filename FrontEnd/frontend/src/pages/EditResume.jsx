@@ -454,10 +454,14 @@ const EditResume = () => {
 
         let bullets = '';
         if (proj.description) {
-          const descList = proj.description.split(/\n+/).map(d => d.replace(/^[•\-*]\s*/, '').trim()).filter(d => d.length > 5);
-          const limitedDescList = descList.slice(0, 3);
-          if (limitedDescList.length > 0) {
-            bullets = `\\begin{itemize}\n${limitedDescList.map(d => `\\item ${escapeLatex(d)}`).join('\n')}\n\\end{itemize}`;
+          // Keep all project bullets (count depends on project; cap at 7 for layout safety)
+          const descList = proj.description
+            .split(/\n+|\\n/)
+            .map(d => d.replace(/^[•\-*]\s*/, '').trim())
+            .filter(d => d.length > 5)
+            .slice(0, 7);
+          if (descList.length > 0) {
+            bullets = `\\begin{itemize}\n${descList.map(d => `\\item ${escapeLatex(d)}`).join('\n')}\n\\end{itemize}`;
           }
         }
         return `${headerLine}\n${bullets}`;

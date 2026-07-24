@@ -464,19 +464,24 @@ ${bullets}`;
         if (githubLink) headerLine += ` \\hfill \\href{${githubLink}}{GitHub}`;
         if (liveLink) headerLine += `${githubLink ? ' $|$' : ' \\hfill'} \\href{${liveLink}}{Live}`;
 
-        // Parse description into bullet points
+        // Parse description into bullet points (count depends on project; cap at 7)
         let bullets = '';
         if (proj.description) {
           let descList;
           if (Array.isArray(proj.description)) {
-            descList = proj.description;
+            descList = proj.description.map(d => String(d).trim()).filter(d => d.length > 5).slice(0, 7);
           } else {
-            // Split on newlines, bullets, or sentence boundaries (Safari-safe, no lookbehind)
-            descList = proj.description
-              .split(/[\n•-]/)
-              .flatMap(seg => seg.split(/\.\s+(?=[A-Z])/))
-              .map(d => d.trim())
-              .filter(d => d.length > 10);
+            // Prefer newline-separated bullets (AI output format); keep detailed lines intact
+            descList = String(proj.description)
+              .split(/\n+|\\n/)
+              .map(d => d.replace(/^[•\-*]\s*/, '').trim())
+              .filter(d => d.length > 5)
+              .slice(0, 7);
+            // Fallback for single-paragraph descriptions without newlines
+            if (descList.length === 0) {
+              const single = String(proj.description).replace(/^[•\-*]\s*/, '').trim();
+              if (single.length > 5) descList = [single];
+            }
           }
           if (descList.length > 0) {
             bullets = `\\begin{itemize}\n${descList.map(d => `\\item ${escapeLatex(d)}`).join('\n')}\n\\end{itemize}`;

@@ -194,7 +194,7 @@ export const ResumeProvider = ({ children }) => {
       if (expItems) experienceSection = `\\section*{Experience}\n${expItems}`;
     }
 
-    // Projects section - limit to 3 bullet points per project
+    // Projects section — variable bullets per project (detail depends on project; cap at 7)
     let projectsSection = '';
     if (data?.projects && data.projects.length > 0) {
       const projItems = data.projects.map(proj => {
@@ -210,9 +210,10 @@ export const ResumeProvider = ({ children }) => {
         if (proj.description) {
           // Split on newlines, then remove leading bullet markers (• or - or *)
           const descList = proj.description
-            .split(/\n+/)
+            .split(/\n+|\\n/)
             .map(d => d.replace(/^[•\-*]\s*/, '').trim())
-            .filter(d => d.length > 5);
+            .filter(d => d.length > 5)
+            .slice(0, 7);
           if (descList.length > 0) {
             bullets = `\\begin{itemize}\n${descList.map(d => `\\item ${escapeLatex(d)}`).join('\n')}\n\\end{itemize}`;
           }

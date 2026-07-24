@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline to VMs
 
 on:
   push:
@@ -34,21 +34,52 @@ jobs:
       - name: Run Tests
         run: ./mvnw clean test
 
-  deploy-to-render:
-    name: Trigger Render Deployment
+  deploy-vm1:
+    name: Deploy to VM1
     runs-on: ubuntu-latest
     needs: build-and-test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
-      - name: Trigger Render Deploy Hook
-        env:
-          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
-        run: |
-          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
-            echo "Error: RENDER_DEPLOY_HOOK secret is not set!"
-            exit 1
-          fi
-          echo "Triggering deployment..."
-          curl -X POST -d "" "$RENDER_DEPLOY_HOOK"
-          echo -e "\nDeployment triggered successfully!"
+      - name: Execute deployment commands via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM1_HOST }}
+          username: ${{ secrets.VM1_USER }}
+          key: ${{ secrets.VM1_SSH_KEY }}
+          script: |
+            echo "Connected to VM1!"
+            # Navigate to the project directory
+            cd ~/AI_Resume_Builder_Backend || cd ~/project_folder
+            
+            # Pull latest changes
+            git pull origin main
+            
+            # Restart backend using Docker Compose for VM1
+            docker-compose -f docker-compose.vm1.yml down
+            docker-compose -f docker-compose.vm1.yml up -d --build
+
+  deploy-vm2:
+    name: Deploy to VM2
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Execute deployment commands via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM2_HOST }}
+          username: ${{ secrets.VM2_USER }}
+          key: ${{ secrets.VM2_SSH_KEY }}
+          script: |
+            echo "Connected to VM2!"
+            # Navigate to the project directory
+            cd ~/AI_Resume_Builder_Backend || cd ~/project_folder
+            
+            # Pull latest changes
+            git pull origin main
+            
+            # Restart backend using Docker Compose for VM2
+            docker-compose -f docker-compose.vm2.yml down
+            docker-compose -f docker-compose.vm2.yml up -d --build

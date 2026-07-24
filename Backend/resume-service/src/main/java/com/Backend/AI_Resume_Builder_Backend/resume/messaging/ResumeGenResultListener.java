@@ -42,4 +42,8 @@ public class ResumeGenResultListener {
     public ResumeGenEvent consumeResult(String jobId) {
         return results.remove(jobId);
     }
+
+    public void putResult(String jobId, ResumeGenEvent event) {
+        results.put(jobId, event);
+    }
 }

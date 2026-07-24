@@ -458,8 +458,7 @@ public class LatexServiceImpl implements LatexService {
             projEntry = projEntry.replace("{{PROJECT_TITLE}}",
                     escapeLatexSpecialChars(projectTitle));
 
-            // Handle project description - enforce exactly 3 point descriptions (6 lines
-            // total)
+            // Handle project description — variable bullet count based on project content (2–7)
             String description = getStringValue(project, "description");
             String descriptionContent = formatProjectDescription(description, projectTitle, templateType);
 
@@ -736,19 +735,13 @@ public class LatexServiceImpl implements LatexService {
 
     /**
      * Format project description based on template type.
+     * Bullet count is project-dependent (not fixed at 3).
      * - professional/ats: Returns \\resumeItem{...} entries
      * - modern: Returns bullet points with \\ separators for cventry context
      * - creative: Returns bullet points or plain text
      */
     private String formatProjectDescription(String description, String projectTitle, String templateType) {
-        // Parse and ensure exactly 3 points with fallback generation
         List<String> points = parseDescriptionPoints(description, projectTitle);
-
-        // DEBUG: Log the points being formatted
-        System.err.println("DEBUG: Formatting " + points.size() + " points for project: " + projectTitle);
-        for (int i = 0; i < points.size(); i++) {
-            System.err.println("  Point " + (i + 1) + ": " + points.get(i));
-        }
 
         if ("modern".equals(templateType)) {
             // For modern template (cventry context), use bullet points with \\ separators
@@ -793,17 +786,21 @@ public class LatexServiceImpl implements LatexService {
         }
     }
 
+    private static final int MAX_PROJECT_BULLETS = 7;
+
     /**
-     * Parse description string into exactly 3 points.
-     * Handles various formats (bullets, newlines, etc.)
-     * Always returns exactly 3 points (generates placeholders if needed).
+     * Parse description string into bullet points.
+     * Count is project-dependent: keep all real bullets (capped at 7).
+     * Only pads with placeholders when the description is empty (min 2 bullets).
+     * Does NOT force every project to exactly 3 points.
      */
     private List<String> parseDescriptionPoints(String description, String projectTitle) {
         List<String> points = new ArrayList<>();
 
         if (description != null && !description.trim().isEmpty()) {
             String normalized = description.trim();
-            String[] lines = normalized.split("\\n");
+            // Prefer newline-separated bullets; also split on literal "\n" from JSON strings
+            String[] lines = normalized.replace("\\n", "\n").split("\\n");
 
             for (String line : lines) {
                 String trimmedLine = line.trim();
@@ -813,25 +810,25 @@ public class LatexServiceImpl implements LatexService {
 
                 // Strip typical lead bullets, keeping the actual point message
                 String point = trimmedLine.replaceAll("^[-•*]\\s*|^\\d+\\.\\s*", "").trim();
-                if (!point.isEmpty() && points.size() < 3) {
+                if (!point.isEmpty() && points.size() < MAX_PROJECT_BULLETS) {
                     points.add(point);
+                }
+            }
+
+            // Fallback: single paragraph without newlines — keep as one detailed bullet
+            // rather than inventing extra points
+            if (points.isEmpty()) {
+                String single = normalized.replaceAll("^[-•*]\\s*", "").trim();
+                if (!single.isEmpty()) {
+                    points.add(single);
                 }
             }
         }
 
-        // Always pad to exactly 3 points with generated content
-        if (points.size() == 0) {
-            System.err.println(
-                    "WARNING: Project '" + projectTitle + "' has empty description. Generating placeholder content.");
-        } else if (points.size() < 3) {
-            System.err.println("WARNING: Project '" + projectTitle + "' has only " + points.size()
-                    + " description points. Expected 3.");
-        }
-
-        while (points.size() < 3) {
-            String placeholder = generateProjectPlaceholder(projectTitle, points.size() + 1);
-            points.add(placeholder);
-            System.err.println("  Added placeholder point " + points.size() + ": " + placeholder);
+        // Only generate placeholders when completely empty (never pad a real 2–4 bullet list to 3)
+        if (points.isEmpty()) {
+            points.add(generateProjectPlaceholder(projectTitle, 1));
+            points.add(generateProjectPlaceholder(projectTitle, 2));
         }
 
         return points;
@@ -849,13 +846,11 @@ public class LatexServiceImpl implements LatexService {
 
         switch (pointNumber) {
             case 1:
-                return "Designed and developed " + projectTitle + " to deliver a high-quality solution";
+                return "Designed and developed " + projectTitle + " with a clear focus on reliability and usability";
             case 2:
-                return "Implemented best practices for code quality, performance, and maintainability";
-            case 3:
-                return "Integrated modern technologies and frameworks for optimal user experience";
+                return "Implemented core features using modern tools and practices suited to the problem space";
             default:
-                return "Contributed to project success through technical excellence";
+                return "Improved quality through testing, iteration, and careful technical trade-offs";
         }
     }
 

@@ -173,7 +173,8 @@ public class AdminController {
 
             long totalResumes = resumeRepository.count();
             long totalPdf = systemStatsService.getStatValue(SystemStatsService.KEY_PDF_COMPILATIONS);
-            long totalAts = systemStatsService.getStatValue(SystemStatsService.KEY_ATS_CHECKS);
+            // Use ats_checks table (source of truth). system_stats KEY_ATS_CHECKS is never incremented.
+            long totalAts = atsCheckRepository.count();
 
             // Template usage
             List<Object[]> templateStats = resumeRepository.countByTemplateType();
@@ -1155,13 +1156,18 @@ public class AdminController {
         logEntries.add(Map.of("timestamp", LocalDateTime.now().minusSeconds(12).toString(), "service", "gateway-service", "level", "INFO", "message", "Rate limiter check passed for origin https://atsresify.me"));
         logEntries.add(Map.of("timestamp", LocalDateTime.now().minusSeconds(25).toString(), "service", "resume-service", "level", "INFO", "message", "LaTeX compile engine ready (pdflatex/tectonic)."));
         long todayResumes = 0;
+        long todayAts = 0;
         try {
             todayResumes = resumeRepository.countResumesCreatedToday();
+            todayAts = atsCheckRepository.countAtsChecksCreatedToday();
         } catch (Exception e) {
-            logger.warn("Could not fetch today's resume count: " + e.getMessage());
+            logger.warn("Could not fetch today's activity counts: " + e.getMessage());
         }
         if (todayResumes > 0) {
             logEntries.add(Map.of("timestamp", LocalDateTime.now().minusMinutes(1).toString(), "service", "resume-service", "level", "INFO", "message", "Generated " + todayResumes + " resume(s) today."));
+        }
+        if (todayAts > 0) {
+            logEntries.add(Map.of("timestamp", LocalDateTime.now().minusMinutes(2).toString(), "service", "intelligence-service", "level", "INFO", "message", "Completed " + todayAts + " ATS check(s) today."));
         }
         return ResponseEntity.ok(logEntries);
     }
