@@ -50,15 +50,23 @@ jobs:
           key: ${{ secrets.VM1_SSH_KEY }}
           script: |
             echo "Connected to VM1!"
-            # Navigate to the project directory
-            cd ~/AI_Resume_Builder_Backend || cd ~/project_folder
+            # Clone repository if it doesn't exist
+            if [ ! -d "ATS_Resify" ]; then
+              git clone https://github.com/praveensuthar2105/ATS_Resify.git
+            fi
+            cd ATS_Resify
             
             # Pull latest changes
             git pull origin main
             
-            # Restart backend using Docker Compose for VM1
-            docker-compose -f docker-compose.vm1.yml down
-            docker-compose -f docker-compose.vm1.yml up -d --build
+            # Restart backend using Docker Compose for VM1 (try modern docker compose plugin first)
+            if command -v docker-compose &> /dev/null; then
+              docker-compose -f docker-compose.vm1.yml down
+              docker-compose -f docker-compose.vm1.yml up -d --build
+            else
+              docker compose -f docker-compose.vm1.yml down
+              docker compose -f docker-compose.vm1.yml up -d --build
+            fi
 
   deploy-vm2:
     name: Deploy to VM2
@@ -75,12 +83,20 @@ jobs:
           key: ${{ secrets.VM2_SSH_KEY }}
           script: |
             echo "Connected to VM2!"
-            # Navigate to the project directory
-            cd ~/AI_Resume_Builder_Backend || cd ~/project_folder
+            # Clone repository if it doesn't exist
+            if [ ! -d "ATS_Resify" ]; then
+              git clone https://github.com/praveensuthar2105/ATS_Resify.git
+            fi
+            cd ATS_Resify
             
             # Pull latest changes
             git pull origin main
             
-            # Restart backend using Docker Compose for VM2
-            docker-compose -f docker-compose.vm2.yml down
-            docker-compose -f docker-compose.vm2.yml up -d --build
+            # Restart backend using Docker Compose for VM2 (try modern docker compose plugin first)
+            if command -v docker-compose &> /dev/null; then
+              docker-compose -f docker-compose.vm2.yml down
+              docker-compose -f docker-compose.vm2.yml up -d --build
+            else
+              docker compose -f docker-compose.vm2.yml down
+              docker compose -f docker-compose.vm2.yml up -d --build
+            fi
