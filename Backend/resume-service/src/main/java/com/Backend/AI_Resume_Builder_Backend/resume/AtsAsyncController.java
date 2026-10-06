@@ -157,29 +157,37 @@ public class AtsAsyncController {
     @GetMapping("/ats-score/status/{jobId}")
     public ResponseEntity<Map<String, Object>> getAtsScoreStatus(
             @PathVariable String jobId) {
+        try {
+            AtsScoreEvent event = resultListener.getResult(jobId);
 
-        AtsScoreEvent event = resultListener.getResult(jobId);
+            if (event == null) {
+                return ResponseEntity.ok(Map.of(
+                        "jobId", jobId,
+                        "status", "PROCESSING",
+                        "message", "Still processing. Please poll again."
+                ));
+            }
 
-        if (event == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("jobId", jobId);
+            response.put("status", event.getStatus() != null ? event.getStatus() : "PROCESSING");
+
+            if ("COMPLETED".equals(event.getStatus())) {
+                response.put("result", event.getResult());
+                resultListener.consumeResult(jobId); // Clean up
+            } else if ("FAILED".equals(event.getStatus())) {
+                response.put("error", event.getErrorMessage());
+                resultListener.consumeResult(jobId); // Clean up
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error retrieving ATS score status for jobId={}: {}", jobId, e.getMessage(), e);
             return ResponseEntity.ok(Map.of(
                     "jobId", jobId,
                     "status", "PROCESSING",
                     "message", "Still processing. Please poll again."
             ));
         }
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("jobId", jobId);
-        response.put("status", event.getStatus());
-
-        if ("COMPLETED".equals(event.getStatus())) {
-            response.put("result", event.getResult());
-            resultListener.consumeResult(jobId); // Clean up
-        } else if ("FAILED".equals(event.getStatus())) {
-            response.put("error", event.getErrorMessage());
-            resultListener.consumeResult(jobId); // Clean up
-        }
-
-        return ResponseEntity.ok(response);
     }
 }

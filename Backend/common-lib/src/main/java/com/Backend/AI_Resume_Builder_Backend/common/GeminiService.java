@@ -90,7 +90,13 @@ public class GeminiService {
             } catch (org.springframework.web.client.HttpClientErrorException e) {
                 if (e.getStatusCode().value() == 429 && attempt < maxRetries) {
                     log.warn("Gemini API rate limited (429). Retrying attempt {}/{} in {}ms...", attempt, maxRetries, attempt * 1500);
-                    try { Thread.sleep(attempt * 1500L); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                    try {
+                        Thread.sleep(attempt * 1500L);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        log.warn("Gemini retry delay interrupted, aborting retry loop");
+                        break;
+                    }
                     continue;
                 }
                 log.error("Gemini API HTTP error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
@@ -99,7 +105,13 @@ public class GeminiService {
             } catch (org.springframework.web.client.HttpServerErrorException e) {
                 if ((e.getStatusCode().value() == 503 || e.getStatusCode().value() == 500) && attempt < maxRetries) {
                     log.warn("Gemini API server busy ({}) on attempt {}/{}. Retrying in {}ms...", e.getStatusCode(), attempt, maxRetries, attempt * 2000);
-                    try { Thread.sleep(attempt * 2000L); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                    try {
+                        Thread.sleep(attempt * 2000L);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        log.warn("Gemini retry delay interrupted, aborting retry loop");
+                        break;
+                    }
                     continue;
                 }
                 log.error("Gemini API server error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());

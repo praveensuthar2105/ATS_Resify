@@ -112,11 +112,21 @@ export const resumeAPI = {
 
     // Poll status until completed or max retries (120 attempts * 2s = 240s / 4 mins max)
     const maxAttempts = 120;
+    let lastStatusData = null;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      const statusRes = await apiClient.get(`/resume/ats-score/status/${jobId}`);
-      const statusData = statusRes?.data;
+      let statusData = null;
+      try {
+        const statusRes = await apiClient.get(`/resume/ats-score/status/${jobId}`);
+        statusData = statusRes?.data;
+      } catch (pollErr) {
+        // A transient HTTP error (e.g. 500, gateway hiccup) during polling should not
+        // crash the analysis. Log warning and continue polling next cycle.
+        console.warn(`Poll attempt ${attempt} encountered transient error (${pollErr.message}), retrying...`);
+        continue;
+      }
+      lastStatusData = statusData;
 
       if (statusData?.status === 'COMPLETED') {
         let result = statusData.result;
@@ -133,18 +143,30 @@ export const resumeAPI = {
       }
     }
 
-    // Fallback to direct synchronous endpoint if async polling timed out
+    // Do not initiate a duplicate analysis if the existing async job is still pending or processing
+    if (lastStatusData?.status === 'PROCESSING' || lastStatusData?.status === 'PENDING') {
+      const pendingError = new Error(
+        `ATS analysis is still processing on the server (Job ID: ${jobId}). Please check back shortly.`
+      );
+      pendingError.jobId = jobId;
+      pendingError.status = lastStatusData.status;
+      throw pendingError;
+    }
+
+    // Only if the job is not actively running, attempt synchronous fallback with a bounded
+    // server-compatible deadline (180s) to allow for multiple Gemini backend retry attempts
     try {
-      console.warn('Async ATS score timed out, falling back to direct scoring endpoint...');
+      console.warn('Async ATS score job not active, falling back to direct scoring endpoint...');
       const fallbackRes = await apiClient.post('/resume/ats-score', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 90000,
+        timeout: 180000,
       });
       if (fallbackRes?.data) {
         return fallbackRes.data;
       }
     } catch (fallbackErr) {
       console.error('Direct fallback ATS scoring also failed:', fallbackErr);
+      throw fallbackErr;
     }
 
     throw new Error('ATS analysis request timed out. Please try again.');
