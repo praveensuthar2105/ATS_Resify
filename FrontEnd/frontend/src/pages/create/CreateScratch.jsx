@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import SEO from '../../components/SEO';
 import {
   Sparkles, Plus, Trash2, ChevronLeft, ChevronRight, Check,
   Loader2, ArrowLeft, User, Briefcase, GraduationCap, Award, Wrench
@@ -222,7 +223,10 @@ const CreateScratch = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f7fdfb] via-[#eefbf7] to-[#d5f5ec] pt-28 pb-16 px-4 sm:px-6 relative overflow-hidden flex flex-col items-center">
-      <Helmet><title>Start From Scratch | ATS Resify</title></Helmet>
+      <SEO
+        title="Start From Scratch — AI Resume Builder"
+        description="Build your professional, ATS-optimized resume step-by-step with guided prompts."
+      />
 
       {/* Decorative blobs */}
       <div className="absolute top-20 right-[-10%] w-[500px] h-[500px] rounded-full bg-teal-300/10 blur-[120px] pointer-events-none" />

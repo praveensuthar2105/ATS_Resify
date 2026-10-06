@@ -24,7 +24,7 @@ public class GeminiService {
 
     public GeminiService(
             @Value("${gemini.api.key:}") String apiKey,
-            @Value("${gemini.model:gemini-3.6-flash}") String model,
+            @Value("${gemini.model:gemini-2.5-flash-lite}") String model,
             RestClient.Builder restClientBuilder) {
 
         if (apiKey == null || apiKey.trim().isEmpty()) {
@@ -75,26 +75,40 @@ public class GeminiService {
                         "topK", 1,
                         "responseMimeType", "application/json"));
 
-        JsonNode response;
-        try {
-            response = restClient.post()
-                    .uri(uriBuilder -> uriBuilder.queryParam("key", apiKey).build())
-                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                    .accept(org.springframework.http.MediaType.APPLICATION_JSON, org.springframework.http.MediaType.ALL)
-                    .body(request)
-                    .retrieve()
-                    .body(JsonNode.class);
-        } catch (org.springframework.web.client.HttpClientErrorException e) {
-            log.error("Gemini API HTTP error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("Gemini API error (" + e.getStatusCode() + "): " + e.getResponseBodyAsString(),
-                    e);
-        } catch (org.springframework.web.client.HttpServerErrorException e) {
-            log.error("Gemini API server error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException(
-                    "Gemini API server error (" + e.getStatusCode() + "): " + e.getResponseBodyAsString(), e);
-        } catch (Exception e) {
-            log.error("Gemini API call failed: {}", e.getMessage(), e);
-            throw e;
+        JsonNode response = null;
+        int maxRetries = 3;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                response = restClient.post()
+                        .uri(uriBuilder -> uriBuilder.queryParam("key", apiKey).build())
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .accept(org.springframework.http.MediaType.APPLICATION_JSON, org.springframework.http.MediaType.ALL)
+                        .body(request)
+                        .retrieve()
+                        .body(JsonNode.class);
+                break;
+            } catch (org.springframework.web.client.HttpClientErrorException e) {
+                if (e.getStatusCode().value() == 429 && attempt < maxRetries) {
+                    log.warn("Gemini API rate limited (429). Retrying attempt {}/{} in {}ms...", attempt, maxRetries, attempt * 1500);
+                    try { Thread.sleep(attempt * 1500L); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                    continue;
+                }
+                log.error("Gemini API HTTP error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
+                throw new RuntimeException("Gemini API error (" + e.getStatusCode() + "): " + e.getResponseBodyAsString(),
+                        e);
+            } catch (org.springframework.web.client.HttpServerErrorException e) {
+                if ((e.getStatusCode().value() == 503 || e.getStatusCode().value() == 500) && attempt < maxRetries) {
+                    log.warn("Gemini API server busy ({}) on attempt {}/{}. Retrying in {}ms...", e.getStatusCode(), attempt, maxRetries, attempt * 2000);
+                    try { Thread.sleep(attempt * 2000L); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                    continue;
+                }
+                log.error("Gemini API server error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
+                throw new RuntimeException(
+                        "Gemini API server error (" + e.getStatusCode() + "): " + e.getResponseBodyAsString(), e);
+            } catch (Exception e) {
+                log.error("Gemini API call failed: {}", e.getMessage(), e);
+                throw e;
+            }
         }
 
         if (response != null) {

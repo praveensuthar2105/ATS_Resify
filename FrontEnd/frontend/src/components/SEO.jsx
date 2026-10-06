@@ -7,17 +7,19 @@ const SEO = ({
     type = 'website',
     name = 'ATS Resify',
     image = 'https://atsresify.me/og-image.png',
-    href
+    href,
+    noindex = false
 }) => {
-    // Use the provided href or fallback to the current URL if running in browser
-    const canonicalUrl = href || (typeof window !== 'undefined' ? window.location.href : 'https://atsresify.me/');
-    const fullTitle = title ? `${title} | ATS Resify` : 'ATS Resify — Free AI Resume Builder & ATS Checker';
+    // Generate clean canonical URL (stripping search params and hashes)
+    const canonicalUrl = href || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://atsresify.me/');
+    const fullTitle = title ? (title.includes('ATS Resify') ? title : `${title} | ATS Resify`) : 'ATS Resify — Free AI Resume Builder & ATS Score Checker';
     const metaDescription = description || "Build professional, ATS-optimized resumes with AI in minutes. Check your ATS score, edit with a live LaTeX editor, and export PDF resumes for free.";
 
     return (
         <Helmet>
             <title>{fullTitle}</title>
             <meta name="description" content={metaDescription} />
+            <meta name="robots" content={noindex ? "noindex, nofollow" : "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"} />
 
             <link rel="canonical" href={canonicalUrl} />
 
@@ -35,7 +37,6 @@ const SEO = ({
             <meta name="twitter:image" content={image} />
         </Helmet>
     );
-
 };
 
 export default SEO;

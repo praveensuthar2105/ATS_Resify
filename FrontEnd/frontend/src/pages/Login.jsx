@@ -80,6 +80,7 @@ const Login = () => {
             <SEO
                 title="Login - ATS Resify"
                 description="Sign in to ATS Resify to build, analyze, and optimize your professional resume with AI."
+                noindex={true}
             />
 
             <main ref={containerRef} className="w-full max-w-md mx-auto flex flex-col items-center relative z-10">

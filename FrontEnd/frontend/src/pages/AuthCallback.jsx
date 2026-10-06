@@ -99,6 +99,7 @@ const AuthCallback = () => {
     <AuroraBackground className="min-h-screen flex flex-col items-center justify-center p-4">
       <Helmet>
         <title>Verifying Session | ATS Resify</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <main className="w-full max-w-md mx-auto flex flex-col items-center relative z-10">

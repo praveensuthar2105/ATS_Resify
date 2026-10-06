@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { getAuthHeaders } from '../utils/auth';
 import { API_BASE_URL } from '../services/api';
+import SEO from '../components/SEO';
 
 // ─── Theme Colors aligned with Aurora Glassmorphic Design System ──────────────
 const CHART_COLORS = ['#14B8A6', '#10B981', '#6366F1', '#F59E0B', '#EF4444'];
@@ -978,6 +979,7 @@ const AdminPanel = () => {
         fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif"
       }}
     >
+      <SEO title="Admin Console | ATS Resify" noindex={true} />
       {/* Ambient mesh — matches site aurora theme */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute top-[-12%] right-[0%] w-[780px] h-[780px] rounded-full opacity-30" style={{ background: 'radial-gradient(circle, rgba(45,212,191,0.35) 0%, transparent 70%)', filter: 'blur(110px)' }} />

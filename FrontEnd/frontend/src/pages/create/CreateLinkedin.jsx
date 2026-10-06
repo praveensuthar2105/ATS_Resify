@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import SEO from '../../components/SEO';
 import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
 import { resumeAPI } from '../../services/api';
 
@@ -108,9 +109,10 @@ const CreateLinkedin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f7fdfb] via-[#eefbf7] to-[#d5f5ec] pt-28 pb-16 px-6 relative overflow-hidden flex flex-col items-center justify-start">
-      <Helmet>
-        <title>Import from LinkedIn | ATS Resify</title>
-      </Helmet>
+      <SEO
+        title="Import from LinkedIn — ATS Resify"
+        description="Convert your LinkedIn profile PDF into an ATS-optimized resume in seconds."
+      />
 
       {/* Decorative Blur Blob */}
       <div className="absolute top-20 left-[-10%] w-[500px] h-[500px] rounded-full bg-teal-300/10 blur-[120px] pointer-events-none" />

@@ -29,7 +29,7 @@ import com.Backend.AI_Resume_Builder_Backend.user.UserRepository;
 public class AtsScoreServiceImpl implements AtsScoreService {
 
     private static final Logger log = LoggerFactory.getLogger(AtsScoreServiceImpl.class);
-    private static final int MAX_RETRIES = 2;
+    private static final int MAX_RETRIES = 3;
     private static final long BASE_DELAY_MS = 500; // 500ms base delay
     private static final int MAX_JOB_DESCRIPTION_LENGTH = 5000; // Max chars for job description
     private static final List<String> REQUIRED_KEYS = List.of(

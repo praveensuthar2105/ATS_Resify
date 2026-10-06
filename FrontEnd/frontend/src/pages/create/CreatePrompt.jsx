@@ -123,12 +123,9 @@ const CreatePrompt = () => {
   return (
     <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-[#f7fdfb] via-[#eefbf7] to-[#d5f5ec] pt-16 pb-12 px-6 relative overflow-hidden flex flex-col items-center">
       <SEO 
-        title="Generate Resume with AI Prompt | ATS Resify" 
+        title="Generate Resume with AI Prompt — ATS Resify" 
         description="Describe your professional background and let AI generate an ATS-optimized LaTeX resume draft for you instantly."
       />
-      <Helmet>
-        <title>Generate with AI Prompt | ATS Resify</title>
-      </Helmet>
 
       {/* Decorative Blob */}
       <div className="absolute top-20 right-[-10%] w-[500px] h-[500px] rounded-full bg-teal-300/10 blur-[120px] pointer-events-none" />

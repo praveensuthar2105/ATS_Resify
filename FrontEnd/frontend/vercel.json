@@ -10,6 +10,31 @@
             ],
             "destination": "https://atsresify.me/$1",
             "permanent": true
+        },
+        {
+            "source": "/about-us",
+            "destination": "/about",
+            "permanent": true
+        },
+        {
+            "source": "/privacy-policy",
+            "destination": "/privacy",
+            "permanent": true
+        },
+        {
+            "source": "/terms-of-service",
+            "destination": "/terms",
+            "permanent": true
+        },
+        {
+            "source": "/generate",
+            "destination": "/create-resume/prompt",
+            "permanent": true
+        },
+        {
+            "source": "/ats-checker",
+            "destination": "/ats-checker/quick-score",
+            "permanent": true
         }
     ],
     "headers": [

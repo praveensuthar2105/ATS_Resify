@@ -133,6 +133,20 @@ export const resumeAPI = {
       }
     }
 
+    // Fallback to direct synchronous endpoint if async polling timed out
+    try {
+      console.warn('Async ATS score timed out, falling back to direct scoring endpoint...');
+      const fallbackRes = await apiClient.post('/resume/ats-score', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 90000,
+      });
+      if (fallbackRes?.data) {
+        return fallbackRes.data;
+      }
+    } catch (fallbackErr) {
+      console.error('Direct fallback ATS scoring also failed:', fallbackErr);
+    }
+
     throw new Error('ATS analysis request timed out. Please try again.');
   },
 
